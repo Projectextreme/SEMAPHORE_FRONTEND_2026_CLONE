@@ -60,10 +60,10 @@ const galleryImages = [
 ];
 
 export default function FestDetails() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
-  const galleryWrapperRef = useRef<HTMLDivElement>(null);
-  const galleryRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef(null);
+  const cardsRef = useRef([]);
+  const galleryWrapperRef = useRef(null);
+  const galleryRef = useRef(null);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -111,7 +111,7 @@ export default function FestDetails() {
       const getScrollAmount = () =>
         -(gallery.scrollWidth - window.innerWidth + 100);
 
-      const tween = gsap.to(gallery, {
+      gsap.to(gallery, {
         x: getScrollAmount,
         ease: "none",
         scrollTrigger: {

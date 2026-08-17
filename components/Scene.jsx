@@ -36,8 +36,8 @@ const events = [
 ];
 
 export default function Scene() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef(null);
+  const wrapperRef = useRef(null);
   const [progress, setProgress] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -130,16 +130,8 @@ export default function Scene() {
       },
     );
 
-    const shipMaterial = new THREE.MeshStandardMaterial({
-      map: woodTexture,
-      color: 0x4a3b32,
-      roughness: 0.9,
-      metalness: 0.1,
-      flatShading: true,
-    });
-
     // --- Realistic Glacial Iceberg Cluster ---
-    function createIcebergGeometry(radius: number, heightScale: number) {
+    function createIcebergGeometry(radius, heightScale) {
       const geo = new THREE.IcosahedronGeometry(radius, 4);
       const pos = geo.attributes.position;
       const v = new THREE.Vector3();
@@ -492,7 +484,7 @@ export default function Scene() {
       const canvas = document.createElement("canvas");
       canvas.width = 256;
       canvas.height = 128;
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d");
 
       const grad = ctx.createLinearGradient(0, 0, 256, 128);
       grad.addColorStop(0, "#00f0ff");
@@ -558,7 +550,7 @@ export default function Scene() {
     });
     const fishSwarm = new THREE.InstancedMesh(fishGeo, fishMat, fishCount);
     const dummy = new THREE.Object3D();
-    const fishData: { speed: number; phaseX: number; phaseY: number; phaseZ: number; baseY: number; scale: number }[] = [];
+    const fishData = [];
     for (let i = 0; i < fishCount; i++) {
       const s = 0.15 + Math.random() * 0.35; // Much smaller fish
       dummy.scale.set(s, s * (0.8 + Math.random() * 0.4), s * (0.9 + Math.random() * 0.2)); // Non-uniform scale
@@ -581,7 +573,7 @@ export default function Scene() {
     scene.add(fishSwarm);
 
     // --- Sharks ---
-    let sharkMixer: THREE.AnimationMixer | null = null;
+    let sharkMixer = null;
     gltfLoader.load("/glbs/Shark by Quaternius - YYsK3gRCBZ.glb", (gltf) => {
       const shark = gltf.scene;
       shark.scale.set(4, 4, 4);
@@ -632,14 +624,14 @@ export default function Scene() {
     const mouse = { x: 0, y: 0 };
     const targetMouse = { x: 0, y: 0 };
 
-    function handleMouseMove(event: MouseEvent) {
+    function handleMouseMove(event) {
       targetMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       targetMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     }
     window.addEventListener("mousemove", handleMouseMove);
 
     // Touch support for mobile parallax
-    function handleTouchMove(event: TouchEvent) {
+    function handleTouchMove(event) {
       if (event.touches.length > 0) {
         const touch = event.touches[0];
         targetMouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
@@ -751,7 +743,7 @@ export default function Scene() {
     tl.to({}, { duration: 1 });
 
     const clock = new THREE.Clock();
-    let animationId: number;
+    let animationId;
     function animate() {
       animationId = requestAnimationFrame(animate);
 
@@ -760,21 +752,21 @@ export default function Scene() {
         sharkMixer.update(delta);
       }
 
-      const waterMat = water.material as THREE.ShaderMaterial;
+      const waterMat = water.material;
       if (waterMat.uniforms && waterMat.uniforms["time"]) {
         waterMat.uniforms["time"].value += delta * 0.5;
       }
       const t = clock.elapsedTime;
       
-      const positions = bubbles.geometry.attributes.position.array as Float32Array;
+      const positions = bubbles.geometry.attributes.position.array;
       for (let i = 0; i < bubbleCount; i++) {
         positions[i * 3 + 1] += delta * (2 + Math.random() * 2);
         if (positions[i * 3 + 1] > -2) positions[i * 3 + 1] = -100;
       }
       bubbles.geometry.attributes.position.needsUpdate = true;
 
-      const codePos = codingParticles.geometry.attributes.position.array as Float32Array;
-      const codePhases = codingParticles.geometry.attributes.phase.array as Float32Array;
+      const codePos = codingParticles.geometry.attributes.position.array;
+      const codePhases = codingParticles.geometry.attributes.phase.array;
       for (let i = 0; i < codingParticleCount; i++) {
         codePhases[i] += delta * 0.5;
         const radius = 25 + Math.sin(codePhases[i] * 2) * 5;
@@ -798,6 +790,7 @@ export default function Scene() {
 
         const lookTargetX = dummy.position.x + Math.sin(t * data.speed * 0.7 + data.phaseX) * 0.4;
         const lookTargetZ = dummy.position.z + Math.cos(t * data.speed * 0.7 + data.phaseZ) * 0.4;
+
         dummy.lookAt(lookTargetX, dummy.position.y, lookTargetZ);
 
         // Banking roll when turning
