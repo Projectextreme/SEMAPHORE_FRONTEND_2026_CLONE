@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -24,16 +25,21 @@ import {
 } from "lucide-react"
 
 const menuItems = [
-  { label: 'Home', icon: Home, href: '#' },
-  { label: 'Login', icon: KeyRound, href: '#' },
-  { label: 'Register', icon: FileEdit, href: '#' },
+  { label: 'Home', icon: Home, href: '/' },
+  { label: 'Login', icon: FileEdit, href: '/user/register' },
   { label: 'Brochure', icon: BookOpen, href: '#' },
-  { label: 'Developers', icon: Code, href: '#dev-team' },
+  { label: 'Developers', icon: Code, href: '/developer' },
   { label: 'Contact', icon: Contact, href: '#info' },
-  { label: 'Profile', icon: User, href: '#' },
+  { label: 'Profile', icon: User, href: '/user/account' },
 ]
 
 export default function Menu() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem('token'));
+  }, []);
+
   return (
     <Drawer showSwipeHandle>
       <div className="fixed top-2 right-2 z-[100]">
@@ -52,7 +58,7 @@ export default function Menu() {
           <DrawerTitle className="text-2xl font-bold text-white">Semaphore 2K26</DrawerTitle>
         </DrawerHeader>
         <div className="flex flex-col gap-2 max-w-sm mx-auto w-full overflow-y-auto max-h-[70vh] no-scrollbar">
-          {menuItems.map((item, index) => {
+          {menuItems.filter(item => !(isLoggedIn && item.label === 'Login')).map((item, index) => {
             const Icon = item.icon
             return (
               <a
