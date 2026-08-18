@@ -4,43 +4,293 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader.js";
 import { Water } from "three/examples/jsm/objects/Water.js";
-
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import {
+  seabedVertex,
+  seabedFragment,
+  flowFieldVertex,
+  flowFieldFragment,
+  wormholeVertex,
+  wormholeFragment,
+  godRayVertex,
+  godRayFragment,
+  bubbleVertex,
+  bubbleFragment,
+  portalVortexVertex,
+  portalVortexFragment,
+  waterCausticsVertex,
+  waterCausticsFragment,
+} from "../src/Shaders/index";
+
 gsap.registerPlugin(ScrollTrigger);
 
-const events = [
+interface EventNode {
+  id: string;
+  num: string;
+  name: string;
+  category: string;
+  desc: string;
+  date: string;
+  time: string;
+  venue: string;
+  prize: string;
+  rules: string[];
+  pos: { x: number; y: number; z: number };
+  bannerPos: { x: number; y: number; z: number; rotY: number };
+  portalPos: { x: number; y: number; z: number };
+  minScroll: number;
+}
+
+const eventNodes: EventNode[] = [
   {
-    id: "event-iceberg",
-    title: "Web Designing",
+    id: "event-1",
+    num: "01",
+    name: "IT Quiz",
     category: "Technical",
-    desc: "Design and implement a working website within a limited time based on a given theme.",
+    desc: "Test your knowledge on Programming, DBMS, Operating Systems, Networks, and Cyber Security. Battle against top tech minds.",
     date: "9 October 2026",
+    time: "10:00 AM",
+    venue: "Main Auditorium",
+    prize: "₹ 10,000",
+    rules: ["Teams of 2 members", "Preliminary written round followed by live stage quiz"],
+    pos: { x: -32, y: -110, z: -240 }, // HIGH CLIFF PLATEAU
+    bannerPos: { x: -16, y: -103, z: -235, rotY: 0.3 },
+    portalPos: { x: -40, y: -105, z: -248 },
+    minScroll: 48,
   },
   {
-    id: "event-rocks",
-    title: "Coding",
-    category: "Programming",
-    desc: "Test your logic in competitive programming. Focus on data structures and algorithms.",
+    id: "event-2",
+    num: "02",
+    name: "IT Manager",
+    category: "Management",
+    desc: "You are the technology manager of a company. Something goes wrong. Test your leadership, crisis management, and decision-making skills.",
     date: "9 October 2026",
+    time: "11:30 AM",
+    venue: "MCA Seminar Hall",
+    prize: "₹ 15,000",
+    rules: ["Individual participation", "Multiple stress rounds & mock press conference"],
+    pos: { x: 32, y: -210, z: -330 }, // DEEP OCEAN TRENCH (DOWN)
+    bannerPos: { x: 16, y: -203, z: -325, rotY: -0.3 },
+    portalPos: { x: 40, y: -205, z: -338 },
+    minScroll: 58,
   },
   {
-    id: "event-shipwreck",
-    title: "Rhythm Rock",
-    category: "Cultural",
-    desc: "The ultimate dance competition! Bring your best moves and dominate the stage.",
+    id: "event-3",
+    num: "03",
+    name: "Techno Hive",
+    category: "Technical",
+    desc: "A pure technical and IT-oriented challenge designed to test your core tech competencies, web dev, and adaptability.",
+    date: "9 October 2026",
+    time: "02:00 PM",
+    venue: "Computer Lab 3",
+    prize: "₹ 12,000",
+    rules: ["Teams of 2 members", "Coding, debugging, and live prototype deployment"],
+    pos: { x: -28, y: -160, z: -420 }, // ELEVATED SPIRE (HIGH)
+    bannerPos: { x: -12, y: -153, z: -415, rotY: 0.25 },
+    portalPos: { x: -36, y: -155, z: -428 },
+    minScroll: 68,
+  },
+  {
+    id: "event-4",
+    num: "04",
+    name: "Hyper Launch",
+    category: "Innovation",
+    desc: "An innovation, product, and business-oriented challenge. Pitch your startup ideas and show your entrepreneurial spirit.",
     date: "10 October 2026",
+    time: "09:30 AM",
+    venue: "Incubation Center",
+    prize: "₹ 15,000",
+    rules: ["Teams of up to 3 members", "5-minute pitch + 3-minute Q&A with judges"],
+    pos: { x: 28, y: -310, z: -510 }, // ULTRA-DEEP ABYSS (DOWN)
+    bannerPos: { x: 14, y: -303, z: -505, rotY: -0.25 },
+    portalPos: { x: 36, y: -305, z: -518 },
+    minScroll: 78,
+  },
+  {
+    id: "event-5",
+    num: "05",
+    name: "Gaming & Treasure Hunt",
+    category: "E-Sports & Fun",
+    desc: "Survive intense gaming trenches (BGMI & Valorant) and solve cryptic tech clues across campus to unearth the hidden treasure.",
+    date: "10 October 2026",
+    time: "01:30 PM",
+    venue: "E-Sports Arena & Campus Grounds",
+    prize: "₹ 20,000",
+    rules: ["Squads of 4 members", "Time-bound physical & digital clues"],
+    pos: { x: 0, y: -260, z: -600 }, // SEABED CITADEL (MID)
+    bannerPos: { x: 16, y: -253, z: -595, rotY: -0.2 },
+    portalPos: { x: -18, y: -255, z: -608 },
+    minScroll: 88,
   },
 ];
+
+// Helper function to dynamically draw futuristic 3D Event Banners onto a Canvas Texture
+function createEventBannerTexture(node: EventNode) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext("2d")!;
+
+  // Dark metallic cyber background gradient
+  const grad = ctx.createLinearGradient(0, 0, 1024, 512);
+  grad.addColorStop(0, "#011326");
+  grad.addColorStop(0.5, "#032847");
+  grad.addColorStop(1, "#010e1c");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 1024, 512);
+
+  // Hexagon / Cyber Grid Pattern
+  ctx.strokeStyle = "rgba(0, 240, 255, 0.09)";
+  ctx.lineWidth = 1;
+  for (let x = 0; x < 1024; x += 32) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 512); ctx.stroke();
+  }
+  for (let y = 0; y < 512; y += 32) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1024, y); ctx.stroke();
+  }
+
+  // Glowing Outer Neon Frame
+  ctx.shadowColor = "#00f0ff";
+  ctx.shadowBlur = 24;
+  ctx.strokeStyle = "#00f0ff";
+  ctx.lineWidth = 10;
+  ctx.strokeRect(16, 16, 992, 480);
+
+  // Inner Accent Frame
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = "rgba(0, 240, 255, 0.5)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(30, 30, 964, 452);
+
+  // Corner Brackets (White)
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.moveTo(22, 55); ctx.lineTo(22, 22); ctx.lineTo(55, 22); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(969, 22); ctx.lineTo(1002, 22); ctx.lineTo(1002, 55); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(22, 457); ctx.lineTo(22, 490); ctx.lineTo(55, 490); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(969, 490); ctx.lineTo(1002, 490); ctx.lineTo(1002, 457); ctx.stroke();
+
+  // Top Header Bar Background
+  const headerGrad = ctx.createLinearGradient(0, 0, 1024, 0);
+  headerGrad.addColorStop(0, "rgba(0, 240, 255, 0.25)");
+  headerGrad.addColorStop(1, "rgba(2, 132, 199, 0.15)");
+  ctx.fillStyle = headerGrad;
+  ctx.fillRect(32, 32, 960, 90);
+
+  // Large Event Index Number (e.g. EVENT 01)
+  ctx.shadowColor = "#00f0ff";
+  ctx.shadowBlur = 15;
+  ctx.font = "bold 64px monospace";
+  ctx.fillStyle = "#00f0ff";
+  ctx.fillText(`EVENT // ${node.num}`, 60, 98);
+
+  // Category Badge Pill
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "rgba(0, 240, 255, 0.2)";
+  ctx.strokeStyle = "#00f0ff";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(640, 48, 320, 58, 29);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font = "bold 24px monospace";
+  ctx.fillStyle = "#a5f3fc";
+  ctx.textAlign = "center";
+  ctx.fillText(node.category.toUpperCase(), 800, 85);
+  ctx.textAlign = "left";
+
+  // Event Name Title
+  ctx.shadowColor = "#ffffff";
+  ctx.shadowBlur = 20;
+  ctx.font = "900 60px sans-serif";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(node.name.toUpperCase(), 60, 205);
+
+  // Date & Venue Subtitle
+  ctx.shadowBlur = 0;
+  ctx.font = "bold 22px monospace";
+  ctx.fillStyle = "#67e8f9";
+  ctx.fillText(`📅 ${node.date} @ ${node.time}   📍 ${node.venue.toUpperCase()}`, 60, 255);
+
+  // Prize Pool Pill Badge
+  ctx.fillStyle = "rgba(234, 179, 8, 0.2)";
+  ctx.strokeStyle = "#eab308";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.roundRect(60, 295, 380, 60, 18);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.shadowColor = "#eab308";
+  ctx.shadowBlur = 10;
+  ctx.font = "bold 26px monospace";
+  ctx.fillStyle = "#fef08a";
+  ctx.fillText(`🏆 PRIZE POOL: ${node.prize}`, 85, 335);
+
+  // Register Action Button Prompt
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "rgba(0, 240, 255, 0.25)";
+  ctx.strokeStyle = "#00f0ff";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.roundRect(60, 385, 904, 68, 18);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.shadowColor = "#00f0ff";
+  ctx.shadowBlur = 16;
+  ctx.font = "bold 28px monospace";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText("⚡ CLICK POSTER TO VIEW DETAILS & REGISTER ⚡", 110, 430);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
 
 export default function Scene() {
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   const [progress, setProgress] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<EventNode | null>(null);
+  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [stats, setStats] = useState({
+    depth: 2,
+    speed: "2.0",
+    coords: "X:0 Y:0 Z:0",
+    fps: 60,
+  });
+
+  useEffect(() => {
+    const bgm = new Audio("/assets/audio/bgm.mp3");
+    bgm.loop = true;
+    bgm.volume = 0.5;
+    audioRef.current = bgm;
+
+    return () => {
+      bgm.pause();
+      audioRef.current = null;
+    };
+  }, []);
+
+  const toggleAudio = () => {
+    if (!audioRef.current) return;
+    if (isAudioPlaying) {
+      audioRef.current.pause();
+      setIsAudioPlaying(false);
+    } else {
+      audioRef.current.play().catch((err) => console.warn("Audio error:", err));
+      setIsAudioPlaying(true);
+    }
+  };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -48,41 +298,55 @@ export default function Scene() {
     if (!container || !wrapper) return;
 
     const manager = new THREE.LoadingManager();
-    manager.onProgress = (url, itemsLoaded, itemsTotal) => {
+    manager.onProgress = (_url, itemsLoaded, itemsTotal) => {
       setProgress(Math.floor((itemsLoaded / itemsTotal) * 100));
     };
     manager.onLoad = () => {
       setTimeout(() => setLoading(false), 500);
     };
 
-    const gltfLoader = new GLTFLoader(manager);
-
     const isMobile = window.innerWidth < 768;
 
     const scene = new THREE.Scene();
+
     const camera = new THREE.PerspectiveCamera(
       isMobile ? 65 : 75,
       window.innerWidth / window.innerHeight,
       0.1,
-      1000,
+      1600
     );
-    const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, powerPreference: isMobile ? 'low-power' : 'high-performance' });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: !isMobile,
+      powerPreference: isMobile ? "low-power" : "high-performance",
+    });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
     container.appendChild(renderer.domElement);
 
+    // --- HDRI SKY ENVIRONMENT (SURFACE OCEAN START) ---
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     pmremGenerator.compileEquirectangularShader();
 
-    // --- Water ---
+    let exrEnvironmentTexture: THREE.Texture | null = null;
+    const exrLoader = new EXRLoader(manager);
+    exrLoader.load("/hdri/spiaggia_di_mondello_4k.exr", (texture) => {
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      const exrCubeRenderTarget = pmremGenerator.fromEquirectangular(texture);
+      exrEnvironmentTexture = exrCubeRenderTarget.texture;
+      scene.background = exrCubeRenderTarget.texture;
+      scene.environment = exrCubeRenderTarget.texture;
+      texture.dispose();
+    });
+
+    // --- SURFACE OCEAN WATER ---
     const waterGeometry = new THREE.PlaneGeometry(10000, 10000);
     const waterNormals = new THREE.TextureLoader(manager).load(
       "/textures/waternormals.jpg",
       (texture) => {
         texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      },
+      }
     );
     const water = new Water(waterGeometry, {
       textureWidth: 512,
@@ -98,6 +362,27 @@ export default function Scene() {
     water.position.y = -2;
     scene.add(water);
 
+    // --- UNDERWATER CEILING CAUSTICS PLANE (VIEWED FROM BELOW WATER) ---
+    const waterCeilingGeo = new THREE.PlaneGeometry(800, 800);
+    const waterCeilingMat = new THREE.ShaderMaterial({
+      vertexShader: waterCausticsVertex,
+      fragmentShader: waterCausticsFragment,
+      uniforms: {
+        uTime: { value: 0 },
+        uColor1: { value: new THREE.Color(0x00f0ff) },
+        uColor2: { value: new THREE.Color(0x0044aa) },
+      },
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
+      depthWrite: false,
+    });
+    const waterCeilingMesh = new THREE.Mesh(waterCeilingGeo, waterCeilingMat);
+    waterCeilingMesh.rotation.x = Math.PI / 2;
+    waterCeilingMesh.position.y = -2.05;
+    waterCeilingMesh.visible = false;
+    scene.add(waterCeilingMesh);
+
     const waterUnderside = new THREE.Mesh(
       waterGeometry,
       new THREE.MeshStandardMaterial({
@@ -107,38 +392,13 @@ export default function Scene() {
         roughness: 0.1,
         metalness: 0.1,
         side: THREE.BackSide,
-      }),
+      })
     );
     waterUnderside.rotation.x = -Math.PI / 2;
     waterUnderside.position.y = -2.01;
     scene.add(waterUnderside);
 
-    // --- Textures for Realistic Obstacles ---
-    const rockTexture = new THREE.TextureLoader(manager).load(
-      "https://images.unsplash.com/photo-1525926476831-29c362dd0706?auto=format&fit=crop&w=1024&q=80",
-      (tex) => {
-        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(2, 2);
-      },
-    );
-
-    const woodTexture = new THREE.TextureLoader(manager).load(
-      "https://images.unsplash.com/photo-1550605151-509a25036b13?auto=format&fit=crop&w=1024&q=80",
-      (tex) => {
-        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(2, 4);
-      },
-    );
-
-    const shipMaterial = new THREE.MeshStandardMaterial({
-      map: woodTexture,
-      color: 0x4a3b32,
-      roughness: 0.9,
-      metalness: 0.1,
-      flatShading: true,
-    });
-
-    // --- Realistic Glacial Iceberg Cluster ---
+    // --- SURFACE GLACIAL ICEBERGS & ROCKS ---
     function createIcebergGeometry(radius: number, heightScale: number) {
       const geo = new THREE.IcosahedronGeometry(radius, 4);
       const pos = geo.attributes.position;
@@ -186,436 +446,849 @@ export default function Scene() {
     iceberg2.position.set(24, -4, -54);
     scene.add(iceberg2);
 
-    // Floating surface ice chunks
     const icePlateGeo = new THREE.CylinderGeometry(4, 5, 0.8, 7);
     const icePlate = new THREE.Mesh(icePlateGeo, iceMaterial);
     icePlate.position.set(-6, -2, -35);
     icePlate.rotation.y = 0.4;
     scene.add(icePlate);
 
-    // --- Small Floating Ice Chunks ---
     const smallIcePositions = [
       { x: 12, y: -3, z: -30, s: 1.8 },
       { x: -35, y: -2.5, z: -42, s: 2.5 },
       { x: 30, y: -3.5, z: -38, s: 1.5 },
       { x: -10, y: -4, z: -55, s: 2.0 },
       { x: 18, y: -2, z: -25, s: 1.2 },
-      { x: -28, y: -3, z: -32, s: 1.7 },
-      { x: 5, y: -5, z: -60, s: 2.2 },
-      { x: -15, y: -6, z: -65, s: 1.4 },
-      { x: 35, y: -4, z: -50, s: 1.9 },
-      { x: -40, y: -5, z: -58, s: 1.6 },
     ];
+    const smallIceGeos: THREE.BufferGeometry[] = [];
     for (const p of smallIcePositions) {
       const chunkGeo = new THREE.IcosahedronGeometry(p.s, 2);
-      const posC = chunkGeo.attributes.position;
-      const vC = new THREE.Vector3();
-      for (let j = 0; j < posC.count; j++) {
-        vC.fromBufferAttribute(posC, j);
-        const n = Math.sin(vC.x * 1.5) * Math.cos(vC.z * 1.5) * 0.3;
-        vC.multiplyScalar(1 + n);
-        posC.setXYZ(j, vC.x, vC.y, vC.z);
-      }
-      chunkGeo.computeVertexNormals();
+      smallIceGeos.push(chunkGeo);
       const chunk = new THREE.Mesh(chunkGeo, iceMaterial);
       chunk.position.set(p.x, p.y, p.z);
       chunk.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
       scene.add(chunk);
     }
 
-    // --- Shipwreck (GLB Loader + Fallback) ---
-    gltfLoader.load(
-      "/glbs/ship.glb",
-      (gltf) => {
-        const shipwreck = gltf.scene;
-        shipwreck.position.set(0, -10, -50);
-        shipwreck.rotation.set(0.2, 0.5, -0.3);
-        shipwreck.scale.set(5, 5, 5);
-        scene.add(shipwreck);
+    // --- DEEP UNDERGROUND OCEAN LIGHTING ---
+    const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    sunLight.position.set(0, 10, 5);
+    scene.add(sunLight);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+    scene.add(ambientLight);
+
+    const tealUnderwaterLight = new THREE.DirectionalLight(0x00d5e8, 2.5);
+    tealUnderwaterLight.position.set(0, 50, -100);
+    scene.add(tealUnderwaterLight);
+
+    // Glowing Portal Backlight (Positioned deep underwater at y: -110, z: -162)
+    const portalBackLight = new THREE.PointLight(0x00f0ff, 8.0, 200);
+    portalBackLight.position.set(0, -110, -162);
+    scene.add(portalBackLight);
+
+    // --- MULTI-BEAM VOLUMETRIC CYAN LIGHT RAYS ---
+    const rayConeGeo = new THREE.CylinderGeometry(24, 160, 340, 32, 16, true);
+    const godRayMaterial = new THREE.ShaderMaterial({
+      vertexShader: godRayVertex,
+      fragmentShader: godRayFragment,
+      uniforms: {
+        uTime: { value: 0 },
+        uColor1: { value: new THREE.Color(0x00f0ff) },
+        uColor2: { value: new THREE.Color(0x013045) },
       },
-      undefined,
-      (error) => {
-        console.warn(
-          "Ship model not found. Using procedural underwater assets.",
-          error,
-        );
-      }
-    );
-
-    // --- Realistic Deep Trench Rocks ---
-    const rockGroup = new THREE.Group();
-    for (let i = 0; i < 10; i++) {
-      const rockGeo = new THREE.DodecahedronGeometry(Math.random() * 6 + 6, 2);
-      const posR = rockGeo.attributes.position;
-      const vR = new THREE.Vector3();
-      for (let j = 0; j < posR.count; j++) {
-        vR.fromBufferAttribute(posR, j);
-        const noise = Math.sin(vR.x * 0.8) * Math.cos(vR.y * 0.8) * 0.3;
-        vR.multiplyScalar(1 + noise);
-        posR.setXYZ(j, vR.x, vR.y, vR.z);
-      }
-      rockGeo.computeVertexNormals();
-
-      const rockMaterial = new THREE.MeshStandardMaterial({
-        map: rockTexture,
-        color: 0x3d4a54,
-        roughness: 0.9,
-        metalness: 0.2,
-        flatShading: true,
-      });
-      const rock = new THREE.Mesh(rockGeo, rockMaterial);
-      rock.position.set(
-        (Math.random() - 0.5) * 35,
-        (Math.random() - 0.5) * 18,
-        (Math.random() - 0.5) * 35,
-      );
-      rock.rotation.set(
-        Math.random() * Math.PI,
-        Math.random() * Math.PI,
-        Math.random() * Math.PI,
-      );
-      rockGroup.add(rock);
-    }
-    rockGroup.position.set(-30, -35, -70);
-    scene.add(rockGroup);
-
-    // --- Coding Particles around Rocks (Matrix Effect) ---
-    const codingParticleCount = 400;
-    const codingGeo = new THREE.BufferGeometry();
-    const codingPos = new Float32Array(codingParticleCount * 3);
-    const codingPhases = new Float32Array(codingParticleCount);
-    for (let i = 0; i < codingParticleCount; i++) {
-      codingPos[i * 3] = -30 + (Math.random() - 0.5) * 60;
-      codingPos[i * 3 + 1] = -35 + (Math.random() - 0.5) * 40;
-      codingPos[i * 3 + 2] = -70 + (Math.random() - 0.5) * 60;
-      codingPhases[i] = Math.random() * Math.PI * 2;
-    }
-    codingGeo.setAttribute('position', new THREE.BufferAttribute(codingPos, 3));
-    codingGeo.setAttribute('phase', new THREE.BufferAttribute(codingPhases, 1));
-
-    const codingMat = new THREE.PointsMaterial({
-      color: 0x00ff88,
-      size: 1.2,
       transparent: true,
-      opacity: 0.8,
       blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-    const codingParticles = new THREE.Points(codingGeo, codingMat);
-    scene.add(codingParticles);
-
-    const codingLight = new THREE.PointLight(0x00ff88, 50, 40);
-    codingLight.position.set(-30, -35, -70);
-    scene.add(codingLight);
-
-    // --- Detailed Realistic Submarine Ruins ---
-    const subGroup = new THREE.Group();
-    const subHullMat = new THREE.MeshStandardMaterial({
-      color: 0x1c242b,
-      metalness: 0.8,
-      roughness: 0.4,
-      flatShading: true,
-    });
-
-    // Main hull cylinder
-    const subHull = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.2, 22, 16), subHullMat);
-    subHull.rotation.x = Math.PI / 2;
-    subGroup.add(subHull);
-
-    // Nose cone
-    const subNose = new THREE.Mesh(new THREE.SphereGeometry(3.2, 16, 16), subHullMat);
-    subNose.position.z = 11;
-    subGroup.add(subNose);
-
-    // Stern cone
-    const subStern = new THREE.Mesh(new THREE.ConeGeometry(3.2, 6, 16), subHullMat);
-    subStern.rotation.x = -Math.PI / 2;
-    subStern.position.z = -14;
-    subGroup.add(subStern);
-
-    // Conning tower (sail)
-    const towerMat = new THREE.MeshStandardMaterial({ color: 0x141b20, metalness: 0.9, roughness: 0.3 });
-    const subTower = new THREE.Mesh(new THREE.BoxGeometry(2, 3.5, 6), towerMat);
-    subTower.position.set(0, 3.5, 2);
-    subGroup.add(subTower);
-
-    // Submarine Floodlight
-    const subLight = new THREE.SpotLight(0x00d8ff, 200, 60, Math.PI / 5, 0.4);
-    subLight.position.set(0, 1, 12);
-    subLight.target.position.set(0, -10, 30);
-    subGroup.add(subLight);
-    subGroup.add(subLight.target);
-
-    subGroup.rotation.set(0.3, 0.6, -0.4);
-    subGroup.position.set(20, -55, -100);
-    scene.add(subGroup);
-
-    const wreckLight = new THREE.PointLight(0x00e1ff, 200, 35);
-    wreckLight.position.set(20, -53, -95);
-    scene.add(wreckLight);
-
-    // --- Ocean Floor ---
-    const floorGeometry = new THREE.PlaneGeometry(400, 400, 150, 150);
-    const posFloor = floorGeometry.attributes.position;
-    for (let i = 0; i < posFloor.count; i++) {
-      const x = posFloor.getX(i);
-      const y = posFloor.getY(i);
-      let z = Math.sin(x * 0.1) * Math.cos(y * 0.1) * 3.0;
-      z += Math.sin(x * 0.4) * Math.cos(y * 0.3) * 1.5;
-      z += (Math.random() - 0.5) * 1.0;
-      posFloor.setZ(i, z);
-    }
-    floorGeometry.computeVertexNormals();
-    const floorMaterial = new THREE.MeshStandardMaterial({
-      color: 0x092636,
-      roughness: 0.8,
-      metalness: 0.1,
-      flatShading: true,
-    });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -65;
-    scene.add(floor);
-
-    // --- Lighting ---
-    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    dirLight.position.set(0, 10, 5);
-    scene.add(dirLight);
-    const underWaterLight = new THREE.DirectionalLight(0x0088ff, 2);
-    underWaterLight.position.set(0, -20, 0);
-    scene.add(underWaterLight);
-
-    // --- Soft Volumetric God Rays ---
-    const rayGroup = new THREE.Group();
-    const rayGeo = new THREE.CylinderGeometry(2, 10, 80, 16, 1, true);
-    const colors = [];
-    const positionsRay = rayGeo.attributes.position;
-    for (let i = 0; i < positionsRay.count; i++) {
-      const y = positionsRay.getY(i);
-      if (y > 0) {
-        colors.push(0.5, 0.8, 1.0);
-      } else {
-        colors.push(0.0, 0.0, 0.0);
-      }
-    }
-    rayGeo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
-
-    const rayMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      vertexColors: true,
-      blending: THREE.AdditiveBlending,
-      transparent: true,
-      opacity: 0.12,
       depthWrite: false,
       side: THREE.DoubleSide,
     });
+    const godRayCone1 = new THREE.Mesh(rayConeGeo, godRayMaterial);
+    godRayCone1.position.set(0, -70, -180);
+    godRayCone1.rotation.z = 0.08;
+    godRayCone1.visible = false;
+    scene.add(godRayCone1);
 
-    for (let i = 0; i < 6; i++) {
-      const ray = new THREE.Mesh(rayGeo, rayMat);
-      ray.position.set(
-        (Math.random() - 0.5) * 60,
-        -43,
-        -40 - Math.random() * 60,
-      );
-      ray.rotation.x = (Math.random() - 0.5) * 0.2;
-      ray.rotation.z = (Math.random() - 0.5) * 0.2;
-      rayGroup.add(ray);
-    }
-    scene.add(rayGroup);
+    const godRayCone2 = new THREE.Mesh(rayConeGeo, godRayMaterial);
+    godRayCone2.position.set(-20, -70, -160);
+    godRayCone2.rotation.z = -0.12;
+    godRayCone2.visible = false;
+    scene.add(godRayCone2);
 
-    // --- Bubbles Particle System ---
-    const bubbleCount = isMobile ? 300 : 800;
-    const bubbleGeo = new THREE.BufferGeometry();
-    const bubblePos = new Float32Array(bubbleCount * 3);
-    for (let i = 0; i < bubbleCount; i++) {
-      bubblePos[i * 3] = (Math.random() - 0.5) * 150;
-      bubblePos[i * 3 + 1] = -100 + Math.random() * 100;
-      bubblePos[i * 3 + 2] = (Math.random() - 0.5) * 150;
-    }
-    bubbleGeo.setAttribute("position", new THREE.BufferAttribute(bubblePos, 3));
-    const bubbleMat = new THREE.PointsMaterial({
-      color: 0xaaffff,
-      size: 0.6,
-      transparent: true,
-      opacity: 0.4,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
+    // --- LEFT & RIGHT JAGGED CLIFF WALLS ---
+    const sideCliffGroup = new THREE.Group();
+    sideCliffGroup.visible = false;
+
+    const cliffWallMat = new THREE.MeshStandardMaterial({
+      color: 0x041c2c,
+      roughness: 0.85,
+      metalness: 0.2,
+      flatShading: true,
     });
-    const bubbles = new THREE.Points(bubbleGeo, bubbleMat);
-    scene.add(bubbles);
 
-    // --- Realistic Tropical Fish Swarm ---
-    function createRealisticFishGeometry() {
-      const geo = new THREE.SphereGeometry(1, 24, 16);
-      const pos = geo.attributes.position;
+    const coralGlowColors = [0x00f0ff, 0xa855f7, 0xec4899, 0x0284c7];
+
+    function createSideCliffWall(xPos: number, isRight: boolean) {
+      const cliffWallGeo = new THREE.BoxGeometry(32, 130, 180, 16, 24, 16);
+      const pos = cliffWallGeo.attributes.position;
       const v = new THREE.Vector3();
       for (let i = 0; i < pos.count; i++) {
         v.fromBufferAttribute(pos, i);
-        let x = v.x * 0.35;
-        let y = v.y * 0.75;
-        let z = v.z * 1.8;
-        
-        if (z > 0) {
-          const headFactor = 1.0 - (z / 1.8) * 0.55;
-          x *= headFactor;
-          y *= headFactor;
-        } else {
-          const t = -z / 1.8;
-          if (t > 0.45) {
-            x *= Math.max(0.08, 1.0 - t * 0.88);
-            const finFlare = (t - 0.45) * 2.0;
-            const fork = Math.abs(y) > 0.18 ? 1.0 : 0.55;
-            y *= (1.0 + finFlare * 1.8) * fork;
-          }
-        }
-        
-        // Dorsal Fin
-        if (y > 0.3 && z < 0.4 && z > -0.7) {
-          y += (0.7 - Math.abs(z + 0.15)) * 0.55;
-          x *= 0.25;
-        }
-        
-        // Ventral Fin
-        if (y < -0.3 && z < 0.1 && z > -0.6) {
-          y -= (0.5 - Math.abs(z + 0.25)) * 0.4;
-          x *= 0.25;
-        }
-
-        pos.setXYZ(i, x, y, z);
+        const bump =
+          Math.sin(v.y * 0.08) * Math.cos(v.z * 0.08) * 6.0 +
+          Math.sin(v.y * 0.2 + v.x * 0.1) * 2.5;
+        v.x += isRight ? -bump : bump;
+        pos.setXYZ(i, v.x, v.y, v.z);
       }
-      geo.computeVertexNormals();
-      return geo;
+      cliffWallGeo.computeVertexNormals();
+
+      const cliffMesh = new THREE.Mesh(cliffWallGeo, cliffWallMat);
+      cliffMesh.position.set(xPos, -95, -160);
+      sideCliffGroup.add(cliffMesh);
+
+      // Add glowing corals & sponges along the cliff face shelves
+      for (let c = 0; c < 20; c++) {
+        const cGeo = new THREE.ConeGeometry(1.0 + Math.random() * 0.6, 4.0 + Math.random() * 3.0, 7);
+        const cMat = new THREE.MeshStandardMaterial({
+          color: 0x032035,
+          emissive: coralGlowColors[c % coralGlowColors.length],
+          emissiveIntensity: 0.85,
+          roughness: 0.3,
+          flatShading: true,
+        });
+        const coralMesh = new THREE.Mesh(cGeo, cMat);
+        const sideOffset = isRight ? -16 + (Math.random() - 0.5) * 5 : 16 + (Math.random() - 0.5) * 5;
+        coralMesh.position.set(
+          xPos + sideOffset,
+          -35 - Math.random() * 90,
+          -80 - Math.random() * 140
+        );
+        coralMesh.rotation.set(
+          (Math.random() - 0.5) * 0.4,
+          Math.random() * Math.PI,
+          isRight ? -0.4 : 0.4
+        );
+        sideCliffGroup.add(coralMesh);
+      }
     }
 
-    function createFishTexture() {
-      const canvas = document.createElement("canvas");
-      canvas.width = 256;
-      canvas.height = 128;
-      const ctx = canvas.getContext("2d")!;
+    createSideCliffWall(-68, false); // Left Cliff Wall
+    createSideCliffWall(68, true);   // Right Cliff Wall
+    scene.add(sideCliffGroup);
 
-      const grad = ctx.createLinearGradient(0, 0, 256, 128);
-      grad.addColorStop(0, "#00f0ff");
-      grad.addColorStop(0.35, "#0072ff");
-      grad.addColorStop(0.7, "#0030a0");
-      grad.addColorStop(1.0, "#ffbf00");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 256, 128);
-
-      ctx.fillStyle = "rgba(0, 15, 60, 0.75)";
-      ctx.beginPath();
-      ctx.ellipse(130, 16, 110, 18, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = "rgba(220, 250, 255, 0.85)";
-      ctx.beginPath();
-      ctx.ellipse(100, 112, 80, 15, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Fish Eye
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.arc(45, 52, 9, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#0c111e";
-      ctx.beginPath();
-      ctx.arc(45, 52, 5.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#00f0ff";
-      ctx.beginPath();
-      ctx.arc(43, 50, 2, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Gill Arc
-      ctx.strokeStyle = "rgba(0, 40, 120, 0.7)";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(75, 64, 25, -Math.PI / 3, Math.PI / 3);
-      ctx.stroke();
-
-      // Scale Shimmer
-      ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-      for (let x = 70; x < 210; x += 12) {
-        for (let y = 30; y < 100; y += 9) {
-          ctx.beginPath();
-          ctx.arc(x + ((y % 18) ? 6 : 0), y, 3, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      return new THREE.CanvasTexture(canvas);
+    // --- LAYER 3 & 4: DISTANT UNDERWATER MOUNTAIN PEAKS & CAVERN WALLS ---
+    const caveGeometry = new THREE.CylinderGeometry(260, 360, 900, 32, 32, true);
+    const cavePos = caveGeometry.attributes.position;
+    const caveVec = new THREE.Vector3();
+    for (let i = 0; i < cavePos.count; i++) {
+      caveVec.fromBufferAttribute(cavePos, i);
+      const noise =
+        Math.sin(caveVec.x * 0.05) * Math.cos(caveVec.y * 0.05) * Math.sin(caveVec.z * 0.05) * 25.0 +
+        Math.sin(caveVec.x * 0.12 + caveVec.y * 0.08) * 10.0;
+      caveVec.x += noise;
+      caveVec.z += noise;
+      cavePos.setXYZ(i, caveVec.x, caveVec.y, caveVec.z);
     }
+    caveGeometry.computeVertexNormals();
 
-    const fishCount = isMobile ? 30 : 80;
-    const fishGeo = createRealisticFishGeometry();
-    const fishTex = createFishTexture();
-    const fishMat = new THREE.MeshPhysicalMaterial({
-      map: fishTex,
-      roughness: 0.25,
-      metalness: 0.45,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.1,
+    const caveMaterial = new THREE.MeshStandardMaterial({
+      color: 0x021627,
+      roughness: 0.85,
+      metalness: 0.15,
+      side: THREE.BackSide,
+      flatShading: true,
     });
+    const caveMesh = new THREE.Mesh(caveGeometry, caveMaterial);
+    caveMesh.position.set(0, -220, -380);
+    caveMesh.visible = false;
+    scene.add(caveMesh);
+
+    // Large Distant Underwater Mountains
+    const bgMountainsGroup = new THREE.Group();
+    bgMountainsGroup.visible = false;
+
+    const mountainMaterial = new THREE.MeshStandardMaterial({
+      color: 0x011322,
+      roughness: 0.9,
+      metalness: 0.1,
+      flatShading: true,
+    });
+
+    const mountainPositions = [
+      { x: -160, y: -100, z: -260, r: 65, h: 180 },
+      { x: 160, y: -110, z: -290, r: 75, h: 200 },
+      { x: -190, y: -150, z: -380, r: 85, h: 220 },
+      { x: 185, y: -160, z: -410, r: 90, h: 240 },
+      { x: -120, y: -220, z: -520, r: 105, h: 260 },
+      { x: 120, y: -230, z: -540, r: 110, h: 280 },
+    ];
+
+    for (const m of mountainPositions) {
+      const mGeo = new THREE.ConeGeometry(m.r, m.h, 7);
+      const mPos = mGeo.attributes.position;
+      const mV = new THREE.Vector3();
+      for (let i = 0; i < mPos.count; i++) {
+        mV.fromBufferAttribute(mPos, i);
+        const detail = Math.sin(mV.x * 0.08) * Math.cos(mV.y * 0.08) * 8.0;
+        mV.x += detail;
+        mV.z += detail;
+        mPos.setXYZ(i, mV.x, mV.y, mV.z);
+      }
+      mGeo.computeVertexNormals();
+
+      const mMesh = new THREE.Mesh(mGeo, mountainMaterial);
+      mMesh.position.set(m.x, m.y + m.h / 2, m.z);
+      bgMountainsGroup.add(mMesh);
+    }
+    scene.add(bgMountainsGroup);
+
+    // --- CENTRAL ANCIENT CIRCULAR PORTAL RING (MAIN ENTRANCE STARGATE AT y: -110, z: -160) ---
+    const ruinStoneMat = new THREE.MeshStandardMaterial({
+      color: 0x0b2d42,
+      roughness: 0.4,
+      metalness: 0.6,
+      flatShading: true,
+    });
+
+    const ruinGlowMat = new THREE.MeshStandardMaterial({
+      color: 0x005577,
+      emissive: 0x00e5ff,
+      emissiveIntensity: 0.9,
+      roughness: 0.2,
+      metalness: 0.4,
+    });
+
+    const portalGroup = new THREE.Group();
+    portalGroup.position.set(0, -110, -160);
+
+    // Raised Stone Staircase Pedestal
+    const stepDimensions = [
+      { w: 22, h: 3.0, d: 16, y: -14 },
+      { w: 26, h: 3.0, d: 18, y: -17 },
+      { w: 30, h: 3.0, d: 20, y: -20 },
+      { w: 35, h: 3.0, d: 22, y: -23 },
+      { w: 42, h: 3.0, d: 25, y: -26 },
+    ];
+    const stepGeos: THREE.BoxGeometry[] = [];
+    for (const step of stepDimensions) {
+      const stepGeo = new THREE.BoxGeometry(step.w, step.h, step.d);
+      stepGeos.push(stepGeo);
+      const stepMesh = new THREE.Mesh(stepGeo, ruinStoneMat);
+      stepMesh.position.set(0, step.y, 0);
+      portalGroup.add(stepMesh);
+    }
+
+    // Large Circular Stone Portal Ring (Radius 14, Tube 2.5)
+    const portalRingGeo = new THREE.TorusGeometry(14, 2.5, 16, 48);
+    const portalRingMesh = new THREE.Mesh(portalRingGeo, ruinStoneMat);
+    portalRingMesh.position.set(0, 0, 0);
+    portalGroup.add(portalRingMesh);
+
+    // Keystone at top of Portal Ring
+    const keystoneGeo = new THREE.BoxGeometry(4.0, 5.0, 3.5);
+    const keystone = new THREE.Mesh(keystoneGeo, ruinStoneMat);
+    keystone.position.set(0, 14.5, 0);
+    portalGroup.add(keystone);
+
+    const keystoneGlyph = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.8, 0.4), ruinGlowMat);
+    keystoneGlyph.position.set(0, 14.5, 1.8);
+    portalGroup.add(keystoneGlyph);
+
+    // Custom Swirling Energy Vortex Shader Disc inside Portal Ring
+    const portalDiscGeo = new THREE.CircleGeometry(11.8, 48);
+    const portalDiscMat = new THREE.ShaderMaterial({
+      vertexShader: portalVortexVertex,
+      fragmentShader: portalVortexFragment,
+      uniforms: {
+        uTime: { value: 0 },
+        uColor1: { value: new THREE.Color(0x00f0ff) },
+        uColor2: { value: new THREE.Color(0x002266) },
+      },
+      transparent: true,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const portalDisc = new THREE.Mesh(portalDiscGeo, portalDiscMat);
+    portalDisc.position.set(0, 0, -0.1);
+    portalGroup.add(portalDisc);
+
+    // Swirling Energy Particles Orbiting Main Portal Ring
+    const portalParticleCount = 350;
+    const portalParticleGeo = new THREE.BufferGeometry();
+    const portalParticlePositions = new Float32Array(portalParticleCount * 3);
+    const portalParticleAngles = new Float32Array(portalParticleCount);
+    const portalParticleSpeeds = new Float32Array(portalParticleCount);
+
+    for (let i = 0; i < portalParticleCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 12.0 + Math.random() * 4.0;
+      portalParticlePositions[i * 3] = Math.cos(angle) * radius;
+      portalParticlePositions[i * 3 + 1] = Math.sin(angle) * radius;
+      portalParticlePositions[i * 3 + 2] = (Math.random() - 0.5) * 4;
+      portalParticleAngles[i] = angle;
+      portalParticleSpeeds[i] = 1.0 + Math.random() * 2.0;
+    }
+    portalParticleGeo.setAttribute("position", new THREE.BufferAttribute(portalParticlePositions, 3));
+
+    const portalParticleMat = new THREE.PointsMaterial({
+      color: 0x00f0ff,
+      size: 1.4,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+    });
+    const portalParticleMesh = new THREE.Points(portalParticleGeo, portalParticleMat);
+    portalGroup.add(portalParticleMesh);
+
+    scene.add(portalGroup);
+
+    // --- FLOW FIELD WATER PARTICLES ---
+    const flowFieldCount = isMobile ? 1800 : 4200;
+    const flowFieldPositions = new Float32Array(flowFieldCount * 3);
+    const flowFieldVelocities = new Float32Array(flowFieldCount * 3);
+    const flowFieldSizes = new Float32Array(flowFieldCount);
+    const flowFieldAlphas = new Float32Array(flowFieldCount);
+    const flowFieldTypes = new Float32Array(flowFieldCount);
+
+    for (let i = 0; i < flowFieldCount; i++) {
+      const i3 = i * 3;
+      flowFieldPositions[i3] = (Math.random() - 0.5) * 320;
+      flowFieldPositions[i3 + 1] = -380 + Math.random() * 360;
+      flowFieldPositions[i3 + 2] = -30 - Math.random() * 620;
+
+      flowFieldVelocities[i3] = (Math.random() - 0.5) * 0.1;
+      flowFieldVelocities[i3 + 1] = (Math.random() - 0.5) * 0.1;
+      flowFieldVelocities[i3 + 2] = (Math.random() - 0.5) * 0.1;
+
+      flowFieldTypes[i] = Math.random();
+      flowFieldSizes[i] = Math.random() < 0.7 ? 1.2 + Math.random() * 2.0 : 3.2 + Math.random() * 3.5;
+      flowFieldAlphas[i] = 0.35 + Math.random() * 0.55;
+    }
+
+    const flowFieldGeo = new THREE.BufferGeometry();
+    flowFieldGeo.setAttribute("position", new THREE.BufferAttribute(flowFieldPositions, 3));
+    flowFieldGeo.setAttribute("velocity", new THREE.BufferAttribute(flowFieldVelocities, 3));
+    flowFieldGeo.setAttribute("size", new THREE.BufferAttribute(flowFieldSizes, 1));
+    flowFieldGeo.setAttribute("alpha", new THREE.BufferAttribute(flowFieldAlphas, 1));
+    flowFieldGeo.setAttribute("particleType", new THREE.BufferAttribute(flowFieldTypes, 1));
+
+    const flowFieldMat = new THREE.ShaderMaterial({
+      vertexShader: flowFieldVertex,
+      fragmentShader: flowFieldFragment,
+      uniforms: {
+        uColor: { value: new THREE.Color(0x00ddff) },
+        uTime: { value: 0 },
+      },
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const flowFieldMesh = new THREE.Points(flowFieldGeo, flowFieldMat);
+    scene.add(flowFieldMesh);
+
+    // --- THE NEW WORLD BEYOND THE MAIN STARGATE: INVISIBLE UNTIL ENTERING STARGATE (z < -155) ---
+    // Features 5 DISTINCT DESCENDING ROCK PLATFORMS, PORTALS & 3D EVENT BANNERS
+    const newWorldGroup = new THREE.Group();
+    newWorldGroup.visible = false; // Strictly hidden until passing inside the stargate (z < -155)!
+    scene.add(newWorldGroup);
+
+    const cliffRockMat = new THREE.MeshStandardMaterial({
+      color: 0x06283d,
+      roughness: 0.85,
+      metalness: 0.15,
+      flatShading: true,
+    });
+
+    const nodeGlowMat = new THREE.MeshStandardMaterial({
+      color: 0x006688,
+      emissive: 0x00f0ff,
+      emissiveIntensity: 0.9,
+      roughness: 0.2,
+      metalness: 0.4,
+    });
+
+    const bannerFrameMat = new THREE.MeshStandardMaterial({
+      color: 0x092635,
+      roughness: 0.3,
+      metalness: 0.8,
+    });
+
+    const cliffMeshes: THREE.Mesh[] = [];
+    const pinMarkers: THREE.Mesh[] = [];
+    const bannerMeshes: THREE.Mesh[] = [];
+
+    const coralColors = [0x00f0ff, 0xa855f7, 0x0284c7, 0xec4899];
+
+    // Construct each distinct Event Location (Platform + Event Portal + 3D Banner)
+    function createEventPlatformAndBanner(node: EventNode) {
+      const { x, y, z } = node.pos;
+      const width = 34;
+      const depth = 34;
+      const seabedY = -385;
+      const height = Math.abs(y - seabedY) + 25;
+
+      // 1. Sculpted Natural Cliff Mountain Base with Rocky Crags & Ridges
+      const cliffGeo = new THREE.CylinderGeometry(width * 0.5, width * 0.85, height, 20, 32);
+      const pos = cliffGeo.attributes.position;
+      const v = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i);
+        const cragNoise =
+          Math.sin(v.y * 0.12) * Math.cos(v.x * 0.15) * 5.0 +
+          Math.sin(v.z * 0.2 + v.y * 0.08) * 3.5 +
+          Math.cos(v.x * 0.25 + v.z * 0.25) * 2.2;
+        const rad = Math.sqrt(v.x * v.x + v.z * v.z);
+        if (rad > 0.1) {
+          v.x += (v.x / rad) * cragNoise;
+          v.z += (v.z / rad) * cragNoise;
+        }
+        pos.setXYZ(i, v.x, v.y, v.z);
+      }
+      cliffGeo.computeVertexNormals();
+
+      const cliffMesh = new THREE.Mesh(cliffGeo, cliffRockMat);
+      cliffMesh.position.set(x, y - height / 2, z);
+      newWorldGroup.add(cliffMesh);
+      cliffMeshes.push(cliffMesh);
+
+      // Add Bioluminescent Crystal Veins & Glowing Rock Ledges onto Platform Face
+      const crystalColors = [0x00f0ff, 0xa855f7, 0x0284c7, 0x38bdf8];
+      for (let cr = 0; cr < 12; cr++) {
+        const xtalGeo = new THREE.OctahedronGeometry(0.8 + Math.random() * 0.8, 1);
+        const xtalMat = new THREE.MeshStandardMaterial({
+          color: 0x022538,
+          emissive: crystalColors[cr % crystalColors.length],
+          emissiveIntensity: 1.0,
+          roughness: 0.2,
+          flatShading: true,
+        });
+        const xtalMesh = new THREE.Mesh(xtalGeo, xtalMat);
+        const angle = Math.random() * Math.PI * 2;
+        const r = (width * 0.45) + (Math.random() - 0.5) * 4;
+        xtalMesh.position.set(
+          x + Math.cos(angle) * r,
+          y - Math.random() * 25,
+          z + Math.sin(angle) * r
+        );
+        xtalMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+        newWorldGroup.add(xtalMesh);
+      }
+
+      // 2. Event Pin Marker on Top of Rock Platform
+      const pinPedestalGeo = new THREE.TorusGeometry(3.2, 0.4, 12, 24);
+      const pinPedestal = new THREE.Mesh(pinPedestalGeo, nodeGlowMat);
+      pinPedestal.rotation.x = Math.PI / 2;
+      pinPedestal.position.set(x, y + 0.3, z);
+      newWorldGroup.add(pinPedestal);
+
+      const pinStemGeo = new THREE.CylinderGeometry(0.2, 0.4, 4, 8);
+      const pinStem = new THREE.Mesh(pinStemGeo, nodeGlowMat);
+      pinStem.position.set(x, y + 2.3, z);
+      newWorldGroup.add(pinStem);
+
+      const pinNodeGeo = new THREE.OctahedronGeometry(1.6, 2);
+      const pinNode = new THREE.Mesh(pinNodeGeo, nodeGlowMat);
+      pinNode.position.set(x, y + 5.0, z);
+      pinNode.userData = { eventData: node };
+      newWorldGroup.add(pinNode);
+      pinMarkers.push(pinNode);
+
+      // 3. Dedicated Event Portal Ring behind each event platform
+      const { x: px, y: py, z: pz } = node.portalPos;
+      const subPortalGeo = new THREE.TorusGeometry(8.0, 1.5, 16, 32);
+      const subPortalMesh = new THREE.Mesh(subPortalGeo, ruinStoneMat);
+      subPortalMesh.position.set(px, py, pz);
+      newWorldGroup.add(subPortalMesh);
+
+      const subDiscMat = new THREE.ShaderMaterial({
+        vertexShader: portalVortexVertex,
+        fragmentShader: portalVortexFragment,
+        uniforms: {
+          uTime: { value: 0 },
+          uColor1: { value: new THREE.Color(0x00f0ff) },
+          uColor2: { value: new THREE.Color(0x003366) },
+        },
+        transparent: true,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      });
+      const subDisc = new THREE.Mesh(new THREE.CircleGeometry(6.8, 32), subDiscMat);
+      subDisc.position.set(px, py, pz - 0.1);
+      newWorldGroup.add(subDisc);
+
+      // 4. 3D Event Banner attached to the Rock Platform (POLE BEHIND THE POSTER)
+      const { x: bx, y: by, z: bz, rotY: bRotY } = node.bannerPos;
+
+      // Banner Support Post (Positioned BEHIND the Poster at bz - 0.6)
+      const postGeo = new THREE.CylinderGeometry(0.4, 0.5, 16, 12);
+      const postMesh = new THREE.Mesh(postGeo, bannerFrameMat);
+      postMesh.position.set(bx, by - 4.5, bz - 0.6);
+      newWorldGroup.add(postMesh);
+
+      // Horizontal Rear Mounting Brackets connecting Pole to Poster
+      const bracketGeo = new THREE.BoxGeometry(4.0, 0.4, 0.8);
+      const bracket1 = new THREE.Mesh(bracketGeo, bannerFrameMat);
+      bracket1.position.set(bx, by + 2.0, bz - 0.3);
+      newWorldGroup.add(bracket1);
+
+      const bracket2 = new THREE.Mesh(bracketGeo, bannerFrameMat);
+      bracket2.position.set(bx, by - 2.0, bz - 0.3);
+      newWorldGroup.add(bracket2);
+
+      // 3D Event Banner Panel with Front & Back Texture
+      const bannerTexture = createEventBannerTexture(node);
+
+      const bannerMat = new THREE.MeshStandardMaterial({
+        map: bannerTexture,
+        roughness: 0.2,
+        metalness: 0.3,
+        emissive: 0x003344,
+        emissiveIntensity: 0.6,
+      });
+
+      const frameBackMat = new THREE.MeshStandardMaterial({
+        color: 0x061c2d,
+        roughness: 0.4,
+        metalness: 0.8,
+      });
+
+      const materials = [
+        frameBackMat, // right
+        frameBackMat, // left
+        frameBackMat, // top
+        frameBackMat, // bottom
+        bannerMat,    // front
+        bannerMat,    // back
+      ];
+
+      const bannerBoxGeo = new THREE.BoxGeometry(18, 9, 0.4);
+      const bannerMesh = new THREE.Mesh(bannerBoxGeo, materials);
+      bannerMesh.position.set(bx, by, bz);
+      bannerMesh.rotation.y = bRotY;
+      bannerMesh.userData = { eventData: node };
+      newWorldGroup.add(bannerMesh);
+      bannerMeshes.push(bannerMesh);
+
+      // Glowing Neon Cyan Bezel Frame around Poster Panel
+      const bezelGeo = new THREE.BoxGeometry(18.6, 9.6, 0.2);
+      const bezelMat = new THREE.MeshStandardMaterial({
+        color: 0x005577,
+        emissive: 0x00f0ff,
+        emissiveIntensity: 1.5,
+        roughness: 0.1,
+      });
+      const bezelMesh = new THREE.Mesh(bezelGeo, bezelMat);
+      bezelMesh.position.set(bx, by, bz - 0.25);
+      bezelMesh.rotation.y = bRotY;
+      newWorldGroup.add(bezelMesh);
+
+      // Dedicated PointLight illuminating each Event Poster Panel
+      const posterLight = new THREE.PointLight(0x00f0ff, 5.0, 45);
+      posterLight.position.set(bx, by, bz + 4.0);
+      newWorldGroup.add(posterLight);
+
+      // Bioluminescent corals on each rock platform plateau
+      for (let c = 0; c < 8; c++) {
+        const coralGeo = new THREE.ConeGeometry(0.7 + Math.random() * 0.6, 3.5 + Math.random() * 2.5, 6);
+        const coralMat = new THREE.MeshStandardMaterial({
+          color: 0x042840,
+          emissive: coralColors[c % coralColors.length],
+          emissiveIntensity: 0.75,
+          roughness: 0.4,
+          flatShading: true,
+        });
+        const coral = new THREE.Mesh(coralGeo, coralMat);
+        coral.position.set(
+          x + (Math.random() - 0.5) * (width * 0.7),
+          y + 1.2,
+          z + (Math.random() - 0.5) * (depth * 0.7)
+        );
+        newWorldGroup.add(coral);
+      }
+    }
+
+    eventNodes.forEach((node) => {
+      createEventPlatformAndBanner(node);
+    });
+
+    // --- DARK TEAL SEA GRASS / KELP FRONDS ---
+    const kelpGroup = new THREE.Group();
+    const kelpGeo = new THREE.CylinderGeometry(0.15, 0.45, 18, 8, 8);
+    const kelpMat = new THREE.MeshStandardMaterial({
+      color: 0x02364c,
+      emissive: 0x005577,
+      emissiveIntensity: 0.3,
+      roughness: 0.6,
+      flatShading: true,
+    });
+
+    const kelpInstances: { mesh: THREE.Mesh; phase: number; speed: number }[] = [];
+    const kelpPositions = [
+      { x: -35, z: -230 }, { x: -20, z: -235 }, { x: 35, z: -320 },
+      { x: 20, z: -325 }, { x: -35, z: -410 }, { x: -20, z: -415 },
+      { x: 35, z: -500 }, { x: 20, z: -505 }, { x: -10, z: -590 }, { x: 10, z: -595 },
+    ];
+
+    for (let i = 0; i < kelpPositions.length; i++) {
+      const kelp = new THREE.Mesh(kelpGeo, kelpMat);
+      const pos = kelpPositions[i];
+      const hScale = 0.8 + Math.random() * 0.8;
+      kelp.scale.set(1, hScale, 1);
+      kelp.position.set(pos.x, -370 + (hScale * 9), pos.z);
+      kelpGroup.add(kelp);
+      kelpInstances.push({
+        mesh: kelp,
+        phase: Math.random() * Math.PI * 2,
+        speed: 1.0 + Math.random() * 1.2,
+      });
+    }
+    scene.add(kelpGroup);
+
+    // --- UNEVEN OCEAN FLOOR TERRAIN WITH MOUNTAIN GROUND BASES ---
+    const terrainGeo = new THREE.PlaneGeometry(800, 1000, 128, 128);
+    terrainGeo.rotateX(-Math.PI / 2);
+    const terPos = terrainGeo.attributes.position;
+    const terVec = new THREE.Vector3();
+    for (let i = 0; i < terPos.count; i++) {
+      terVec.fromBufferAttribute(terrainGeo.attributes.position, i);
+      let height =
+        Math.sin(terVec.x * 0.02) * Math.cos(terVec.z * 0.02) * 22.0 +
+        Math.sin(terVec.x * 0.06 + terVec.z * 0.05) * 8.0;
+
+      // Add ground mountain mounds under each event platform
+      for (const ev of eventNodes) {
+        const dx = terVec.x - ev.pos.x;
+        const dz = terVec.z - ev.pos.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist < 90) {
+          const moundFactor = (1.0 - dist / 90);
+          const moundHeight = Math.pow(moundFactor, 1.5) * Math.abs(ev.pos.y - (-385)) * 0.35;
+          height += moundHeight;
+        }
+      }
+
+      terVec.y = height;
+      terPos.setXYZ(i, terVec.x, terVec.y, terVec.z);
+    }
+    terrainGeo.computeVertexNormals();
+
+    const terrainMat = new THREE.MeshStandardMaterial({
+      color: 0x031828,
+      roughness: 0.9,
+      metalness: 0.1,
+      flatShading: true,
+    });
+    const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
+    terrainMesh.position.set(0, -385, -450);
+    scene.add(terrainMesh);
+
+    // --- CYBER SEABED DIGITAL PARTICLE GRID ---
+    const seabedCount = isMobile ? 45000 : 95000;
+    const seabedGeometry = new THREE.BufferGeometry();
+    const seabedPositions = new Float32Array(seabedCount * 3);
+    const seabedRandoms = new Float32Array(seabedCount);
+    const seabedGridCoords = new Float32Array(seabedCount * 2);
+
+    for (let i = 0; i < seabedCount; i++) {
+      const x = (Math.random() - 0.5) * 600;
+      const z = (Math.random() - 0.5) * 750 - 250;
+      seabedPositions[i * 3] = x;
+      seabedPositions[i * 3 + 1] = -382;
+      seabedPositions[i * 3 + 2] = z;
+      seabedRandoms[i] = Math.random();
+      seabedGridCoords[i * 2] = x;
+      seabedGridCoords[i * 2 + 1] = z;
+    }
+
+    seabedGeometry.setAttribute("position", new THREE.BufferAttribute(seabedPositions, 3));
+    seabedGeometry.setAttribute("aRandom", new THREE.BufferAttribute(seabedRandoms, 1));
+    seabedGeometry.setAttribute("aGridCoord", new THREE.BufferAttribute(seabedGridCoords, 2));
+
+    const seabedMaterial = new THREE.ShaderMaterial({
+      vertexShader: seabedVertex,
+      fragmentShader: seabedFragment,
+      uniforms: {
+        uTime: { value: 0 },
+        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+        uSize: { value: 3.5 },
+        uNoiseScale: { value: 0.05 },
+        uNoiseHeight: { value: 6.0 },
+        uColor1: { value: new THREE.Color(0x022538) },
+        uColor2: { value: new THREE.Color(0x0088b3) },
+        uColor3: { value: new THREE.Color(0x00f0ff) },
+        uSandColor: { value: new THREE.Color(0x04354c) },
+        uRockColor: { value: new THREE.Color(0x0c4a6e) },
+        uGlowIntensity: { value: 0.7 },
+        uWaveSpeed: { value: 0.15 },
+        uWaveAmplitude: { value: 1.2 },
+        uFogColor: { value: new THREE.Color(0x021627) },
+        uFogNear: { value: 15 },
+        uFogFar: { value: 280 },
+        uScrollSpeed: { value: 2.0 },
+        uScrollOffset: { value: 0 },
+      },
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+
+    const seabedMesh = new THREE.Points(seabedGeometry, seabedMaterial);
+    seabedMesh.frustumCulled = false;
+    scene.add(seabedMesh);
+
+    // --- RISING BUBBLES PARTICLE STREAM ---
+    const bubbleCount = isMobile ? 1200 : 3000;
+    const bubbleGeo = new THREE.BufferGeometry();
+    const bubbleInitialPos = new Float32Array(bubbleCount * 3);
+    const bubbleSizes = new Float32Array(bubbleCount);
+    const bubbleSpeeds = new Float32Array(bubbleCount);
+    const bubbleOffsets = new Float32Array(bubbleCount);
+
+    for (let i = 0; i < bubbleCount; i++) {
+      bubbleInitialPos[i * 3] = (Math.random() - 0.5) * 350;
+      bubbleInitialPos[i * 3 + 1] = -385 + Math.random() * 15;
+      bubbleInitialPos[i * 3 + 2] = -30 - Math.random() * 620;
+
+      bubbleSizes[i] = 4.0 + Math.random() * 12.0;
+      bubbleSpeeds[i] = 0.4 + Math.random() * 1.2;
+      bubbleOffsets[i] = Math.random() * 100.0;
+    }
+
+    bubbleGeo.setAttribute("position", new THREE.BufferAttribute(bubbleInitialPos, 3));
+    bubbleGeo.setAttribute("aInitialPos", new THREE.BufferAttribute(bubbleInitialPos, 3));
+    bubbleGeo.setAttribute("aSize", new THREE.BufferAttribute(bubbleSizes, 1));
+    bubbleGeo.setAttribute("aSpeed", new THREE.BufferAttribute(bubbleSpeeds, 1));
+    bubbleGeo.setAttribute("aOffset", new THREE.BufferAttribute(bubbleOffsets, 1));
+
+    const bubbleMat = new THREE.ShaderMaterial({
+      vertexShader: bubbleVertex,
+      fragmentShader: bubbleFragment,
+      uniforms: {
+        uTime: { value: 0 },
+        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+        uColor: { value: new THREE.Color(0x67e8f9) },
+      },
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+
+    const bubblePoints = new THREE.Points(bubbleGeo, bubbleMat);
+    scene.add(bubblePoints);
+
+    // --- FLOATING UNDERWATER DUST & PLANKTON ---
+    const dustCount = isMobile ? 800 : 2000;
+    const dustGeo = new THREE.BufferGeometry();
+    const dustPositions = new Float32Array(dustCount * 3);
+    const dustVelocities = new Float32Array(dustCount * 3);
+    const dustSizes = new Float32Array(dustCount);
+    const dustAlphas = new Float32Array(dustCount);
+    const dustTypes = new Float32Array(dustCount);
+
+    for (let i = 0; i < dustCount; i++) {
+      dustPositions[i * 3] = (Math.random() - 0.5) * 320;
+      dustPositions[i * 3 + 1] = -385 + Math.random() * 360;
+      dustPositions[i * 3 + 2] = -30 - Math.random() * 620;
+      dustVelocities[i * 3] = 0;
+      dustVelocities[i * 3 + 1] = 0;
+      dustVelocities[i * 3 + 2] = 0;
+      dustTypes[i] = Math.random();
+      dustSizes[i] = Math.random() < 0.6 ? 1.5 + Math.random() * 2.0 : 3.5 + Math.random() * 3.0;
+      dustAlphas[i] = 0.3 + Math.random() * 0.6;
+    }
+
+    dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPositions, 3));
+    dustGeo.setAttribute("velocity", new THREE.BufferAttribute(dustVelocities, 3));
+    dustGeo.setAttribute("size", new THREE.BufferAttribute(dustSizes, 1));
+    dustGeo.setAttribute("alpha", new THREE.BufferAttribute(dustAlphas, 1));
+    dustGeo.setAttribute("particleType", new THREE.BufferAttribute(dustTypes, 1));
+
+    const dustMat = new THREE.ShaderMaterial({
+      vertexShader: flowFieldVertex,
+      fragmentShader: flowFieldFragment,
+      uniforms: {
+        uColor: { value: new THREE.Color(0x22d3ee) },
+        uTime: { value: 0 },
+      },
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const dustMesh = new THREE.Points(dustGeo, dustMat);
+    scene.add(dustMesh);
+
+    // --- DISTANT SMALL FISH SCHOOLS ---
+    const fishCount = isMobile ? 35 : 75;
+    const fishGeo = new THREE.ConeGeometry(0.3, 1.4, 5);
+    fishGeo.rotateX(Math.PI / 2);
+
+    const fishMat = new THREE.MeshStandardMaterial({
+      color: 0x0284c7,
+      emissive: 0x00f0ff,
+      emissiveIntensity: 0.5,
+      roughness: 0.3,
+      metalness: 0.6,
+    });
+
+    const dummyObj = new THREE.Object3D();
     const fishSwarm = new THREE.InstancedMesh(fishGeo, fishMat, fishCount);
-    const dummy = new THREE.Object3D();
-    const fishData: { speed: number; phaseX: number; phaseY: number; phaseZ: number; baseY: number; scale: number }[] = [];
+    const fishData: {
+      speed: number;
+      phaseX: number;
+      phaseY: number;
+      phaseZ: number;
+      baseY: number;
+      scale: number;
+    }[] = [];
+
     for (let i = 0; i < fishCount; i++) {
-      const s = 0.15 + Math.random() * 0.35; // Much smaller fish
-      dummy.scale.set(s, s * (0.8 + Math.random() * 0.4), s * (0.9 + Math.random() * 0.2)); // Non-uniform scale
-      dummy.position.set(
-        (Math.random() - 0.5) * 110,
-        -8 - Math.random() * 32,
-        -15 - Math.random() * 65,
+      const s = 0.4 + Math.random() * 0.5;
+      dummyObj.scale.set(s, s, s * 1.3);
+      const isLeft = i < fishCount / 2;
+      const baseX = isLeft ? -40 + (Math.random() - 0.5) * 20 : 40 + (Math.random() - 0.5) * 20;
+
+      dummyObj.position.set(
+        baseX,
+        -30 - Math.random() * 300,
+        -60 - Math.random() * 550
       );
-      dummy.updateMatrix();
-      fishSwarm.setMatrixAt(i, dummy.matrix);
+      dummyObj.updateMatrix();
+      fishSwarm.setMatrixAt(i, dummyObj.matrix);
+
       fishData.push({
-        speed: 0.6 + Math.random() * 1.4,
+        speed: 0.5 + Math.random() * 1.0,
         phaseX: Math.random() * Math.PI * 2,
         phaseY: Math.random() * Math.PI * 2,
         phaseZ: Math.random() * Math.PI * 2,
-        baseY: dummy.position.y,
+        baseY: dummyObj.position.y,
         scale: s,
       });
     }
     scene.add(fishSwarm);
 
-    // --- Sharks ---
-    let sharkMixer: THREE.AnimationMixer | null = null;
-    gltfLoader.load("/glbs/Shark by Quaternius - YYsK3gRCBZ.glb", (gltf) => {
-      const shark = gltf.scene;
-      shark.scale.set(4, 4, 4);
-      shark.position.set(-20, -15, -35);
-      scene.add(shark);
-      if (gltf.animations?.length > 0) {
-        sharkMixer = new THREE.AnimationMixer(shark);
-        sharkMixer.clipAction(gltf.animations[0]).play();
+    // --- RAYCASTER FOR PORTAL RING, PIN MARKER & 3D BANNER INTERACTIVITY ---
+    const raycaster = new THREE.Raycaster();
+    const mouseVector = new THREE.Vector2();
+
+    function handlePortalClick(event: MouseEvent) {
+      mouseVector.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouseVector.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouseVector, camera);
+
+      const intersects = raycaster.intersectObjects([portalRingMesh, ...pinMarkers, ...bannerMeshes]);
+      if (intersects.length > 0) {
+        const hit = intersects[0].object;
+        if (hit === portalRingMesh) {
+          const targetY = window.innerHeight * 5;
+          window.scrollTo({ top: targetY, behavior: "smooth" });
+        } else if (hit.userData && hit.userData.eventData) {
+          setSelectedEvent(hit.userData.eventData);
+        }
       }
-    });
+    }
+    window.addEventListener("click", handlePortalClick);
 
-    // --- Shark Fin ---
-    gltfLoader.load("/glbs/Shark fin by Poly by Google - 1L9OjE5KOlC.glb", (gltf) => {
-      const fin = gltf.scene;
-      fin.scale.set(0.08, 0.08, 0.08);
-      fin.position.set(15, -2, -25);
-      fin.rotation.y = -Math.PI / 2;
-      scene.add(fin);
-    });
-
-    // --- HDRI ---
-    const loader = new EXRLoader(manager);
-    loader.load("/hdri/spiaggia_di_mondello_4k.exr", (texture) => {
-      const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-      scene.environment = envMap;
-      scene.background = envMap;
-      texture.dispose();
-      pmremGenerator.dispose();
-    });
-
-    const fogColor = new THREE.Color(0x001122);
-    scene.fog = new THREE.FogExp2(fogColor, 0.0);
-
-    // --- Camera & GSAP Journey ---
+    // --- CAMERA & GSAP SCROLL JOURNEY: CONTINUOUS DESCENDING DEEP THROUGH THE STARGATE & EVENT LOCATIONS ---
     camera.position.set(0, 2, 0);
     camera.rotation.order = "YXZ";
 
@@ -625,8 +1298,7 @@ export default function Scene() {
       z: 0,
       rx: 0,
       ry: 0,
-      fogDensity: 0,
-      blur: 0,
+      fogDensity: 0.0,
     };
 
     const mouse = { x: 0, y: 0 };
@@ -635,10 +1307,25 @@ export default function Scene() {
     function handleMouseMove(event: MouseEvent) {
       targetMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       targetMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      mouseVector.x = targetMouse.x;
+      mouseVector.y = targetMouse.y;
+      raycaster.setFromCamera(mouseVector, camera);
+
+      const intersects = raycaster.intersectObjects([portalRingMesh, ...pinMarkers, ...bannerMeshes]);
+      if (intersects.length > 0) {
+        document.body.style.cursor = "pointer";
+        const hit = intersects[0].object;
+        if (hit.userData && hit.userData.eventData) {
+          setHoveredNode(hit.userData.eventData.name);
+        }
+      } else {
+        document.body.style.cursor = "default";
+        setHoveredNode(null);
+      }
     }
     window.addEventListener("mousemove", handleMouseMove);
 
-    // Touch support for mobile parallax
     function handleTouchMove(event: TouchEvent) {
       if (event.touches.length > 0) {
         const touch = event.touches[0];
@@ -662,176 +1349,316 @@ export default function Scene() {
         end: "bottom bottom",
         scrub: isMobile ? 2.5 : 1.5,
         onUpdate: (self) => {
-          setScrollProgress(Math.floor(self.progress * 100));
+          const currentProgress = Math.floor(self.progress * 100);
+          setScrollProgress(currentProgress);
         },
       },
     });
 
-    // Fade out Hero UI immediately on scroll
-    tl.to(
-      "#hero-ui",
-      { opacity: 0, y: -50, scale: 1.05, duration: 0.5, ease: "power2.inOut" },
-      0,
-    );
-
-    // Phase 1: Dive & Iceberg (0 - 25%) - Dives in front/side of iceberg showing the outer layer
+    // Phase 1: Surface Ocean View (0 - 15%)
     tl.to(
       camState,
       {
-        x: 6,
-        y: -9,
-        z: -32,
-        rx: 0.08,
-        ry: -0.22,
-        fogDensity: 0.035,
-        blur: 0.7,
-        duration: 2,
+        x: 0,
+        y: -20,
+        z: -45,
+        rx: 0.04,
+        ry: 0,
+        fogDensity: 0.012,
+        duration: 1.5,
         ease: "power1.inOut",
       },
-      0,
-    );
-    tl.to(
-      "#event-iceberg",
-      { opacity: 1, y: 0, duration: 1, ease: "power2.out" },
-      1.2,
-    );
-    tl.to(
-      "#event-iceberg",
-      { opacity: 0, y: -20, duration: 1, ease: "power2.in" },
-      2.5,
+      0
     );
 
-    // Phase 2: Turn to Trench Rocks (25% - 60%) - Glides safely across open water to the rocks
+    // Phase 2: Align Camera with Deeper Submerged Main Portal Ring Center at y: -110, z: -140 (15% - 40%)
     tl.to(
       camState,
       {
-        x: -18,
-        y: -26,
-        z: -55,
-        rx: 0.12,
-        ry: 0.45,
-        fogDensity: 0.055,
-        duration: 3,
+        x: 0,
+        y: -110,
+        z: -140,
+        rx: 0,
+        ry: 0,
+        fogDensity: 0.016,
+        duration: 2.5,
         ease: "power2.inOut",
       },
-      2.5,
-    );
-    tl.to(
-      "#event-rocks",
-      { opacity: 1, x: 0, duration: 1, ease: "power2.out" },
-      4.0,
-    );
-    tl.to(
-      "#event-rocks",
-      { opacity: 0, x: -20, duration: 1, ease: "power2.in" },
-      5.5,
+      1.5
     );
 
-    // Phase 3: Descend to Submarine (60% - 90%) - Descends towards the submarine ruins
+    // Phase 3: Fly DIRECTLY INSIDE the Circular Portal Stargate (40% - 48%)
     tl.to(
       camState,
       {
-        x: 10,
-        y: -46,
-        z: -84,
-        rx: -0.15,
-        ry: -0.32,
-        fogDensity: 0.075,
-        duration: 3,
-        ease: "power2.inOut",
+        x: 0,
+        y: -110,
+        z: -165,
+        rx: 0,
+        ry: 0,
+        fogDensity: 0.018,
+        duration: 1.2,
+        ease: "power2.in",
       },
-      5.5,
+      4.0
     );
+
+    // Phase 4: Event 1 (IT Quiz - High Cliff Plateau at y: -110)
     tl.to(
-      "#event-shipwreck",
-      { opacity: 1, y: 0, duration: 1, ease: "power2.out" },
-      7.5,
+      camState,
+      {
+        x: 0,
+        y: -105,
+        z: -205,
+        rx: 0.02,
+        ry: 0.08,
+        fogDensity: 0.015,
+        duration: 2.0,
+        ease: "power1.out",
+      },
+      5.2
+    );
+
+    // Phase 5: Event 2 (IT Manager - Deep Ocean Trench at y: -210)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -205,
+        z: -295,
+        rx: -0.05,
+        ry: -0.08,
+        fogDensity: 0.02,
+        duration: 2.0,
+        ease: "power1.inOut",
+      },
+      7.2
+    );
+
+    // Phase 6: Event 3 (Techno Hive - Elevated Spire at y: -160)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -155,
+        z: -385,
+        rx: 0.01,
+        ry: 0.06,
+        fogDensity: 0.018,
+        duration: 2.0,
+        ease: "power1.inOut",
+      },
+      9.2
+    );
+
+    // Phase 7: Event 4 (Hyper Launch - Ultra-Deep Abyss at y: -310)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -305,
+        z: -475,
+        rx: -0.05,
+        ry: -0.06,
+        fogDensity: 0.024,
+        duration: 2.0,
+        ease: "power1.inOut",
+      },
+      11.2
+    );
+
+    // Phase 8: Event 5 (Gaming & Treasure Hunt - Seabed Citadel at y: -260)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -255,
+        z: -565,
+        rx: -0.02,
+        ry: 0,
+        fogDensity: 0.022,
+        duration: 2.0,
+        ease: "power1.inOut",
+      },
+      13.2
     );
 
     tl.to({}, { duration: 1 });
 
     const clock = new THREE.Clock();
     let animationId: number;
+    let frameCount = 0;
+    let lastFpsCheck = performance.now();
+
     function animate() {
       animationId = requestAnimationFrame(animate);
 
       const delta = clock.getDelta();
-      if (sharkMixer) {
-        sharkMixer.update(delta);
+      const t = clock.elapsedTime;
+
+      frameCount++;
+      const now = performance.now();
+      if (now - lastFpsCheck >= 1000) {
+        const calculatedFps = Math.round((frameCount * 1000) / (now - lastFpsCheck));
+        const depthVal = Math.max(2, Math.floor(Math.abs(camState.y)));
+        setStats({
+          depth: depthVal,
+          speed: (2.0 + Math.sin(t * 0.5) * 0.4).toFixed(1),
+          coords: `X:${Math.round(camState.x)} Y:${Math.round(camState.y)} Z:${Math.round(
+            camState.z
+          )}`,
+          fps: calculatedFps,
+        });
+        frameCount = 0;
+        lastFpsCheck = now;
       }
 
+      // Animate Water Surface & Underwater Ceiling Caustics
       const waterMat = water.material as THREE.ShaderMaterial;
       if (waterMat.uniforms && waterMat.uniforms["time"]) {
         waterMat.uniforms["time"].value += delta * 0.5;
       }
-      const t = clock.elapsedTime;
-      
-      const positions = bubbles.geometry.attributes.position.array as Float32Array;
-      for (let i = 0; i < bubbleCount; i++) {
-        positions[i * 3 + 1] += delta * (2 + Math.random() * 2);
-        if (positions[i * 3 + 1] > -2) positions[i * 3 + 1] = -100;
-      }
-      bubbles.geometry.attributes.position.needsUpdate = true;
+      waterCeilingMat.uniforms.uTime.value = t;
 
-      const codePos = codingParticles.geometry.attributes.position.array as Float32Array;
-      const codePhases = codingParticles.geometry.attributes.phase.array as Float32Array;
-      for (let i = 0; i < codingParticleCount; i++) {
-        codePhases[i] += delta * 0.5;
-        const radius = 25 + Math.sin(codePhases[i] * 2) * 5;
-        codePos[i * 3] = -30 + Math.cos(codePhases[i] + i) * radius;
-        codePos[i * 3 + 1] += Math.sin(t * 2 + i) * 0.05;
-        codePos[i * 3 + 2] = -70 + Math.sin(codePhases[i] + i) * radius;
-      }
-      codingParticles.geometry.attributes.position.needsUpdate = true;
-      codingLight.intensity = 50 + Math.sin(t * 5) * 20;
+      // Smooth Background & Fog Transition from HDRI Sky to Deep Teal Underground Ocean
+      if (camState.y > -4) {
+        if (exrEnvironmentTexture) {
+          scene.background = exrEnvironmentTexture;
+          scene.environment = exrEnvironmentTexture;
+        }
+        scene.fog = null;
+        sunLight.intensity = 2.5;
+        ambientLight.color.setHex(0xffffff);
+        ambientLight.intensity = 1.0;
+        godRayCone1.visible = false;
+        godRayCone2.visible = false;
+        waterCeilingMesh.visible = false;
+        caveMesh.visible = false;
+        sideCliffGroup.visible = false;
+        bgMountainsGroup.visible = false;
+      } else {
+        // Deepening Fog & Dynamic Lighting Transition with Depth
+        const depthFactor = Math.min(1.0, Math.abs(camState.y) / 350);
+        const caveFogColor = new THREE.Color(0x031e30).lerp(new THREE.Color(0x010814), depthFactor);
+        scene.background = caveFogColor;
+        scene.fog = new THREE.FogExp2(caveFogColor, camState.fogDensity);
 
-      // Animate Realistic Schooling Fishes
+        sunLight.intensity = Math.max(0.1, 2.5 * (1.0 - depthFactor * 0.9));
+        ambientLight.color.setHex(0x0a4b66).lerp(new THREE.Color(0x011220), depthFactor);
+        ambientLight.intensity = 1.2;
+        godRayCone1.visible = true;
+        godRayCone2.visible = true;
+        waterCeilingMesh.visible = true;
+        caveMesh.visible = true;
+        sideCliffGroup.visible = true;
+        bgMountainsGroup.visible = true;
+      }
+
+      // STRICT REQUIREMENT: Event World is STRICTLY INVISIBLE until camera passes inside circular portal ring (camState.z < -155)!
+      if (camState.z < -155) {
+        newWorldGroup.visible = true;
+      } else {
+        newWorldGroup.visible = false;
+      }
+
+      // Update Volumetric God Rays, Portal Vortex Shader, and Flow Field Water Particles
+      godRayMaterial.uniforms.uTime.value = t;
+      portalDiscMat.uniforms.uTime.value = t;
+      flowFieldMat.uniforms.uTime.value = t;
+
+      // Update Flow Field Water Particle position drift in 3D currents
+      const ffPositions = flowFieldGeo.attributes.position.array as Float32Array;
+      for (let i = 0; i < flowFieldCount; i++) {
+        const i3 = i * 3;
+        ffPositions[i3] += Math.sin(t * 0.6 + i) * 0.05;
+        ffPositions[i3 + 1] += Math.cos(t * 0.4 + i) * 0.04 + 0.02;
+        ffPositions[i3 + 2] += Math.sin(t * 0.5 + i * 2) * 0.05;
+
+        if (ffPositions[i3 + 1] > 30) {
+          ffPositions[i3 + 1] = -385;
+        }
+      }
+      flowFieldGeo.attributes.position.needsUpdate = true;
+
+      // Update Orbiting Energy Particles around Portal Ring
+      const pPositions = portalParticleGeo.attributes.position.array as Float32Array;
+      for (let i = 0; i < portalParticleCount; i++) {
+        const speed = portalParticleSpeeds[i];
+        portalParticleAngles[i] += delta * speed * 0.5;
+        const angle = portalParticleAngles[i];
+        const radius = 12.0 + (i % 5) * 0.7;
+        pPositions[i * 3] = Math.cos(angle) * radius;
+        pPositions[i * 3 + 1] = Math.sin(angle) * radius;
+      }
+      portalParticleGeo.attributes.position.needsUpdate = true;
+
+      // Update Rising Bubbles & Seabed
+      bubbleMat.uniforms.uTime.value = t;
+      seabedMaterial.uniforms.uTime.value = t;
+      seabedMaterial.uniforms.uScrollOffset.value = t * 1.5;
+      dustMat.uniforms.uTime.value = t;
+
+      // Pulse Portal Ring Backlight
+      portalBackLight.intensity = 8.0 + Math.sin(t * 2.5) * 3.0;
+
+      // Rotate Event Pin Marker Nodes and add gentle swaying to 3D Event Banners
+      for (const pin of pinMarkers) {
+        pin.rotation.y = t * 1.5;
+        pin.rotation.z = Math.sin(t * 1.8) * 0.2;
+      }
+
+      for (let b = 0; b < bannerMeshes.length; b++) {
+        const bMesh = bannerMeshes[b];
+        const baseRot = eventNodes[b].bannerPos.rotY;
+        bMesh.rotation.z = Math.sin(t * 1.2 + b) * 0.04;
+        bMesh.rotation.y = baseRot + Math.cos(t * 0.8 + b) * 0.03;
+      }
+
+      // Animate Waving Sea Grass / Kelp Strands in Current
+      for (const k of kelpInstances) {
+        k.mesh.rotation.z = Math.sin(t * k.speed + k.phase) * 0.18;
+        k.mesh.rotation.x = Math.cos(t * k.speed * 0.8 + k.phase) * 0.12;
+      }
+
+      // Animate Distant Fish Schools
       for (let i = 0; i < fishCount; i++) {
-        fishSwarm.getMatrixAt(i, dummy.matrix);
-        dummy.position.setFromMatrixPosition(dummy.matrix);
+        fishSwarm.getMatrixAt(i, dummyObj.matrix);
+        dummyObj.position.setFromMatrixPosition(dummyObj.matrix);
         const data = fishData[i];
-        
-        // Fluid swimming trajectory
-        dummy.position.x += Math.sin(t * data.speed * 0.7 + data.phaseX) * 0.12;
-        dummy.position.y = data.baseY + Math.sin(t * data.speed * 0.5 + data.phaseY) * 1.4;
-        dummy.position.z += Math.cos(t * data.speed * 0.7 + data.phaseZ) * 0.12;
 
-        const lookTargetX = dummy.position.x + Math.sin(t * data.speed * 0.7 + data.phaseX) * 0.4;
-        const lookTargetZ = dummy.position.z + Math.cos(t * data.speed * 0.7 + data.phaseZ) * 0.4;
-        dummy.lookAt(lookTargetX, dummy.position.y, lookTargetZ);
+        dummyObj.position.x += Math.sin(t * data.speed * 0.6 + data.phaseX) * 0.08;
+        dummyObj.position.y = data.baseY + Math.sin(t * data.speed * 0.4 + data.phaseY) * 1.0;
+        dummyObj.position.z += Math.cos(t * data.speed * 0.6 + data.phaseZ) * 0.08;
 
-        // Banking roll when turning
-        dummy.rotation.z = Math.cos(t * data.speed * 0.7 + data.phaseX) * 0.22;
-        // Tail swimming wiggle
-        dummy.rotation.y += Math.sin(t * data.speed * 6.0 + i) * 0.1;
-        dummy.scale.set(data.scale, data.scale, data.scale);
+        const lookX = dummyObj.position.x + Math.sin(t * data.speed * 0.6 + data.phaseX) * 0.4;
+        const lookZ = dummyObj.position.z + Math.cos(t * data.speed * 0.6 + data.phaseZ) * 0.4;
+        dummyObj.lookAt(lookX, dummyObj.position.y, lookZ);
 
-        dummy.updateMatrix();
-        fishSwarm.setMatrixAt(i, dummy.matrix);
+        dummyObj.scale.set(data.scale, data.scale, data.scale * 1.3);
+        dummyObj.updateMatrix();
+        fishSwarm.setMatrixAt(i, dummyObj.matrix);
       }
       fishSwarm.instanceMatrix.needsUpdate = true;
 
-      // Mouse/Touch Parallax easing
+      // Natural Subtle Underwater Floating Buoyancy Effect
+      const floatY = Math.sin(t * 0.4) * 0.35;
+      const floatX = Math.cos(t * 0.3) * 0.25;
+      const floatRotZ = Math.sin(t * 0.2) * 0.008;
+
+      // Parallax Mouse/Touch Camera Drifting
       const parallaxEase = isMobile ? 0.03 : 0.05;
-      const parallaxStrength = isMobile ? 0.8 : 1.5;
+      const parallaxStrength = isMobile ? 0.8 : 1.6;
       mouse.x += (targetMouse.x - mouse.x) * parallaxEase;
       mouse.y += (targetMouse.y - mouse.y) * parallaxEase;
 
       camera.position.set(
-        camState.x + mouse.x * parallaxStrength,
-        camState.y + mouse.y * parallaxStrength,
-        camState.z,
+        camState.x + mouse.x * parallaxStrength + floatX,
+        camState.y + mouse.y * parallaxStrength + floatY,
+        camState.z
       );
-      camera.rotation.x = camState.rx + mouse.y * (isMobile ? 0.02 : 0.05);
-      camera.rotation.y = camState.ry - mouse.x * (isMobile ? 0.02 : 0.05);
-
-      if (scene.fog instanceof THREE.FogExp2) {
-        scene.fog.density = camState.fogDensity;
-      }
-
-      if (scene.backgroundBlurriness !== undefined) {
-        scene.backgroundBlurriness = camState.blur;
-      }
+      camera.rotation.x = camState.rx + mouse.y * (isMobile ? 0.02 : 0.04);
+      camera.rotation.y = camState.ry - mouse.x * (isMobile ? 0.02 : 0.04);
+      camera.rotation.z = floatRotZ;
 
       renderer.render(scene, camera);
     }
@@ -847,6 +1674,7 @@ export default function Scene() {
     return () => {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("click", handlePortalClick);
       if (isMobile) {
         window.removeEventListener("touchmove", handleTouchMove);
         window.removeEventListener("touchend", handleTouchEnd);
@@ -857,169 +1685,387 @@ export default function Scene() {
       container.removeChild(renderer.domElement);
       renderer.dispose();
       waterGeometry.dispose();
-      floorGeometry.dispose();
+      waterCeilingGeo.dispose();
+      waterCeilingMat.dispose();
       iceberg.geometry.dispose();
       iceberg2.geometry.dispose();
+      icePlateGeo.dispose();
       iceMaterial.dispose();
+      for (const g of smallIceGeos) g.dispose();
+      rayConeGeo.dispose();
+      godRayMaterial.dispose();
+      caveGeometry.dispose();
+      caveMaterial.dispose();
+      cliffWallMat.dispose();
+      ruinStoneMat.dispose();
+      ruinGlowMat.dispose();
+      for (const s of stepGeos) s.dispose();
+      portalRingGeo.dispose();
+      keystoneGeo.dispose();
+      portalDiscGeo.dispose();
+      portalDiscMat.dispose();
+      portalParticleGeo.dispose();
+      portalParticleMat.dispose();
+      flowFieldGeo.dispose();
+      flowFieldMat.dispose();
+      cliffRockMat.dispose();
+      nodeGlowMat.dispose();
+      bannerFrameMat.dispose();
+      for (const c of cliffMeshes) c.geometry.dispose();
+      for (const b of bannerMeshes) {
+        b.geometry.dispose();
+        if (b.material instanceof THREE.MeshStandardMaterial && b.material.map) {
+          b.material.map.dispose();
+          b.material.dispose();
+        }
+      }
+      terrainGeo.dispose();
+      terrainMat.dispose();
+      seabedGeometry.dispose();
+      seabedMaterial.dispose();
       bubbleGeo.dispose();
       bubbleMat.dispose();
+      dustGeo.dispose();
+      dustMat.dispose();
+      kelpGeo.dispose();
+      kelpMat.dispose();
       fishGeo.dispose();
       fishMat.dispose();
-      fishTex.dispose();
-      codingGeo.dispose();
-      codingMat.dispose();
-      rayGeo.dispose();
-      rayMat.dispose();
     };
   }, []);
 
+  const hudVisible = scrollProgress > 15;
+  const isInsideNewWorld = scrollProgress > 48;
+
   return (
-    <div ref={wrapperRef} style={{ height: "1000vh", position: "relative", backgroundColor: "#000" }}>
+    <div ref={wrapperRef} style={{ height: "1600vh", position: "relative", backgroundColor: "#000" }}>
       {/* Compass Loading Screen */}
-      <div className={`fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[#020a14] transition-opacity duration-1000 ${loading ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-        {/* Compass Container */}
+      <div
+        className={`fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[#020914] transition-opacity duration-1000 ${
+          loading ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
         <div className="relative w-48 h-48 md:w-64 md:h-64 mb-10">
-          {/* Outer Ring */}
           <div className="absolute inset-0 rounded-full border-2 border-cyan-500/40 shadow-[0_0_30px_rgba(0,200,255,0.15)]" />
-          {/* Tick Marks Ring */}
           <div className="absolute inset-2 rounded-full border border-cyan-400/20">
             {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
               <div key={deg} className="absolute w-full h-full" style={{ transform: `rotate(${deg}deg)` }}>
-                <div className={`absolute top-0 left-1/2 -translate-x-1/2 ${deg % 90 === 0 ? 'w-0.5 h-4 bg-cyan-400' : 'w-px h-2 bg-cyan-600/60'}`} />
+                <div
+                  className={`absolute top-0 left-1/2 -translate-x-1/2 ${
+                    deg % 90 === 0 ? "w-0.5 h-4 bg-cyan-400" : "w-px h-2 bg-cyan-600/60"
+                  }`}
+                />
               </div>
             ))}
           </div>
-          {/* Cardinal Directions */}
           <div className="absolute inset-0 font-mono text-[10px] md:text-xs font-bold tracking-widest text-cyan-300">
             <span className="absolute top-5 left-1/2 -translate-x-1/2 text-cyan-400 text-sm">N</span>
             <span className="absolute bottom-5 left-1/2 -translate-x-1/2 text-cyan-600">S</span>
             <span className="absolute top-1/2 right-5 -translate-y-1/2 text-cyan-600">E</span>
             <span className="absolute top-1/2 left-5 -translate-y-1/2 text-cyan-600">W</span>
           </div>
-          {/* Spinning Needle */}
           <div className="absolute inset-0 flex items-center justify-center animate-[spin_3s_ease-in-out_infinite]">
             <div className="w-1 h-1/2 origin-bottom">
               <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[40px] md:border-b-[55px] border-l-transparent border-r-transparent border-b-cyan-400 mx-auto drop-shadow-[0_0_8px_rgba(0,255,255,0.7)]" />
             </div>
           </div>
-          <div className="absolute inset-0 flex items-center justify-center" style={{ transform: 'rotate(180deg)' }}>
+          <div className="absolute inset-0 flex items-center justify-center" style={{ transform: "rotate(180deg)" }}>
             <div className="w-1 h-1/2 origin-bottom animate-[spin_3s_ease-in-out_infinite]">
               <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[35px] md:border-b-[45px] border-l-transparent border-r-transparent border-b-red-500/70 mx-auto" />
             </div>
           </div>
-          {/* Center Dot */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(0,255,255,0.8)]" />
           </div>
-          {/* Progress Ring */}
           <svg className="absolute inset-0 w-full h-full -rotate-90">
             <circle cx="50%" cy="50%" r="46%" fill="none" stroke="rgba(0,200,255,0.1)" strokeWidth="2" />
-            <circle cx="50%" cy="50%" r="46%" fill="none" stroke="rgba(0,200,255,0.6)" strokeWidth="2" strokeLinecap="round"
+            <circle
+              cx="50%"
+              cy="50%"
+              r="46%"
+              fill="none"
+              stroke="rgba(0,200,255,0.6)"
+              strokeWidth="2"
+              strokeLinecap="round"
               strokeDasharray={`${progress * 2.88} 288`}
-              className="transition-all duration-300 ease-out drop-shadow-[0_0_6px_rgba(0,255,255,0.5)]" />
+              className="transition-all duration-300 ease-out drop-shadow-[0_0_6px_rgba(0,255,255,0.5)]"
+            />
           </svg>
         </div>
-        {/* Text */}
-        <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 tracking-[0.3em] uppercase mb-4">NAVIGATING</h1>
-        <p className="text-cyan-300/60 font-mono text-xs tracking-[0.4em] uppercase mb-6">Charting the Deep</p>
+        <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 tracking-[0.3em] uppercase mb-4">
+          CYBER OCEAN
+        </h1>
+        <p className="text-cyan-300/60 font-mono text-xs tracking-[0.4em] uppercase mb-6">
+          Entering Deep Submerged Cavern
+        </p>
         <p className="text-cyan-400 font-mono text-lg font-bold">{progress}%</p>
       </div>
 
       {/* 3D Canvas Container */}
       <div ref={containerRef} style={{ position: "sticky", top: 0, width: "100vw", height: "100vh", overflow: "hidden" }}>
-        {/* Full-screen border */}
         <div className="pointer-events-none fixed inset-0 z-50 border-[2px] border-cyan-500/20 opacity-90" />
 
-        {/* Global HUD Overlay */}
-        <div className="pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-10 text-white font-mono text-[10px] md:text-xs tracking-widest">
-          <div className="flex justify-between items-start w-full">
-            <div className="flex items-center gap-4">
-              <div className="w-8 h-8 rounded-full border-2 border-cyan-400 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,255,0.5)]">
-                <div className="w-4 h-4 bg-cyan-400 rounded-full animate-pulse" />
-              </div>
-              <div className="font-black tracking-[0.2em] text-cyan-50 leading-tight">
-                <span className="text-cyan-400">SEMAPHORE</span> <br/> FOUNDATION
-              </div>
-            </div>
-            <div className="hidden md:flex gap-8 text-cyan-100/70 font-bold pointer-events-auto">
-              {["JOURNEYS", "ABOUT", "GET INVOLVED", "EDUCATION", "SHARE +", "EN ˅"].map(item => <a key={item} href="#" className="hover:text-cyan-300 transition-colors">{item}</a>)}
-            </div>
+        {/* Hovered Event Tooltip in 3D View */}
+        {hoveredNode && (
+          <div className="pointer-events-none fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-black/80 border border-cyan-400/80 px-6 py-2 rounded-full backdrop-blur-md shadow-[0_0_25px_rgba(0,255,255,0.4)] animate-pulse">
+            <span className="font-mono text-xs md:text-sm font-bold text-cyan-300 tracking-widest uppercase">
+              CLICK TO ENTER PORTAL // {hoveredNode}
+            </span>
           </div>
+        )}
 
-          <div className="flex justify-between items-end w-full">
-            <div className="flex items-center gap-6">
-              <div className="relative w-24 h-24 rounded-full border border-cyan-500/30 flex items-center justify-center bg-blue-900/20 backdrop-blur-sm">
-                <div className="absolute inset-2 rounded-full border border-cyan-400/50 border-dashed animate-[spin_10s_linear_infinite]" />
-                <div className="absolute inset-4 rounded-full bg-cyan-900/40" />
-                <div className="w-1 h-full absolute bg-gradient-to-b from-cyan-400/0 via-cyan-400 to-cyan-400/0 animate-[spin_4s_linear_infinite]" />
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="font-bold text-cyan-300 text-sm tracking-[0.2em]">DEEP TRENCH</span>
-                <span className="text-cyan-100/70">DISCOVERY PROGRESS: {scrollProgress}%</span>
-                <div className="flex gap-2 mt-1 pt-1 border-t border-cyan-500/30 text-[9px] text-cyan-200/70">
-                  <span>DEPTH: {Math.max(2, Math.floor(scrollProgress * 0.9))}M</span>
-                  <span>|</span>
-                  <span>TEMP: {Math.max(4, (28 - scrollProgress * 0.24)).toFixed(1)}°C</span>
+        {/* Floating Event Pins HTML Overlay in New World */}
+        <div
+          className={`pointer-events-auto fixed inset-0 z-40 transition-opacity duration-700 ${
+            isInsideNewWorld ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+        >
+          {eventNodes.map((ev, index) => {
+            const isVisiblePin = scrollProgress >= ev.minScroll;
+            return (
+              <div
+                key={ev.id}
+                onClick={() => setSelectedEvent(ev)}
+                className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group hover:scale-110 transition-all duration-500 ${
+                  isVisiblePin ? "opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none"
+                }`}
+                style={{
+                  left: index === 0 ? "24%" : index === 1 ? "76%" : index === 2 ? "26%" : index === 3 ? "74%" : "50%",
+                  top: index === 0 ? "32%" : index === 1 ? "42%" : index === 2 ? "54%" : index === 3 ? "66%" : "78%",
+                }}
+              >
+                <div className="flex flex-col items-center">
+                  <div className="relative flex items-center justify-center">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-cyan-400 bg-cyan-950/80 backdrop-blur-md shadow-[0_0_25px_rgba(0,255,255,0.6)] flex items-center justify-center group-hover:border-white">
+                      <div className="w-4 h-4 rounded-full bg-cyan-300 animate-pulse shadow-[0_0_12px_rgba(0,255,255,0.9)]" />
+                    </div>
+                    <div className="absolute -bottom-2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-cyan-400" />
+                  </div>
+                  <div className="mt-3 bg-black/80 border border-cyan-400/80 px-4 py-1.5 rounded-full backdrop-blur-md shadow-[0_0_20px_rgba(0,255,255,0.3)]">
+                    <span className="font-mono text-xs md:text-sm font-black text-cyan-300 tracking-wider group-hover:text-white uppercase whitespace-nowrap">
+                      EVENT {ev.num} // {ev.name}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
 
-        {/* Hero UI Overlay */}
-        <div id="hero-ui" className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none text-white selection:bg-cyan-900/50">
-          <div className="text-center px-4">
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-[0.2em] md:tracking-[0.3em] text-transparent uppercase opacity-90" style={{ WebkitTextStroke: "1px rgba(255, 255, 255, 0.9)" }}>
+        {/* Surface Semaphore 2K26 Hero UI */}
+        <div
+          className={`pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-12 text-white transition-opacity duration-700 ${
+            !hudVisible ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <header className="flex justify-between items-center w-full">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full border border-cyan-400/80 flex items-center justify-center bg-cyan-950/40 backdrop-blur-md shadow-[0_0_15px_rgba(0,255,255,0.3)]">
+                <div className="w-3 h-3 rounded-full border border-cyan-300 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <span className="font-mono text-xs font-bold tracking-[0.2em] text-white">SEMAPHORE</span>
+                <span className="font-mono text-[9px] tracking-[0.3em] text-cyan-300/70">FOUNDATION</span>
+              </div>
+            </div>
+            <nav className="hidden md:flex items-center gap-8 font-mono text-xs tracking-[0.25em] text-cyan-100/80">
+              <span className="hover:text-cyan-300 cursor-pointer transition-colors">JOURNEYS</span>
+              <span className="hover:text-cyan-300 cursor-pointer transition-colors">ABOUT</span>
+              <span className="hover:text-cyan-300 cursor-pointer transition-colors">GET INVOLVED</span>
+              <span className="hover:text-cyan-300 cursor-pointer transition-colors">EDUCATION</span>
+              <span className="hover:text-cyan-300 cursor-pointer transition-colors">SHARE +</span>
+              <span className="text-cyan-400 font-bold">EN v</span>
+            </nav>
+          </header>
+
+          <main className="flex flex-col items-center justify-center text-center my-auto">
+            <h2 className="font-mono text-4xl md:text-8xl font-extrabold tracking-[0.35em] text-transparent bg-clip-text bg-gradient-to-b from-white to-white/40 drop-shadow-[0_4px_30px_rgba(0,0,0,0.5)] select-none">
               SEMAPHORE
+            </h2>
+            <h1 className="font-mono text-6xl md:text-9xl font-black tracking-[0.25em] text-white drop-shadow-[0_0_40px_rgba(0,200,255,0.6)] my-2 select-none">
+              2 K 2 6
             </h1>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-[0.2em] md:tracking-[0.3em] text-white mt-1 md:mt-2 shadow-black drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] uppercase">
-              2K26
-            </h1>
-            <p className="text-cyan-100/80 tracking-[0.2em] md:tracking-[0.3em] text-[9px] md:text-xs font-medium uppercase mt-8 md:mt-10 bg-black/20 backdrop-blur-sm inline-block px-6 py-2 border border-cyan-100/10">
-              National Level IT & Cultural Fest
-            </p>
+            <div className="bg-black/30 border border-cyan-400/30 px-6 py-2 rounded-full backdrop-blur-md mt-4 shadow-[0_0_20px_rgba(0,200,255,0.15)]">
+              <span className="font-mono text-xs md:text-sm tracking-[0.35em] text-cyan-200 uppercase font-bold">
+                NATIONAL LEVEL IT & CULTURAL FEST
+              </span>
+            </div>
+          </main>
+
+          <footer className="flex justify-between items-end w-full">
+            <div className="flex items-center gap-4">
+              <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full border border-cyan-400/40 flex items-center justify-center bg-cyan-950/30 backdrop-blur-md">
+                <div className="w-0.5 h-6 bg-cyan-400 origin-bottom transform -rotate-45" />
+              </div>
+              <div className="flex flex-col font-mono text-[10px] md:text-xs">
+                <span className="font-bold text-cyan-300 tracking-[0.2em]">DEEP TRENCH</span>
+                <span className="text-cyan-100/70 tracking-widest">DISCOVERY PROGRESS: 0%</span>
+                <span className="text-cyan-400/60 text-[9px] tracking-wider mt-0.5">DEPTH: 2M | TEMP: 28.0°C</span>
+              </div>
+            </div>
+
+            <div className="pointer-events-auto bg-black/40 border border-cyan-400/50 px-8 py-3 rounded-full backdrop-blur-md shadow-[0_0_25px_rgba(0,255,255,0.2)] hover:border-cyan-300 transition-all cursor-pointer">
+              <span className="font-mono text-xs font-bold tracking-[0.3em] text-cyan-300">
+                ⌜ SCROLL TO DIVE ⌟
+              </span>
+            </div>
+
+            <div className="hidden lg:flex flex-col text-right font-mono text-[9px] text-cyan-200/60 tracking-widest leading-relaxed">
+              <span>9-10 OCTOBER 2026</span>
+              <span>NMAM INSTITUTE OF TECHNOLOGY</span>
+              <span>ALL RIGHTS RESERVED</span>
+            </div>
+          </footer>
+        </div>
+
+        {/* Main Cyber Ocean HUD Overlay */}
+        <div className={`ui-layer ${hudVisible ? "visible" : ""}`} id="ui-layer">
+          <div className="grid-overlay" />
+          <div className="vignette" />
+          <div className="hud-frame" />
+
+          <div className="corner tl" />
+          <div className="corner tr" />
+          <div className="corner bl" />
+          <div className="corner br" />
+
+          {/* Top Bar */}
+          <div className="top-bar">
+            <div className="logo">{isInsideNewWorld ? "NEW WORLD // DESCENDING EVENTS REALM" : "CYBER OCEAN"}</div>
           </div>
 
-          {/* Bottom Center Button */}
-          <div 
-            className="absolute bottom-20 md:bottom-24 flex flex-col items-center pointer-events-auto cursor-pointer group"
-            onClick={() => window.scrollBy({ top: window.innerHeight, behavior: 'smooth' })}
-          >
-            <div className="flex gap-4 items-center">
-              <div className="border border-white/20 px-8 py-3 flex items-center gap-4 group-hover:bg-white/10 group-hover:border-cyan-400/50 transition-all duration-300">
-                <div className="w-2 h-2 border-t border-l border-white/50 group-hover:border-cyan-400 transition-colors" />
-                <span className="text-white tracking-[0.3em] text-[10px] md:text-xs font-bold group-hover:text-cyan-200 transition-colors">
-                  SCROLL TO DIVE
-                </span>
-                <div className="w-2 h-2 border-b border-r border-white/50 group-hover:border-cyan-400 transition-colors" />
+          {/* Left Telemetry Panel */}
+          <div className="side-panel left">
+            <div className="panel-header">
+              <span className="dot" /> <span>TELEMETRY</span>
+            </div>
+            <div className="stat-item">
+              <div className="stat-label">Depth</div>
+              <div className="stat-value">
+                <span>{stats.depth}</span>
+                <span className="unit">M</span>
+              </div>
+              <div className="stat-bar">
+                <div className="stat-bar-fill" style={{ width: `${Math.min(stats.depth, 100)}%` }} />
+              </div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-label">Velocity</div>
+              <div className="stat-value">
+                <span>{stats.speed}</span>
+                <span className="unit">M/S</span>
+              </div>
+              <div className="stat-bar">
+                <div
+                  className="stat-bar-fill"
+                  style={{ width: `${Math.min(Number(stats.speed) * 20, 100)}%` }}
+                />
               </div>
             </div>
           </div>
 
-          {/* Bottom Right Copyright */}
-          <div className="absolute bottom-8 md:bottom-12 right-8 md:right-12 text-right text-cyan-100/50 font-mono text-[9px] md:text-[10px] tracking-widest leading-relaxed uppercase">
-            <p>9-10 OCTOBER 2026</p>
-            <p>NMAM INSTITUTE OF TECHNOLOGY</p>
-            <p>ALL RIGHTS RESERVED</p>
+          {/* Right Controls Panel */}
+          <div className="side-panel right">
+            <div className="panel-header">
+              <span className="dot" /> <span>CONTROLS</span>
+            </div>
+            <div className="control-row">
+              <span className="control-key">MOUSE</span>
+              <span>Navigate</span>
+            </div>
+            <div className="control-row">
+              <span className="control-key">CLICK PORTAL/BANNER</span>
+              <span>View Event</span>
+            </div>
+            <div className="audio-toggle" onClick={toggleAudio}>
+              <button className={`audio-btn ${isAudioPlaying ? "" : "muted"}`} aria-label="Toggle audio">
+                {isAudioPlaying ? (
+                  <svg viewBox="0 0 24 24">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24">
+                    <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+                  </svg>
+                )}
+              </button>
+              <span className={`audio-label ${isAudioPlaying ? "playing" : ""}`}>
+                {isAudioPlaying ? "SOUND ON" : "SOUND OFF"}
+              </span>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="bottom-bar">
+            <span>
+              SYS <span className="coord">ONLINE</span>
+            </span>
+            <span className="separator" />
+            <span>
+              POS <span className="coord">{stats.coords}</span>
+            </span>
+            <span className="separator" />
+            <span>
+              FPS <span className="coord">{stats.fps}</span>
+            </span>
           </div>
         </div>
-
-        {/* Minimal Event Labels (replaces square card boxes) */}
-        <div className="absolute inset-0 pointer-events-none z-10">
-          {events.map((ev) => (
-            <div
-              key={ev.id}
-              id={ev.id}
-              className="absolute opacity-0 left-1/2 -translate-x-1/2 text-center"
-              style={{ top: "50%", marginTop: "-40px" }}
-            >
-              <span className="text-cyan-400 text-xs font-mono tracking-[0.3em] uppercase block mb-2">{ev.category}</span>
-              <h4 className="text-3xl md:text-5xl font-black text-white drop-shadow-[0_4px_20px_rgba(0,200,255,0.4)] tracking-wider uppercase">{ev.title}</h4>
-              <p className="text-cyan-100/60 text-sm md:text-base mt-3 max-w-md mx-auto">{ev.desc}</p>
-            </div>
-          ))}
-        </div>
       </div>
+
+      {/* Interactive Event Detail Modal when clicking on any Event Portal, Pin, or 3D Banner */}
+      {selectedEvent && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl">
+          <div className="relative w-full max-w-xl p-8 rounded-3xl bg-[#021020] border-2 border-cyan-400/80 shadow-[0_0_60px_rgba(0,255,255,0.4)] text-white">
+            <button
+              onClick={() => setSelectedEvent(null)}
+              className="absolute top-6 right-6 font-mono text-cyan-400 text-sm font-bold hover:text-white"
+            >
+              [ CLOSE ✕ ]
+            </button>
+
+            <span className="inline-block px-3 py-1 rounded-full bg-cyan-950 border border-cyan-400/40 text-cyan-300 text-xs font-mono font-bold tracking-wider mb-4">
+              EVENT {selectedEvent.num} // {selectedEvent.category}
+            </span>
+
+            <h3 className="text-3xl font-black font-mono text-white mb-2">{selectedEvent.name}</h3>
+            <p className="text-cyan-200/80 text-sm mb-6 leading-relaxed">{selectedEvent.desc}</p>
+
+            <div className="grid grid-cols-2 gap-4 mb-6 p-4 rounded-xl bg-cyan-950/40 border border-cyan-500/20 font-mono text-xs">
+              <div>
+                <span className="text-cyan-400/60 block">DATE & TIME</span>
+                <span className="text-cyan-200 font-bold">{selectedEvent.date} @ {selectedEvent.time}</span>
+              </div>
+              <div>
+                <span className="text-cyan-400/60 block">VENUE</span>
+                <span className="text-cyan-200 font-bold">{selectedEvent.venue}</span>
+              </div>
+              <div>
+                <span className="text-cyan-400/60 block">PRIZE POOL</span>
+                <span className="text-cyan-300 font-bold text-sm">{selectedEvent.prize}</span>
+              </div>
+            </div>
+
+            <h4 className="font-mono text-xs font-bold text-cyan-400 tracking-wider mb-2">EVENT GUIDELINES:</h4>
+            <ul className="list-disc list-inside text-xs text-cyan-100/70 space-y-1 mb-8">
+              {selectedEvent.rules.map((rule, idx) => (
+                <li key={idx}>{rule}</li>
+              ))}
+            </ul>
+
+            <button
+              onClick={() => {
+                alert(`Registration for EVENT ${selectedEvent.num}: ${selectedEvent.name} will open soon!`);
+                setSelectedEvent(null);
+              }}
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 font-mono font-bold text-black text-sm tracking-[0.2em] shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:brightness-110 transition-all"
+            >
+              REGISTER FOR EVENT {selectedEvent.num}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
