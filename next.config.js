@@ -1,0 +1,29 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: "export",
+  compress: true,
+  poweredByHeader: false,
+  reactStrictMode: true,
+
+  images: {
+    unoptimized: true,
+    formats: ["image/avif", "image/webp"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+    ],
+  },
+
+  compiler: {
+    removeConsole:
+      process.env.NODE_ENV === "production"
+        ? {
+          exclude: ["error", "warn"],
+        }
+        : false,
+  },
+};
+
+module.exports = nextConfig;

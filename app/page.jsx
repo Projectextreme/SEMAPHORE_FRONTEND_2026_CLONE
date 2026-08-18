@@ -1,5 +1,6 @@
 "use client";
 
+import Menu from "@/components/Menu";
 import dynamic from "next/dynamic";
 import FestDetails from "../components/FestDetails";
 

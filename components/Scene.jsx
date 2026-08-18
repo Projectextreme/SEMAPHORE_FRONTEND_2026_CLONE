@@ -26,24 +26,7 @@ import {
 
 gsap.registerPlugin(ScrollTrigger);
 
-interface EventNode {
-  id: string;
-  num: string;
-  name: string;
-  category: string;
-  desc: string;
-  date: string;
-  time: string;
-  venue: string;
-  prize: string;
-  rules: string[];
-  pos: { x: number; y: number; z: number };
-  bannerPos: { x: number; y: number; z: number; rotY: number };
-  portalPos: { x: number; y: number; z: number };
-  minScroll: number;
-}
-
-const eventNodes: EventNode[] = [
+const eventNodes = [
   {
     id: "event-1",
     num: "01",
@@ -127,11 +110,11 @@ const eventNodes: EventNode[] = [
 ];
 
 // Helper function to dynamically draw futuristic 3D Event Banners onto a Canvas Texture
-function createEventBannerTexture(node: EventNode) {
+function createEventBannerTexture(node) {
   const canvas = document.createElement("canvas");
   canvas.width = 1024;
   canvas.height = 512;
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
 
   // Dark metallic cyber background gradient
   const grad = ctx.createLinearGradient(0, 0, 1024, 512);
@@ -252,16 +235,16 @@ function createEventBannerTexture(node: EventNode) {
 }
 
 export default function Scene() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const containerRef = useRef(null);
+  const wrapperRef = useRef(null);
+  const audioRef = useRef(null);
 
   const [progress, setProgress] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<EventNode | null>(null);
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [hoveredNode, setHoveredNode] = useState(null);
   const [stats, setStats] = useState({
     depth: 2,
     speed: "2.0",
@@ -329,7 +312,7 @@ export default function Scene() {
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     pmremGenerator.compileEquirectangularShader();
 
-    let exrEnvironmentTexture: THREE.Texture | null = null;
+    let exrEnvironmentTexture = null;
     const exrLoader = new EXRLoader(manager);
     exrLoader.load("/hdri/spiaggia_di_mondello_4k.exr", (texture) => {
       texture.mapping = THREE.EquirectangularReflectionMapping;
@@ -399,7 +382,7 @@ export default function Scene() {
     scene.add(waterUnderside);
 
     // --- SURFACE GLACIAL ICEBERGS & ROCKS ---
-    function createIcebergGeometry(radius: number, heightScale: number) {
+    function createIcebergGeometry(radius, heightScale) {
       const geo = new THREE.IcosahedronGeometry(radius, 4);
       const pos = geo.attributes.position;
       const v = new THREE.Vector3();
@@ -459,7 +442,7 @@ export default function Scene() {
       { x: -10, y: -4, z: -55, s: 2.0 },
       { x: 18, y: -2, z: -25, s: 1.2 },
     ];
-    const smallIceGeos: THREE.BufferGeometry[] = [];
+    const smallIceGeos = [];
     for (const p of smallIcePositions) {
       const chunkGeo = new THREE.IcosahedronGeometry(p.s, 2);
       smallIceGeos.push(chunkGeo);
@@ -526,7 +509,7 @@ export default function Scene() {
 
     const coralGlowColors = [0x00f0ff, 0xa855f7, 0xec4899, 0x0284c7];
 
-    function createSideCliffWall(xPos: number, isRight: boolean) {
+    function createSideCliffWall(xPos, isRight) {
       const cliffWallGeo = new THREE.BoxGeometry(32, 130, 180, 16, 24, 16);
       const pos = cliffWallGeo.attributes.position;
       const v = new THREE.Vector3();
@@ -667,7 +650,7 @@ export default function Scene() {
       { w: 35, h: 3.0, d: 22, y: -23 },
       { w: 42, h: 3.0, d: 25, y: -26 },
     ];
-    const stepGeos: THREE.BoxGeometry[] = [];
+    const stepGeos = [];
     for (const step of stepDimensions) {
       const stepGeo = new THREE.BoxGeometry(step.w, step.h, step.d);
       stepGeos.push(stepGeo);
@@ -812,14 +795,14 @@ export default function Scene() {
       metalness: 0.8,
     });
 
-    const cliffMeshes: THREE.Mesh[] = [];
-    const pinMarkers: THREE.Mesh[] = [];
-    const bannerMeshes: THREE.Mesh[] = [];
+    const cliffMeshes = [];
+    const pinMarkers = [];
+    const bannerMeshes = [];
 
     const coralColors = [0x00f0ff, 0xa855f7, 0x0284c7, 0xec4899];
 
     // Construct each distinct Event Location (Platform + Event Portal + 3D Banner)
-    function createEventPlatformAndBanner(node: EventNode) {
+    function createEventPlatformAndBanner(node) {
       const { x, y, z } = node.pos;
       const width = 34;
       const depth = 34;
@@ -1021,7 +1004,7 @@ export default function Scene() {
       flatShading: true,
     });
 
-    const kelpInstances: { mesh: THREE.Mesh; phase: number; speed: number }[] = [];
+    const kelpInstances = [];
     const kelpPositions = [
       { x: -35, z: -230 }, { x: -20, z: -235 }, { x: 35, z: -320 },
       { x: 20, z: -325 }, { x: -35, z: -410 }, { x: -20, z: -415 },
@@ -1232,15 +1215,7 @@ export default function Scene() {
 
     const dummyObj = new THREE.Object3D();
     const fishSwarm = new THREE.InstancedMesh(fishGeo, fishMat, fishCount);
-    const fishData: {
-      speed: number;
-      phaseX: number;
-      phaseY: number;
-      phaseZ: number;
-      baseY: number;
-      scale: number;
-    }[] = [];
-
+    const fishData = [];
     for (let i = 0; i < fishCount; i++) {
       const s = 0.4 + Math.random() * 0.5;
       dummyObj.scale.set(s, s, s * 1.3);
@@ -1270,7 +1245,7 @@ export default function Scene() {
     const raycaster = new THREE.Raycaster();
     const mouseVector = new THREE.Vector2();
 
-    function handlePortalClick(event: MouseEvent) {
+    function handlePortalClick(event) {
       mouseVector.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouseVector.y = -(event.clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouseVector, camera);
@@ -1304,7 +1279,7 @@ export default function Scene() {
     const mouse = { x: 0, y: 0 };
     const targetMouse = { x: 0, y: 0 };
 
-    function handleMouseMove(event: MouseEvent) {
+    function handleMouseMove(event) {
       targetMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       targetMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
@@ -1326,7 +1301,7 @@ export default function Scene() {
     }
     window.addEventListener("mousemove", handleMouseMove);
 
-    function handleTouchMove(event: TouchEvent) {
+    function handleTouchMove(event) {
       if (event.touches.length > 0) {
         const touch = event.touches[0];
         targetMouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
@@ -1486,10 +1461,9 @@ export default function Scene() {
     tl.to({}, { duration: 1 });
 
     const clock = new THREE.Clock();
-    let animationId: number;
+    let animationId;
     let frameCount = 0;
     let lastFpsCheck = performance.now();
-
     function animate() {
       animationId = requestAnimationFrame(animate);
 
@@ -1514,7 +1488,7 @@ export default function Scene() {
       }
 
       // Animate Water Surface & Underwater Ceiling Caustics
-      const waterMat = water.material as THREE.ShaderMaterial;
+      const waterMat = water.material;
       if (waterMat.uniforms && waterMat.uniforms["time"]) {
         waterMat.uniforms["time"].value += delta * 0.5;
       }
@@ -1567,7 +1541,7 @@ export default function Scene() {
       flowFieldMat.uniforms.uTime.value = t;
 
       // Update Flow Field Water Particle position drift in 3D currents
-      const ffPositions = flowFieldGeo.attributes.position.array as Float32Array;
+      const ffPositions = flowFieldGeo.attributes.position.array;
       for (let i = 0; i < flowFieldCount; i++) {
         const i3 = i * 3;
         ffPositions[i3] += Math.sin(t * 0.6 + i) * 0.05;
@@ -1581,7 +1555,7 @@ export default function Scene() {
       flowFieldGeo.attributes.position.needsUpdate = true;
 
       // Update Orbiting Energy Particles around Portal Ring
-      const pPositions = portalParticleGeo.attributes.position.array as Float32Array;
+      const pPositions = portalParticleGeo.attributes.position.array;
       for (let i = 0; i < portalParticleCount; i++) {
         const speed = portalParticleSpeeds[i];
         portalParticleAngles[i] += delta * speed * 0.5;

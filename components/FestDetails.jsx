@@ -107,10 +107,10 @@ const galleryImages = [
 ];
 
 export default function FestDetails() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
-  const galleryWrapperRef = useRef<HTMLDivElement>(null);
-  const galleryRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef(null);
+  const cardsRef = useRef([]);
+  const galleryWrapperRef = useRef(null);
+  const galleryRef = useRef(null);
 
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
