@@ -6,19 +6,19 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-interface EventItem {
-  id: string;
-  title: string;
-  category: "Technical" | "Management" | "Innovation" | "E-Sports & Fun" | "Creative";
-  desc: string;
-  date: string;
-  time: string;
-  venue: string;
-  prize: string;
-  rules: string[];
-}
+// interface EventItem {
+//   id: string;
+//   title: string;
+//   category: "Technical" | "Management" | "Innovation" | "E-Sports & Fun" | "Creative";
+//   desc: string;
+//   date: string;
+//   time: string;
+//   venue: string;
+//   prize: string;
+//   rules: string[];
+// }
 
-const events: EventItem[] = [
+const events = [
   {
     id: "it-quiz",
     title: "IT Quiz",
@@ -81,7 +81,7 @@ const events: EventItem[] = [
     desc: "Survive intense gaming trenches (BGMI & Valorant) and solve cryptic tech clues across campus to unearth the hidden treasure.",
     date: "10 October 2026",
     time: "01:30 PM",
-    venue: "E-Sports Arena & Campus Grounds",
+    venue: "E-Sports Arena & CampusCrrt this pr Grounds",
     prize: "₹ 20,000",
     rules: ["Squads of 4 members", "Time-bound physical & digital clues"],
   },
@@ -98,22 +98,12 @@ const events: EventItem[] = [
   },
 ];
 
-const galleryImages = [
-  "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800",
-  "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=800",
-  "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=80&w=800",
-  "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&q=80&w=800",
-  "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=800",
-];
-
 export default function FestDetails() {
   const sectionRef = useRef(null);
   const cardsRef = useRef([]);
-  const galleryWrapperRef = useRef(null);
-  const galleryRef = useRef(null);
 
-  const [activeCategory, setActiveCategory] = useState<string>("All");
-  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [showReturnBtn, setShowReturnBtn] = useState(false);
 
   const filteredEvents =
@@ -166,39 +156,6 @@ export default function FestDetails() {
       }
     );
 
-    const galleryWrapper = galleryWrapperRef.current;
-    const gallery = galleryRef.current;
-
-    if (galleryWrapper && gallery) {
-      const getScrollAmount = () => -(gallery.scrollWidth - window.innerWidth + 100);
-
-      gsap.to(gallery, {
-        x: getScrollAmount,
-        ease: "none",
-        scrollTrigger: {
-          trigger: galleryWrapper,
-          start: "top 10%",
-          end: () => `+=${gallery.scrollWidth - window.innerWidth}`,
-          pin: true,
-          scrub: 1,
-          invalidateOnRefresh: true,
-        },
-      });
-
-      const images = gallery.querySelectorAll(".gallery-img");
-      images.forEach((img) => {
-        gsap.to(img, {
-          objectPosition: "100% 50%",
-          ease: "none",
-          scrollTrigger: {
-            trigger: galleryWrapper,
-            start: "top 10%",
-            end: () => `+=${gallery.scrollWidth - window.innerWidth}`,
-            scrub: true,
-          },
-        });
-      });
-    }
 
     return () => {
       ScrollTrigger.getAll().forEach((t) => t.kill());
@@ -243,11 +200,10 @@ export default function FestDetails() {
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`px-5 py-2 rounded-full font-mono text-xs font-bold tracking-wider transition-all duration-300 ${
-                    activeCategory === cat
-                      ? "bg-cyan-500 text-black shadow-[0_0_20px_rgba(0,255,255,0.6)] border-cyan-400"
-                      : "bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 hover:border-cyan-400 hover:text-white"
-                  }`}
+                  className={`px-5 py-2 rounded-full font-mono text-xs font-bold tracking-wider transition-all duration-300 ${activeCategory === cat
+                    ? "bg-cyan-500 text-black shadow-[0_0_20px_rgba(0,255,255,0.6)] border-cyan-400"
+                    : "bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 hover:border-cyan-400 hover:text-white"
+                    }`}
                 >
                   {cat.toUpperCase()}
                 </button>
@@ -305,42 +261,6 @@ export default function FestDetails() {
         </div>
       </section>
 
-      {/* GSAP Pinned Horizontal Gallery Section */}
-      <section
-        ref={galleryWrapperRef}
-        className="w-full bg-[#010610] text-white py-24 overflow-hidden relative border-t border-cyan-500/20"
-      >
-        <div className="px-10 mb-16 max-w-6xl mx-auto">
-          <h2 className="text-xs font-mono font-bold tracking-[0.35em] text-cyan-400 uppercase mb-4">
-            FLASHBACKS
-          </h2>
-          <h3 className="text-4xl md:text-6xl font-black text-white font-mono tracking-wide">
-            MEMORIES OF THE DEEP
-          </h3>
-        </div>
-
-        {/* The scrolling track */}
-        <div
-          ref={galleryRef}
-          className="flex flex-nowrap items-center gap-10 px-10 h-[60vh] w-max"
-        >
-          {galleryImages.map((src, idx) => (
-            <div
-              key={idx}
-              className="relative w-[60vw] md:w-[40vw] h-full rounded-2xl overflow-hidden shrink-0 group border border-cyan-500/30 shadow-[0_0_30px_rgba(0,255,255,0.1)]"
-            >
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-500 z-10" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={src}
-                alt={`Fest memory ${idx + 1}`}
-                className="gallery-img absolute inset-0 w-full h-full object-cover object-[0%_50%] scale-110"
-              />
-            </div>
-          ))}
-          <div className="w-[10vw] shrink-0" />
-        </div>
-      </section>
 
       {/* Floating Return to Surface Button */}
       <div className={`fixed bottom-8 right-8 z-50 transition-opacity duration-500 ${showReturnBtn ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
