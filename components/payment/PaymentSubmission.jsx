@@ -41,8 +41,8 @@ export default function PaymentSubmission() {
     setError("");
     setSuccess("");
 
-    if (!file) {
-      setError("Please select a payment screenshot.");
+    if (!file || !amount || !utr) {
+      setError("Please fill in all required fields (Screenshot, Amount, and UTR).");
       setLoading(false);
       return;
     }
@@ -158,7 +158,7 @@ export default function PaymentSubmission() {
         {/* Amount Field */}
         <div>
           <label htmlFor="amount" className="block text-sm font-semibold text-cyan-900 mb-2 uppercase tracking-wider">
-            Amount Paid (Optional)
+            Amount Paid (Required)
           </label>
           <div className="relative flex items-center bg-white/40 hover:bg-white/60 focus-within:bg-white/70 border border-white/60 focus-within:border-cyan-400 rounded-xl transition-all duration-300 shadow-sm">
              <div className="pl-4 pr-2 text-cyan-700 font-bold">₹</div>
@@ -172,6 +172,7 @@ export default function PaymentSubmission() {
               placeholder="0.00"
               min="0"
               step="any"
+              required
             />
           </div>
         </div>
@@ -179,7 +180,7 @@ export default function PaymentSubmission() {
         {/* UTR Field */}
         <div>
           <label htmlFor="utr" className="block text-sm font-semibold text-cyan-900 mb-2 uppercase tracking-wider">
-            UTR Number (Optional)
+            UTR Number (Required)
           </label>
           <div className="relative flex items-center bg-white/40 hover:bg-white/60 focus-within:bg-white/70 border border-white/60 focus-within:border-cyan-400 rounded-xl transition-all duration-300 shadow-sm">
             <input
@@ -190,6 +191,7 @@ export default function PaymentSubmission() {
               onChange={(e) => setUtr(e.target.value)}
               className="block w-full px-4 py-3.5 bg-transparent text-cyan-950 focus:outline-none focus:ring-0 font-medium sm:text-sm placeholder-cyan-800/40"
               placeholder="e.g. 123456789012"
+              required
             />
           </div>
         </div>
@@ -197,9 +199,9 @@ export default function PaymentSubmission() {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={loading || !file}
+          disabled={loading || !file || !amount || !utr}
           className={`w-full py-4 px-6 rounded-xl flex items-center justify-center font-bold tracking-widest uppercase transition-all duration-300 shadow-md border ${
-            loading || !file
+            loading || !file || !amount || !utr
               ? "bg-teal-800/40 border-teal-700/30 text-teal-100/50 cursor-not-allowed"
               : "bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 border-teal-500/50 text-white shadow-[0_4px_15px_rgba(13,148,136,0.4)] hover:shadow-[0_6px_20px_rgba(13,148,136,0.6)]"
           }`}
