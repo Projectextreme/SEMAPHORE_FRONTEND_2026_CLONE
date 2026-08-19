@@ -28,6 +28,38 @@ const eventNodes = [
   {
     id: "event-1",
     num: "01",
+    name: "Coding",
+    category: "Technical",
+    desc: "Test your speed, algorithmic thinking, and problem-solving skills in competitive programming.",
+    date: "9 October 2026",
+    time: "10:00 AM",
+    venue: "MCA Lab 1",
+    prize: "₹ 12,000",
+    rules: ["Individual participation", "Languages allowed: C, C++, Java, Python", "Time-bound algorithmic problems"],
+    pos: { x: -42, y: -110, z: -240 },
+    bannerPos: { x: -26, y: -103, z: -235, rotY: 0.35 },
+    portalPos: { x: -50, y: -105, z: -248 },
+    minScroll: 42,
+  },
+  {
+    id: "event-2",
+    num: "02",
+    name: "Web Design",
+    category: "Technical",
+    desc: "Design and build stunning, responsive, and interactive modern web interfaces under time pressure.",
+    date: "9 October 2026",
+    time: "11:30 AM",
+    venue: "Web Lab 2",
+    prize: "₹ 12,000",
+    rules: ["Individual or teams of 2", "HTML5, CSS3, JavaScript allowed", "Live prototype evaluation"],
+    pos: { x: 42, y: -150, z: -320 },
+    bannerPos: { x: 26, y: -143, z: -315, rotY: -0.35 },
+    portalPos: { x: 50, y: -145, z: -328 },
+    minScroll: 48,
+  },
+  {
+    id: "event-3",
+    num: "03",
     name: "IT Quiz",
     category: "Technical",
     desc: "Test your knowledge on Programming, DBMS, Operating Systems, Networks, and Cyber Security. Battle against top tech minds.",
@@ -36,14 +68,62 @@ const eventNodes = [
     venue: "Main Auditorium",
     prize: "₹ 10,000",
     rules: ["Teams of 2 members", "Preliminary written round followed by live stage quiz"],
-    pos: { x: -32, y: -110, z: -240 }, // HIGH CLIFF PLATEAU
-    bannerPos: { x: -16, y: -103, z: -235, rotY: 0.3 },
-    portalPos: { x: -40, y: -105, z: -248 },
-    minScroll: 48,
+    pos: { x: -42, y: -190, z: -400 },
+    bannerPos: { x: -26, y: -183, z: -395, rotY: 0.35 },
+    portalPos: { x: -50, y: -185, z: -408 },
+    minScroll: 54,
   },
   {
-    id: "event-2",
-    num: "02",
+    id: "event-4",
+    num: "04",
+    name: "Gaming",
+    category: "E-Sports",
+    desc: "Survive intense gaming trenches (BGMI & Valorant) and solve cryptic tech clues across campus to unearth the hidden treasure.",
+    date: "10 October 2026",
+    time: "01:30 PM",
+    venue: "E-Sports Arena",
+    prize: "₹ 20,000",
+    rules: ["Squads of 4 members", "Time-bound physical & digital clues"],
+    pos: { x: 42, y: -230, z: -480 },
+    bannerPos: { x: 26, y: -223, z: -475, rotY: -0.35 },
+    portalPos: { x: 50, y: -225, z: -488 },
+    minScroll: 60,
+  },
+  {
+    id: "event-5",
+    num: "05",
+    name: "Tech Talk",
+    category: "Seminar",
+    desc: "Engage with industry leaders and explore cutting-edge developments in AI, Cloud Computing, and Next-Gen Architecture.",
+    date: "9 October 2026",
+    time: "02:00 PM",
+    venue: "Seminar Hall 1",
+    prize: "₹ 10,000",
+    rules: ["Open to all registered delegates", "Q&A session with keynote speakers"],
+    pos: { x: -42, y: -270, z: -560 },
+    bannerPos: { x: -26, y: -263, z: -555, rotY: 0.35 },
+    portalPos: { x: -50, y: -265, z: -568 },
+    minScroll: 66,
+  },
+  {
+    id: "event-6",
+    num: "06",
+    name: "Surprise Event",
+    category: "Special",
+    desc: "Expect the unexpected! A mystery challenge designed to test adaptability, quick thinking, and creative problem solving under pressure.",
+    date: "9 October 2026",
+    time: "03:30 PM",
+    venue: "Open Arena",
+    prize: "₹ 10,000",
+    rules: ["Rules announced on spot", "Teams of 2 members"],
+    pos: { x: 42, y: -310, z: -640 },
+    bannerPos: { x: 26, y: -303, z: -635, rotY: -0.35 },
+    portalPos: { x: 50, y: -305, z: -648 },
+    minScroll: 72,
+  },
+  {
+    id: "event-7",
+    num: "07",
     name: "IT Manager",
     category: "Management",
     desc: "You are the technology manager of a company. Something goes wrong. Test your leadership, crisis management, and decision-making skills.",
@@ -52,31 +132,15 @@ const eventNodes = [
     venue: "MCA Seminar Hall",
     prize: "₹ 15,000",
     rules: ["Individual participation", "Multiple stress rounds & mock press conference"],
-    pos: { x: 32, y: -210, z: -330 }, // DEEP OCEAN TRENCH (DOWN)
-    bannerPos: { x: 16, y: -203, z: -325, rotY: -0.3 },
-    portalPos: { x: 40, y: -205, z: -338 },
-    minScroll: 58,
+    pos: { x: -42, y: -350, z: -720 },
+    bannerPos: { x: -26, y: -343, z: -715, rotY: 0.35 },
+    portalPos: { x: -50, y: -345, z: -728 },
+    minScroll: 78,
   },
   {
-    id: "event-3",
-    num: "03",
-    name: "Techno Hive",
-    category: "Technical",
-    desc: "A pure technical and IT-oriented challenge designed to test your core tech competencies, web dev, and adaptability.",
-    date: "9 October 2026",
-    time: "02:00 PM",
-    venue: "Computer Lab 3",
-    prize: "₹ 12,000",
-    rules: ["Teams of 2 members", "Coding, debugging, and live prototype deployment"],
-    pos: { x: -28, y: -160, z: -420 }, // ELEVATED SPIRE (HIGH)
-    bannerPos: { x: -12, y: -153, z: -415, rotY: 0.25 },
-    portalPos: { x: -36, y: -155, z: -428 },
-    minScroll: 68,
-  },
-  {
-    id: "event-4",
-    num: "04",
-    name: "Hyper Launch",
+    id: "event-8",
+    num: "08",
+    name: "Startup Event",
     category: "Innovation",
     desc: "An innovation, product, and business-oriented challenge. Pitch your startup ideas and show your entrepreneurial spirit.",
     date: "10 October 2026",
@@ -84,26 +148,42 @@ const eventNodes = [
     venue: "Incubation Center",
     prize: "₹ 15,000",
     rules: ["Teams of up to 3 members", "5-minute pitch + 3-minute Q&A with judges"],
-    pos: { x: 28, y: -310, z: -510 }, // ULTRA-DEEP ABYSS (DOWN)
-    bannerPos: { x: 14, y: -303, z: -505, rotY: -0.25 },
-    portalPos: { x: 36, y: -305, z: -518 },
-    minScroll: 78,
+    pos: { x: 42, y: -390, z: -800 },
+    bannerPos: { x: 26, y: -383, z: -795, rotY: -0.35 },
+    portalPos: { x: 50, y: -385, z: -808 },
+    minScroll: 84,
   },
   {
-    id: "event-5",
-    num: "05",
-    name: "Gaming & Treasure Hunt",
-    category: "E-Sports & Fun",
-    desc: "Survive intense gaming trenches (BGMI & Valorant) and solve cryptic tech clues across campus to unearth the hidden treasure.",
+    id: "event-9",
+    num: "09",
+    name: "Dance",
+    category: "Cultural",
+    desc: "Showcase your energy, rhythm, and choreography in an epic stage dance performance celebrating art and music.",
     date: "10 October 2026",
-    time: "01:30 PM",
-    venue: "E-Sports Arena & Campus Grounds",
-    prize: "₹ 20,000",
-    rules: ["Squads of 4 members", "Time-bound physical & digital clues"],
-    pos: { x: 0, y: -260, z: -600 }, // SEABED CITADEL (MID)
-    bannerPos: { x: 16, y: -253, z: -595, rotY: -0.2 },
-    portalPos: { x: -18, y: -255, z: -608 },
-    minScroll: 88,
+    time: "04:00 PM",
+    venue: "Open Air Theater",
+    prize: "₹ 18,000",
+    rules: ["Group performance", "Time limit: 6 to 8 minutes", "Props permitted"],
+    pos: { x: -42, y: -430, z: -880 },
+    bannerPos: { x: -26, y: -423, z: -875, rotY: 0.35 },
+    portalPos: { x: -50, y: -425, z: -888 },
+    minScroll: 90,
+  },
+  {
+    id: "event-10",
+    num: "10",
+    name: "Photography & Videography",
+    category: "Creative",
+    desc: "Capture breathtaking visual stories, creative angles, and cinematic highlights of Semaphore 2k26 across campus.",
+    date: "10 October 2026",
+    time: "10:00 AM",
+    venue: "Campus Grounds",
+    prize: "₹ 12,000",
+    rules: ["Individual participation", "Original unedited RAW & edited submission", "Theme provided on spot"],
+    pos: { x: 0, y: -470, z: -960 },
+    bannerPos: { x: 16, y: -463, z: -955, rotY: -0.2 },
+    portalPos: { x: -18, y: -465, z: -968 },
+    minScroll: 96,
   },
 ];
 
@@ -631,12 +711,16 @@ export default function Scene() {
     });
 
     const mountainPositions = [
-      { x: -160, y: -100, z: -260, r: 65, h: 180 },
-      { x: 160, y: -110, z: -290, r: 75, h: 200 },
-      { x: -190, y: -150, z: -380, r: 85, h: 220 },
-      { x: 185, y: -160, z: -410, r: 90, h: 240 },
-      { x: -120, y: -220, z: -520, r: 105, h: 260 },
-      { x: 120, y: -230, z: -540, r: 110, h: 280 },
+      { x: -175, y: -100, z: -260, r: 65, h: 180 },
+      { x: 175, y: -110, z: -290, r: 70, h: 200 },
+      { x: -185, y: -150, z: -380, r: 75, h: 220 },
+      { x: 185, y: -160, z: -410, r: 75, h: 240 },
+      { x: -185, y: -220, z: -520, r: 80, h: 260 },
+      { x: 185, y: -230, z: -540, r: 80, h: 280 },
+      { x: -190, y: -330, z: -720, r: 80, h: 300 },
+      { x: 190, y: -340, z: -760, r: 80, h: 320 },
+      { x: -195, y: -410, z: -880, r: 85, h: 340 },
+      { x: 195, y: -420, z: -960, r: 85, h: 360 },
     ];
 
     for (const m of mountainPositions) {
@@ -888,8 +972,8 @@ export default function Scene() {
     for (let i = 0; i < flowFieldCount; i++) {
       const i3 = i * 3;
       flowFieldPositions[i3] = (Math.random() - 0.5) * 320;
-      flowFieldPositions[i3 + 1] = -380 + Math.random() * 360;
-      flowFieldPositions[i3 + 2] = -30 - Math.random() * 620;
+      flowFieldPositions[i3 + 1] = -520 + Math.random() * 540;
+      flowFieldPositions[i3 + 2] = -30 - Math.random() * 990;
 
       flowFieldVelocities[i3] = (Math.random() - 0.5) * 0.1;
       flowFieldVelocities[i3 + 1] = (Math.random() - 0.5) * 0.1;
@@ -923,7 +1007,7 @@ export default function Scene() {
     scene.add(flowFieldMesh);
 
     // --- THE NEW WORLD BEYOND THE MAIN STARGATE: INVISIBLE UNTIL ENTERING STARGATE (z < -155) ---
-    // Features 5 DISTINCT DESCENDING ROCK PLATFORMS, PORTALS & 3D EVENT BANNERS
+    // Features 10 DISTINCT DESCENDING ROCK PLATFORMS, PORTALS & 3D EVENT BANNERS
     const newWorldGroup = new THREE.Group();
     newWorldGroup.visible = false; // Strictly hidden until passing inside the stargate (z < -155)!
     scene.add(newWorldGroup);
@@ -962,7 +1046,7 @@ export default function Scene() {
       const { x, y, z } = node.pos;
       const width = 34;
       const depth = 34;
-      const seabedY = -385;
+      const seabedY = Math.min(-385, y - 80);
       const height = Math.abs(y - seabedY) + 25;
 
       // 1. Sculpted Natural Cliff Mountain Base with Rocky Crags & Ridges
@@ -1641,15 +1725,15 @@ export default function Scene() {
       4.0
     );
 
-    // Phase 4: Event 1 (IT Quiz - High Cliff Plateau at y: -110)
+    // Phase 4: Event 01 (Coding - Rock Platform 1)
     tl.to(
       camState,
       {
         x: 0,
-        y: -105,
-        z: -205,
-        rx: 0.02,
-        ry: 0.08,
+        y: -98,
+        z: -198,
+        rx: -0.02,
+        ry: 0.06,
         fogDensity: 0.015,
         duration: 2.0,
         ease: "power1.out",
@@ -1657,61 +1741,61 @@ export default function Scene() {
       5.2
     );
 
-    // Phase 5: Event 2 (IT Manager - Deep Ocean Trench at y: -210)
+    // Phase 5: Event 02 (Web Design - Rock Platform 2)
     tl.to(
       camState,
       {
         x: 0,
-        y: -205,
-        z: -295,
-        rx: -0.05,
-        ry: -0.08,
-        fogDensity: 0.02,
+        y: -138,
+        z: -278,
+        rx: -0.02,
+        ry: -0.06,
+        fogDensity: 0.017,
         duration: 2.0,
         ease: "power1.inOut",
       },
       7.2
     );
 
-    // Phase 6: Event 3 (Techno Hive - Elevated Spire at y: -160)
+    // Phase 6: Event 03 (IT Quiz - Rock Platform 3)
     tl.to(
       camState,
       {
         x: 0,
-        y: -155,
-        z: -385,
-        rx: 0.01,
-        ry: 0.06,
-        fogDensity: 0.018,
+        y: -178,
+        z: -358,
+        rx: -0.02,
+        ry: 0.05,
+        fogDensity: 0.019,
         duration: 2.0,
         ease: "power1.inOut",
       },
       9.2
     );
 
-    // Phase 7: Event 4 (Hyper Launch - Ultra-Deep Abyss at y: -310)
+    // Phase 7: Event 04 (Gaming - Rock Platform 4)
     tl.to(
       camState,
       {
         x: 0,
-        y: -305,
-        z: -475,
-        rx: -0.05,
-        ry: -0.06,
-        fogDensity: 0.024,
+        y: -218,
+        z: -438,
+        rx: -0.02,
+        ry: -0.05,
+        fogDensity: 0.021,
         duration: 2.0,
         ease: "power1.inOut",
       },
       11.2
     );
 
-    // Phase 8: Event 5 (Gaming & Treasure Hunt - Seabed Citadel at y: -260)
+    // Phase 8: Event 05 (Tech Talk - Rock Platform 5)
     tl.to(
       camState,
       {
         x: 0,
-        y: -255,
-        z: -565,
+        y: -258,
+        z: -518,
         rx: -0.02,
         ry: 0,
         fogDensity: 0.022,
@@ -1719,6 +1803,86 @@ export default function Scene() {
         ease: "power1.inOut",
       },
       13.2
+    );
+
+    // Phase 9: Event 06 (Surprise Event - Rock Platform 6)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -298,
+        z: -598,
+        rx: -0.02,
+        ry: 0.06,
+        fogDensity: 0.024,
+        duration: 2.0,
+        ease: "power1.inOut",
+      },
+      15.2
+    );
+
+    // Phase 10: Event 07 (IT Manager - Rock Platform 7)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -338,
+        z: -678,
+        rx: -0.02,
+        ry: -0.06,
+        fogDensity: 0.025,
+        duration: 2.0,
+        ease: "power1.inOut",
+      },
+      17.2
+    );
+
+    // Phase 11: Event 08 (Startup Event - Rock Platform 8)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -378,
+        z: -758,
+        rx: -0.02,
+        ry: 0.05,
+        fogDensity: 0.026,
+        duration: 2.0,
+        ease: "power1.inOut",
+      },
+      19.2
+    );
+
+    // Phase 12: Event 09 (Dance - Rock Platform 9)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -418,
+        z: -838,
+        rx: -0.02,
+        ry: -0.05,
+        fogDensity: 0.027,
+        duration: 2.0,
+        ease: "power1.inOut",
+      },
+      21.2
+    );
+
+    // Phase 13: Event 10 (Photography & Videography - Rock Platform 10)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -458,
+        z: -918,
+        rx: -0.02,
+        ry: 0,
+        fogDensity: 0.028,
+        duration: 2.0,
+        ease: "power1.inOut",
+      },
+      23.2
     );
 
     tl.to({}, { duration: 1 });
@@ -1772,15 +1936,17 @@ export default function Scene() {
         sideCliffGroup.visible = false;
         bgMountainsGroup.visible = false;
       } else {
-        // Deepening Fog & Dynamic Lighting Transition with Depth
-        const depthFactor = Math.min(1.0, Math.abs(camState.y) / 350);
-        const caveFogColor = new THREE.Color(0x031e30).lerp(new THREE.Color(0x010814), depthFactor);
+        // Deepening Fog & Dynamic Dark-Ocean Lighting Transition with Depth (y: -4 down to y: -470)
+        const depthFactor = Math.min(1.0, Math.abs(camState.y) / 470);
+        const caveFogColor = new THREE.Color(0x031e30).lerp(new THREE.Color(0x000612), depthFactor);
         scene.background = caveFogColor;
-        scene.fog = new THREE.FogExp2(caveFogColor, camState.fogDensity);
+        
+        const dynamicFogDensity = camState.fogDensity * (1.0 + depthFactor * 0.4);
+        scene.fog = new THREE.FogExp2(caveFogColor, dynamicFogDensity);
 
-        sunLight.intensity = Math.max(0.1, 2.5 * (1.0 - depthFactor * 0.9));
+        sunLight.intensity = Math.max(0.05, 2.5 * (1.0 - depthFactor * 0.95));
         ambientLight.color.setHex(0x0a4b66).lerp(new THREE.Color(0x011220), depthFactor);
-        ambientLight.intensity = 1.2;
+        ambientLight.intensity = 1.2 * (1.0 - depthFactor * 0.3);
         waterCeilingMesh.visible = true;
         caveMesh.visible = true;
         sideCliffGroup.visible = true;
@@ -1808,7 +1974,7 @@ export default function Scene() {
         ffPositions[i3 + 2] += Math.sin(t * 0.5 + i * 2) * 0.05;
 
         if (ffPositions[i3 + 1] > 30) {
-          ffPositions[i3 + 1] = -385;
+          ffPositions[i3 + 1] = -520;
         }
       }
       flowFieldGeo.attributes.position.needsUpdate = true;
@@ -1992,8 +2158,9 @@ export default function Scene() {
     };
   }, []);
 
-  const hudVisible = scrollProgress > 15;
-  const isInsideNewWorld = scrollProgress > 48;
+  const heroVisible = scrollProgress <= 5;
+  const hudVisible = scrollProgress >= 4;
+  const isInsideNewWorld = scrollProgress > 42;
 
   return (
     <div ref={wrapperRef} style={{ height: "1600vh", position: "relative", backgroundColor: "#000" }}>
@@ -2070,11 +2237,9 @@ export default function Scene() {
           </div>
         )}
 
-
-
         {/* Surface Semaphore 2K26 Hero UI */}
         <div
-          className={`pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-12 text-white transition-opacity duration-700 ${!hudVisible ? "opacity-100" : "opacity-0"
+          className={`pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-12 text-white transition-opacity duration-700 ${heroVisible ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
         >
           <header className="flex justify-between items-center w-full">
