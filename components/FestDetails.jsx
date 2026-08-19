@@ -262,18 +262,7 @@ export default function FestDetails() {
       </section>
 
 
-      {/* Floating Return to Surface Button */}
-      <div className={`fixed bottom-8 right-8 z-50 transition-opacity duration-500 ${showReturnBtn ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-        <button
-          onClick={scrollToTop}
-          className="group relative flex items-center gap-3 bg-black/80 border border-cyan-400/60 px-6 py-3 rounded-full backdrop-blur-md shadow-[0_0_25px_rgba(0,255,255,0.3)] hover:border-cyan-300 transition-all hover:scale-105"
-        >
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-          <span className="font-mono text-xs font-bold tracking-[0.25em] text-cyan-300 group-hover:text-white">
-            ↑ RETURN TO SURFACE OCEAN
-          </span>
-        </button>
-      </div>
+
 
       {/* Interactive Event Detail Modal */}
       {selectedEvent && (

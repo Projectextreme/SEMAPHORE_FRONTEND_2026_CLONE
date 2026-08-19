@@ -238,6 +238,7 @@ export default function Scene() {
   const audioRef = useRef(null);
   const pinRefs = useRef([]);
   const activeEventRef = useRef("event-1");
+  const userMutedRef = useRef(false);
   const [activeEvent, setActiveEvent] = useState("event-1");
 
   const [progress, setProgress] = useState(0);
@@ -254,25 +255,83 @@ export default function Scene() {
   });
 
   useEffect(() => {
-    const bgm = new Audio("/assets/audio/bgm.mp3");
-    bgm.loop = true;
-    bgm.volume = 0.5;
-    audioRef.current = bgm;
+    if (typeof window !== "undefined") {
+      const bgm = new Audio("/assets/audio/bgm.mp3");
+      bgm.loop = true;
+      bgm.volume = 0.5;
+      bgm.preload = "auto";
+      audioRef.current = bgm;
+    }
 
     return () => {
-      bgm.pause();
-      audioRef.current = null;
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
     };
   }, []);
 
-  const toggleAudio = () => {
+  // Automatically play audio by default when first entering the ocean on user scroll gesture, and pause outside ocean
+  useEffect(() => {
     if (!audioRef.current) return;
-    if (isAudioPlaying) {
-      audioRef.current.pause();
-      setIsAudioPlaying(false);
+
+    const handleInitialOceanScroll = () => {
+      if (scrollProgress >= 4 && !userMutedRef.current && audioRef.current && audioRef.current.paused) {
+        audioRef.current
+          .play()
+          .then(() => setIsAudioPlaying(true))
+          .catch(() => {});
+      }
+    };
+
+    if (scrollProgress >= 4) {
+      handleInitialOceanScroll();
+      window.addEventListener("wheel", handleInitialOceanScroll, { passive: true });
+      window.addEventListener("scroll", handleInitialOceanScroll, { passive: true });
+      window.addEventListener("touchmove", handleInitialOceanScroll, { passive: true });
     } else {
-      audioRef.current.play().catch((err) => console.warn("Audio error:", err));
-      setIsAudioPlaying(true);
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+        setIsAudioPlaying(false);
+      }
+    }
+
+    return () => {
+      window.removeEventListener("wheel", handleInitialOceanScroll);
+      window.removeEventListener("scroll", handleInitialOceanScroll);
+      window.removeEventListener("touchmove", handleInitialOceanScroll);
+    };
+  }, [scrollProgress]);
+
+  const toggleAudio = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (!audioRef.current) {
+      const bgm = new Audio("/assets/audio/bgm.mp3");
+      bgm.loop = true;
+      bgm.volume = 0.5;
+      audioRef.current = bgm;
+    }
+
+    const audio = audioRef.current;
+    if (audio.paused) {
+      userMutedRef.current = false; // User explicitly turned ON audio
+      audio
+        .play()
+        .then(() => {
+          setIsAudioPlaying(true);
+        })
+        .catch((err) => {
+          console.warn("Audio play error:", err);
+          setIsAudioPlaying(false);
+        });
+    } else {
+      userMutedRef.current = true; // User explicitly turned OFF audio
+      audio.pause();
+      setIsAudioPlaying(false);
     }
   };
 
@@ -465,9 +524,9 @@ export default function Scene() {
     tealUnderwaterLight.position.set(0, 50, -100);
     scene.add(tealUnderwaterLight);
 
-    // Glowing Portal Backlight (Positioned deep underwater at y: -110, z: -162)
+    // Glowing Portal Backlight (Positioned deep underwater at y: -110, z: -192)
     const portalBackLight = new THREE.PointLight(0x00f0ff, 8.0, 200);
-    portalBackLight.position.set(0, -110, -162);
+    portalBackLight.position.set(0, -110, -192);
     scene.add(portalBackLight);
 
 
@@ -616,7 +675,96 @@ export default function Scene() {
     });
 
     const portalGroup = new THREE.Group();
-    portalGroup.position.set(0, -110, -160);
+    portalGroup.position.set(0, -110, -190);
+
+    const archRockMat = new THREE.MeshStandardMaterial({
+      color: 0x06283d,
+      roughness: 0.85,
+      metalness: 0.15,
+      flatShading: true,
+    });
+
+    // Outer Natural Cavern Rock Arch framing the entire Stargate Structure
+    const mainArchGeo = new THREE.TorusGeometry(32, 5.5, 12, 32, Math.PI);
+    const archPos = mainArchGeo.attributes.position;
+    const aVec = new THREE.Vector3();
+    for (let i = 0; i < archPos.count; i++) {
+      aVec.fromBufferAttribute(archPos, i);
+      const noise = Math.sin(aVec.x * 0.15) * Math.cos(aVec.y * 0.15) * 3.5;
+      aVec.x += noise;
+      aVec.y += noise;
+      archPos.setXYZ(i, aVec.x, aVec.y, aVec.z);
+    }
+    mainArchGeo.computeVertexNormals();
+    const mainArchMesh = new THREE.Mesh(mainArchGeo, archRockMat);
+    mainArchMesh.position.set(0, -5, -4);
+    portalGroup.add(mainArchMesh);
+
+    // Concentric Glowing Outer Energy Ring around Portal Ring
+    const outerRingGeo = new THREE.TorusGeometry(18.5, 0.4, 16, 48);
+    const outerRingMesh = new THREE.Mesh(outerRingGeo, ruinGlowMat);
+    outerRingMesh.position.set(0, 0, -0.2);
+    portalGroup.add(outerRingMesh);
+
+    // Twin Guardian Obelisks / Spires (Left & Right of Portal Ring)
+    const obeliskPositions = [
+      { x: -26, y: 3, z: 0, rotZ: 0.1 },
+      { x: 26, y: 3, z: 0, rotZ: -0.1 },
+    ];
+    for (const ob of obeliskPositions) {
+      const obGroup = new THREE.Group();
+      obGroup.position.set(ob.x, ob.y, ob.z);
+      obGroup.rotation.z = ob.rotZ;
+
+      const obGeo = new THREE.CylinderGeometry(1.2, 3.2, 32, 6);
+      const obMesh = new THREE.Mesh(obGeo, ruinStoneMat);
+      obGroup.add(obMesh);
+
+      const obCapGeo = new THREE.OctahedronGeometry(2.2, 1);
+      const obCapMat = new THREE.MeshStandardMaterial({
+        color: 0x011e30,
+        emissive: 0x00f0ff,
+        emissiveIntensity: 2.2,
+        roughness: 0.1,
+      });
+      const obCap = new THREE.Mesh(obCapGeo, obCapMat);
+      obCap.position.set(0, 17, 0);
+      obGroup.add(obCap);
+
+      const obGlyphGeo = new THREE.BoxGeometry(0.5, 22, 0.5);
+      const obGlyph = new THREE.Mesh(obGlyphGeo, ruinGlowMat);
+      obGlyph.position.set(0, 0, 1.8);
+      obGroup.add(obGlyph);
+
+      portalGroup.add(obGroup);
+    }
+
+    // Bioluminescent Crystal Clusters surrounding the Stone Pedestal Steps
+    const pedestalCrystals = [
+      { x: -16, y: -12, z: 6, color: 0x00f0ff, scale: 1.6 },
+      { x: 16, y: -12, z: 6, color: 0x00f0ff, scale: 1.5 },
+      { x: -19, y: -15, z: 8, color: 0xa855f7, scale: 1.8 },
+      { x: 19, y: -15, z: 8, color: 0x38bdf8, scale: 1.7 },
+      { x: -22, y: -19, z: 10, color: 0x00e5ff, scale: 2.0 },
+      { x: 22, y: -19, z: 10, color: 0xa855f7, scale: 1.9 },
+      { x: -12, y: -10, z: -4, color: 0x0284c7, scale: 1.4 },
+      { x: 12, y: -10, z: -4, color: 0x00f0ff, scale: 1.4 },
+    ];
+
+    for (const c of pedestalCrystals) {
+      const cGeo = new THREE.OctahedronGeometry(c.scale, 1);
+      const cMat = new THREE.MeshStandardMaterial({
+        color: 0x011a28,
+        emissive: c.color,
+        emissiveIntensity: 2.5,
+        roughness: 0.2,
+        flatShading: true,
+      });
+      const cMesh = new THREE.Mesh(cGeo, cMat);
+      cMesh.position.set(c.x, c.y, c.z);
+      cMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+      portalGroup.add(cMesh);
+    }
 
     // Raised Stone Staircase Pedestal
     const stepDimensions = [
@@ -668,6 +816,36 @@ export default function Scene() {
     const portalDisc = new THREE.Mesh(portalDiscGeo, portalDiscMat);
     portalDisc.position.set(0, 0, -0.1);
     portalGroup.add(portalDisc);
+
+    // Soft Energy Blur Aura Disc specifically for ONLY the Portal Energy Core
+    const portalBlurGeo = new THREE.CircleGeometry(16.5, 48);
+    const portalBlurMat = new THREE.ShaderMaterial({
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec2 vUv;
+        void main() {
+          vec2 center = vUv - vec2(0.5);
+          float dist = length(center) * 2.0;
+          float alpha = smoothstep(1.0, 0.0, dist);
+          alpha = pow(alpha, 1.8) * 0.75;
+          vec3 blurColor = mix(vec3(0.0, 0.92, 1.0), vec3(0.01, 0.12, 0.35), dist);
+          gl_FragColor = vec4(blurColor, alpha);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    const portalBlurMesh = new THREE.Mesh(portalBlurGeo, portalBlurMat);
+    portalBlurMesh.position.set(0, 0, -0.3);
+    portalGroup.add(portalBlurMesh);
 
     // Swirling Energy Particles Orbiting Main Portal Ring
     const portalParticleCount = 350;
@@ -1394,27 +1572,19 @@ export default function Scene() {
         scrub: isMobile ? 2.5 : 1.5,
         snap: {
           snapTo: (progress, self) => {
-            if (progress > 0 && progress < 0.08) {
-              // Direct direction-based snap: scrolling UP goes directly UP (0), scrolling DOWN goes directly DOWN (0.15)
+            if (progress > 0 && progress < 0.05) {
+              // Smooth direction-based snap: scrolling UP goes smoothly to top (0), scrolling DOWN stops exactly at 0.05 (5% progress view)
               if (self && self.direction === -1) {
                 return 0;
               }
-              return 0.08;
+              return 0.05;
             }
-            let closest = snapPoints[0];
-            let minDiff = Math.abs(progress - snapPoints[0]);
-            for (let i = 1; i < snapPoints.length; i++) {
-              const diff = Math.abs(progress - snapPoints[i]);
-              if (diff < minDiff) {
-                minDiff = diff;
-                closest = snapPoints[i];
-              }
-            }
-            return closest;
+            // No automatic snapping backward or forward after entering the underground ocean
+            return progress;
           },
-          duration: { min: 0.15, max: 0.45 },
-          delay: 0.02,
-          ease: "power2.out",
+          duration: { min: 0.4, max: 0.8 },
+          delay: 0.04,
+          ease: "power2.inOut",
         },
         onUpdate: (self) => {
           const currentProgress = Math.floor(self.progress * 100);
@@ -1423,14 +1593,14 @@ export default function Scene() {
       },
     });
 
-    // Phase 1: Surface Ocean View (0 - 15%)
+    // Phase 1: Surface Ocean View (0 - 15%) - Dive directly down into ocean
     tl.to(
       camState,
       {
         x: 0,
-        y: -20,
-        z: -45,
-        rx: 0.04,
+        y: -40,
+        z: -35,
+        rx: -0.08,
         ry: 0,
         fogDensity: 0.012,
         duration: 1.5,
@@ -1439,13 +1609,13 @@ export default function Scene() {
       0
     );
 
-    // Phase 2: Align Camera with Deeper Submerged Main Portal Ring Center at y: -110, z: -140 (15% - 40%)
+    // Phase 2: Align Camera with Deeper Submerged Main Portal Ring Center at y: -110, z: -125 (15% - 40%)
     tl.to(
       camState,
       {
         x: 0,
         y: -110,
-        z: -140,
+        z: -125,
         rx: 0,
         ry: 0,
         fogDensity: 0.016,
@@ -1461,7 +1631,7 @@ export default function Scene() {
       {
         x: 0,
         y: -110,
-        z: -165,
+        z: -195,
         rx: 0,
         ry: 0,
         fogDensity: 0.018,
@@ -1617,8 +1787,8 @@ export default function Scene() {
         bgMountainsGroup.visible = true;
       }
 
-      // STRICT REQUIREMENT: Event World is STRICTLY INVISIBLE until camera passes inside circular portal ring (camState.z < -155)!
-      if (camState.z < -155) {
+      // STRICT REQUIREMENT: Event World is STRICTLY INVISIBLE until camera passes inside circular portal ring (camState.z < -185)!
+      if (camState.z < -185) {
         newWorldGroup.visible = true;
       } else {
         newWorldGroup.visible = false;
@@ -1626,6 +1796,7 @@ export default function Scene() {
 
       // Update Portal Vortex Shader and Flow Field Water Particles
       portalDiscMat.uniforms.uTime.value = t;
+      outerRingMesh.rotation.z = -t * 0.25;
       flowFieldMat.uniforms.uTime.value = t;
 
       // Update Flow Field Water Particle position drift in 3D currents
@@ -1878,7 +2049,7 @@ export default function Scene() {
           </svg>
         </div>
         <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 tracking-[0.3em] uppercase mb-4">
-          CYBER OCEAN
+          NAVIGATING
         </h1>
         <p className="text-cyan-300/60 font-mono text-xs tracking-[0.4em] uppercase mb-6">
           Entering Deep Submerged Cavern
@@ -1918,14 +2089,14 @@ export default function Scene() {
                 <span className="font-mono text-[9px] tracking-[0.3em] text-cyan-300/70">FOUNDATION</span>
               </div>
             </div>
-            <nav className="hidden md:flex items-center gap-8 font-mono text-xs tracking-[0.25em] text-cyan-100/80">
+            {/* <nav className="hidden md:flex items-center gap-8 font-mono text-xs tracking-[0.25em] text-cyan-100/80">
               <span className="hover:text-cyan-300 cursor-pointer transition-colors">JOURNEYS</span>
               <span className="hover:text-cyan-300 cursor-pointer transition-colors">ABOUT</span>
               <span className="hover:text-cyan-300 cursor-pointer transition-colors">GET INVOLVED</span>
               <span className="hover:text-cyan-300 cursor-pointer transition-colors">EDUCATION</span>
               <span className="hover:text-cyan-300 cursor-pointer transition-colors">SHARE +</span>
               <span className="text-cyan-400 font-bold">EN v</span>
-            </nav>
+            </nav> */}
           </header>
 
           <main className="flex flex-col items-center justify-center text-center my-auto">
@@ -1935,11 +2106,9 @@ export default function Scene() {
             <h1 className="font-mono text-6xl md:text-9xl font-black tracking-[0.25em] text-white drop-shadow-[0_0_40px_rgba(0,200,255,0.6)] my-2 select-none">
               2 K 2 6
             </h1>
-            <div className="bg-black/30 border border-cyan-400/30 px-6 py-2 rounded-full backdrop-blur-md mt-4 shadow-[0_0_20px_rgba(0,200,255,0.15)]">
-              <span className="font-mono text-xs md:text-sm tracking-[0.35em] text-cyan-200 uppercase font-bold">
-                NATIONAL LEVEL IT & CULTURAL FEST
-              </span>
-            </div>
+            <span className="font-mono text-xs md:text-sm tracking-[0.35em] text-cyan-200 uppercase font-bold">
+              NATIONAL LEVEL IT & CULTURAL FEST
+            </span>
           </main>
 
           <footer className="flex justify-between items-end w-full">
@@ -1952,18 +2121,6 @@ export default function Scene() {
                 <span className="text-cyan-100/70 tracking-widest">DISCOVERY PROGRESS: {scrollProgress}%</span>
                 <span className="text-cyan-400/60 text-[9px] tracking-wider mt-0.5">DEPTH: {stats.depth}M | TEMP: 28.0°C</span>
               </div>
-            </div>
-
-            <div
-              onClick={() => {
-                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-                window.scrollTo({ top: maxScroll * 0.16, behavior: "smooth" });
-              }}
-              className="pointer-events-auto bg-black/40 border border-cyan-400/50 px-8 py-3 rounded-full backdrop-blur-md shadow-[0_0_25px_rgba(0,255,255,0.2)] hover:border-cyan-300 transition-all cursor-pointer select-none active:scale-95"
-            >
-              <span className="font-mono text-xs font-bold tracking-[0.3em] text-cyan-300">
-                ⌜ SCROLL TO DIVE ⌟
-              </span>
             </div>
 
             <div className="hidden lg:flex flex-col text-right font-mono text-[9px] text-cyan-200/60 tracking-widest leading-relaxed">
@@ -1990,83 +2147,58 @@ export default function Scene() {
             <div className="logo">{isInsideNewWorld ? "NEW WORLD // DESCENDING EVENTS REALM" : "CYBER OCEAN"}</div>
           </div>
 
-          {/* Left Telemetry Panel */}
-          <div className="side-panel left">
-            <div className="panel-header">
-              <span className="dot" /> <span>TELEMETRY</span>
+          {/* Animated Scroll Down Mouse Logo (Visible only at beginning surface view, scrollProgress < 10) */}
+          <div
+            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none transition-all duration-500 font-mono select-none ${scrollProgress < 10 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+              }`}
+          >
+            <div className="relative w-6 h-10 rounded-full border-2 border-cyan-400/80 shadow-[0_0_15px_rgba(0,255,255,0.4)] flex justify-center pt-2 bg-[#010c18]/60 backdrop-blur-sm">
+              <div className="w-1.5 h-3 rounded-full bg-cyan-300 animate-bounce shadow-[0_0_8px_rgba(0,255,255,0.9)]" />
             </div>
-            <div className="stat-item">
-              <div className="stat-label">Depth</div>
-              <div className="stat-value">
-                <span>{stats.depth}</span>
-                <span className="unit">M</span>
-              </div>
-              <div className="stat-bar">
-                <div className="stat-bar-fill" style={{ width: `${Math.min(stats.depth, 100)}%` }} />
-              </div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-label">Velocity</div>
-              <div className="stat-value">
-                <span>{stats.speed}</span>
-                <span className="unit">M/S</span>
-              </div>
-              <div className="stat-bar">
-                <div
-                  className="stat-bar-fill"
-                  style={{ width: `${Math.min(Number(stats.speed) * 20, 100)}%` }}
-                />
-              </div>
+            <div className="flex items-center gap-1 text-[11px] font-bold tracking-[0.25em] text-cyan-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] uppercase">
+              <span>SCROLL TO DIVE</span>
+              <span className="text-cyan-400 text-xs animate-bounce">↓</span>
             </div>
           </div>
 
-          {/* Right Controls Panel */}
-          <div className="side-panel right">
-            <div className="panel-header">
-              <span className="dot" /> <span>CONTROLS</span>
+          {/* Right-Side Down Telemetry HUD Readout (Clean Panel-less design) */}
+          <div className="fixed bottom-20 right-6 md:right-10 z-50 flex flex-col items-end gap-1.5 font-mono text-right select-none pointer-events-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+
+            <div className="flex items-baseline gap-2 text-cyan-100 font-bold text-sm tracking-wider">
+              <span className="text-[10px] text-cyan-400/70 font-semibold uppercase">DEPTH:</span>
+              <span className="text-cyan-300 font-extrabold text-base">{stats.depth}</span>
+              <span className="text-[10px] text-cyan-400/80">M</span>
             </div>
-            <div className="control-row">
-              <span className="control-key">MOUSE</span>
-              <span>Navigate</span>
-            </div>
-            <div className="control-row">
-              <span className="control-key">CLICK PORTAL/BANNER</span>
-              <span>View Event</span>
-            </div>
-            <div className="audio-toggle" onClick={toggleAudio}>
-              <button className={`audio-btn ${isAudioPlaying ? "" : "muted"}`} aria-label="Toggle audio">
-                {isAudioPlaying ? (
-                  <svg viewBox="0 0 24 24">
-                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24">
-                    <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
-                  </svg>
-                )}
-              </button>
-              <span className={`audio-label ${isAudioPlaying ? "playing" : ""}`}>
-                {isAudioPlaying ? "SOUND ON" : "SOUND OFF"}
-              </span>
+
+            <div className="flex items-baseline gap-2 text-cyan-100 font-bold text-sm tracking-wider">
+              <span className="text-[10px] text-cyan-400/70 font-semibold uppercase">SPEED:</span>
+              <span className="text-cyan-300 font-extrabold text-base">{stats.speed}</span>
+              <span className="text-[10px] text-cyan-400/80">M/S</span>
             </div>
           </div>
 
-          {/* Bottom Bar */}
-          <div className="bottom-bar">
-            <span>
-              SYS <span className="coord">ONLINE</span>
-            </span>
-            <span className="separator" />
-            <span>
-              POS <span className="coord">{stats.coords}</span>
-            </span>
-            <span className="separator" />
-            <span>
-              FPS <span className="coord">{stats.fps}</span>
-            </span>
-          </div>
         </div>
       </div>
+
+      {/* Minimal Top-Right Speaker Audio Toggle Icon (Panel-less bare icon design) */}
+      <button
+        onClick={toggleAudio}
+        className={`fixed top-6 right-6 md:top-8 md:right-10 z-[80] p-1 text-cyan-300 hover:text-white transition-all duration-500 cursor-pointer pointer-events-auto hover:scale-110 active:scale-95 drop-shadow-[0_0_15px_rgba(0,255,255,0.8)] ${
+          scrollProgress >= 4 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+        }`}
+        aria-label="Toggle Audio"
+        title={isAudioPlaying ? "Mute Audio" : "Play Audio"}
+      >
+        {isAudioPlaying ? (
+          <svg className="w-6 h-6 fill-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]" viewBox="0 0 24 24">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+          </svg>
+        ) : (
+          <svg className="w-6 h-6 fill-cyan-400/50 hover:fill-cyan-300" viewBox="0 0 24 24">
+            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+          </svg>
+        )}
+      </button>
 
       {/* Interactive Event Detail Modal when clicking on any Event Portal, Pin, or 3D Banner */}
       {selectedEvent && (
