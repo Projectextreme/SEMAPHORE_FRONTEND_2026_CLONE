@@ -432,16 +432,16 @@ export default function Scene() {
 
     const icePlateGeo = new THREE.CylinderGeometry(4, 5, 0.8, 7);
     const icePlate = new THREE.Mesh(icePlateGeo, iceMaterial);
-    icePlate.position.set(-6, -2, -35);
+    icePlate.position.set(-24, -4.5, -36);
     icePlate.rotation.y = 0.4;
     scene.add(icePlate);
 
     const smallIcePositions = [
-      { x: 12, y: -3, z: -30, s: 1.8 },
-      { x: -35, y: -2.5, z: -42, s: 2.5 },
-      { x: 30, y: -3.5, z: -38, s: 1.5 },
-      { x: -10, y: -4, z: -55, s: 2.0 },
-      { x: 18, y: -2, z: -25, s: 1.2 },
+      { x: 26, y: -4, z: -32, s: 1.6 },
+      { x: -35, y: -3.5, z: -42, s: 2.2 },
+      { x: 34, y: -4.5, z: -38, s: 1.5 },
+      { x: -18, y: -5, z: -50, s: 1.8 },
+      { x: 22, y: -3.5, z: -26, s: 1.2 },
     ];
     const smallIceGeos = [];
     for (const p of smallIcePositions) {
@@ -1384,12 +1384,38 @@ export default function Scene() {
       window.addEventListener("touchend", handleTouchEnd);
     }
 
+    const snapPoints = [0, 0.15, 0.35, 0.48, 0.60, 0.72, 0.84, 1.0];
+
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: wrapper,
         start: "top top",
         end: "bottom bottom",
         scrub: isMobile ? 2.5 : 1.5,
+        snap: {
+          snapTo: (progress, self) => {
+            if (progress > 0 && progress < 0.08) {
+              // Direct direction-based snap: scrolling UP goes directly UP (0), scrolling DOWN goes directly DOWN (0.15)
+              if (self && self.direction === -1) {
+                return 0;
+              }
+              return 0.08;
+            }
+            let closest = snapPoints[0];
+            let minDiff = Math.abs(progress - snapPoints[0]);
+            for (let i = 1; i < snapPoints.length; i++) {
+              const diff = Math.abs(progress - snapPoints[i]);
+              if (diff < minDiff) {
+                minDiff = diff;
+                closest = snapPoints[i];
+              }
+            }
+            return closest;
+          },
+          duration: { min: 0.15, max: 0.45 },
+          delay: 0.02,
+          ease: "power2.out",
+        },
         onUpdate: (self) => {
           const currentProgress = Math.floor(self.progress * 100);
           setScrollProgress(currentProgress);
@@ -1802,9 +1828,8 @@ export default function Scene() {
     <div ref={wrapperRef} style={{ height: "1600vh", position: "relative", backgroundColor: "#000" }}>
       {/* Compass Loading Screen */}
       <div
-        className={`fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[#020914] transition-opacity duration-1000 ${
-          loading ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[#020914] transition-opacity duration-1000 ${loading ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
       >
         <div className="relative w-48 h-48 md:w-64 md:h-64 mb-10">
           <div className="absolute inset-0 rounded-full border-2 border-cyan-500/40 shadow-[0_0_30px_rgba(0,200,255,0.15)]" />
@@ -1812,9 +1837,8 @@ export default function Scene() {
             {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
               <div key={deg} className="absolute w-full h-full" style={{ transform: `rotate(${deg}deg)` }}>
                 <div
-                  className={`absolute top-0 left-1/2 -translate-x-1/2 ${
-                    deg % 90 === 0 ? "w-0.5 h-4 bg-cyan-400" : "w-px h-2 bg-cyan-600/60"
-                  }`}
+                  className={`absolute top-0 left-1/2 -translate-x-1/2 ${deg % 90 === 0 ? "w-0.5 h-4 bg-cyan-400" : "w-px h-2 bg-cyan-600/60"
+                    }`}
                 />
               </div>
             ))}
@@ -1879,9 +1903,8 @@ export default function Scene() {
 
         {/* Surface Semaphore 2K26 Hero UI */}
         <div
-          className={`pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-12 text-white transition-opacity duration-700 ${
-            !hudVisible ? "opacity-100" : "opacity-0"
-          }`}
+          className={`pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-12 text-white transition-opacity duration-700 ${!hudVisible ? "opacity-100" : "opacity-0"
+            }`}
         >
           <header className="flex justify-between items-center w-full">
             <div className="flex items-center gap-3">
@@ -1926,12 +1949,18 @@ export default function Scene() {
               </div>
               <div className="flex flex-col font-mono text-[10px] md:text-xs">
                 <span className="font-bold text-cyan-300 tracking-[0.2em]">DEEP TRENCH</span>
-                <span className="text-cyan-100/70 tracking-widest">DISCOVERY PROGRESS: 0%</span>
-                <span className="text-cyan-400/60 text-[9px] tracking-wider mt-0.5">DEPTH: 2M | TEMP: 28.0°C</span>
+                <span className="text-cyan-100/70 tracking-widest">DISCOVERY PROGRESS: {scrollProgress}%</span>
+                <span className="text-cyan-400/60 text-[9px] tracking-wider mt-0.5">DEPTH: {stats.depth}M | TEMP: 28.0°C</span>
               </div>
             </div>
 
-            <div className="pointer-events-auto bg-black/40 border border-cyan-400/50 px-8 py-3 rounded-full backdrop-blur-md shadow-[0_0_25px_rgba(0,255,255,0.2)] hover:border-cyan-300 transition-all cursor-pointer">
+            <div
+              onClick={() => {
+                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                window.scrollTo({ top: maxScroll * 0.16, behavior: "smooth" });
+              }}
+              className="pointer-events-auto bg-black/40 border border-cyan-400/50 px-8 py-3 rounded-full backdrop-blur-md shadow-[0_0_25px_rgba(0,255,255,0.2)] hover:border-cyan-300 transition-all cursor-pointer select-none active:scale-95"
+            >
               <span className="font-mono text-xs font-bold tracking-[0.3em] text-cyan-300">
                 ⌜ SCROLL TO DIVE ⌟
               </span>
