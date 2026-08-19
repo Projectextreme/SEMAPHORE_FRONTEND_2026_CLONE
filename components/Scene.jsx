@@ -14,8 +14,6 @@ import {
   flowFieldFragment,
   wormholeVertex,
   wormholeFragment,
-  godRayVertex,
-  godRayFragment,
   bubbleVertex,
   bubbleFragment,
   portalVortexVertex,
@@ -238,6 +236,9 @@ export default function Scene() {
   const containerRef = useRef(null);
   const wrapperRef = useRef(null);
   const audioRef = useRef(null);
+  const pinRefs = useRef([]);
+  const activeEventRef = useRef("event-1");
+  const [activeEvent, setActiveEvent] = useState("event-1");
 
   const [progress, setProgress] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -469,32 +470,7 @@ export default function Scene() {
     portalBackLight.position.set(0, -110, -162);
     scene.add(portalBackLight);
 
-    // --- MULTI-BEAM VOLUMETRIC CYAN LIGHT RAYS ---
-    const rayConeGeo = new THREE.CylinderGeometry(24, 160, 340, 32, 16, true);
-    const godRayMaterial = new THREE.ShaderMaterial({
-      vertexShader: godRayVertex,
-      fragmentShader: godRayFragment,
-      uniforms: {
-        uTime: { value: 0 },
-        uColor1: { value: new THREE.Color(0x00f0ff) },
-        uColor2: { value: new THREE.Color(0x013045) },
-      },
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    const godRayCone1 = new THREE.Mesh(rayConeGeo, godRayMaterial);
-    godRayCone1.position.set(0, -70, -180);
-    godRayCone1.rotation.z = 0.08;
-    godRayCone1.visible = false;
-    scene.add(godRayCone1);
 
-    const godRayCone2 = new THREE.Mesh(rayConeGeo, godRayMaterial);
-    godRayCone2.position.set(-20, -70, -160);
-    godRayCone2.rotation.z = -0.12;
-    godRayCone2.visible = false;
-    scene.add(godRayCone2);
 
     // --- LEFT & RIGHT JAGGED CLIFF WALLS ---
     const sideCliffGroup = new THREE.Group();
@@ -798,6 +774,8 @@ export default function Scene() {
     const cliffMeshes = [];
     const pinMarkers = [];
     const bannerMeshes = [];
+    const caveMeshes = [];
+    const eventBannerGroups = {};
 
     const coralColors = [0x00f0ff, 0xa855f7, 0x0284c7, 0xec4899];
 
@@ -875,47 +853,147 @@ export default function Scene() {
       newWorldGroup.add(pinNode);
       pinMarkers.push(pinNode);
 
-      // 3. Dedicated Event Portal Ring behind each event platform
+      // 3. Grand Underwater Rock Cave Entrance near each event platform
       const { x: px, y: py, z: pz } = node.portalPos;
-      const subPortalGeo = new THREE.TorusGeometry(8.0, 1.5, 16, 32);
-      const subPortalMesh = new THREE.Mesh(subPortalGeo, ruinStoneMat);
-      subPortalMesh.position.set(px, py, pz);
-      newWorldGroup.add(subPortalMesh);
+      const caveGroup = new THREE.Group();
+      // Offset position left & back so it does NOT overlap with the 3D Banner Poster
+      caveGroup.position.set(px - 7.0, py + 1.5, pz - 7.0);
+      // Rotate cave mouth to directly face the camera/viewer side
+      caveGroup.rotation.y = Math.PI * 0.25;
 
-      const subDiscMat = new THREE.ShaderMaterial({
-        vertexShader: portalVortexVertex,
-        fragmentShader: portalVortexFragment,
-        uniforms: {
-          uTime: { value: 0 },
-          uColor1: { value: new THREE.Color(0x00f0ff) },
-          uColor2: { value: new THREE.Color(0x003366) },
-        },
-        transparent: true,
-        side: THREE.DoubleSide,
-        depthWrite: false,
+      // A. Large Irregular Rock Cavern Dome / Mound
+      const domeGeo = new THREE.SphereGeometry(15.5, 24, 24, 0, Math.PI * 2, 0, Math.PI * 0.68);
+      const domePos = domeGeo.attributes.position;
+      const dVec = new THREE.Vector3();
+      for (let i = 0; i < domePos.count; i++) {
+        dVec.fromBufferAttribute(domePos, i);
+        const rNoise =
+          Math.sin(dVec.y * 0.25) * Math.cos(dVec.x * 0.3) * 3.5 +
+          Math.cos(dVec.z * 0.4) * 2.5;
+        dVec.x += (dVec.x > 0 ? 1 : -1) * rNoise * 0.6;
+        dVec.z += rNoise * 0.5;
+        dVec.y += Math.sin(dVec.x * 0.2) * 1.5;
+        domePos.setXYZ(i, dVec.x, dVec.y, dVec.z);
+      }
+      domeGeo.computeVertexNormals();
+
+      const caveDomeMesh = new THREE.Mesh(domeGeo, cliffRockMat);
+      caveDomeMesh.rotation.x = Math.PI / 2;
+      caveDomeMesh.position.set(0, 2.0, 0);
+      caveGroup.add(caveDomeMesh);
+
+      // B. Outer Arched Entrance Rim (Large Irregular Rock Ring around Cave Mouth)
+      const rimGeo = new THREE.TorusGeometry(11.0, 2.8, 16, 32, Math.PI * 1.85);
+      const rimPos = rimGeo.attributes.position;
+      for (let i = 0; i < rimPos.count; i++) {
+        dVec.fromBufferAttribute(rimPos, i);
+        const noise = Math.sin(dVec.x * 0.5) * Math.cos(dVec.y * 0.5) * 1.4;
+        dVec.x += noise;
+        dVec.y += noise;
+        rimPos.setXYZ(i, dVec.x, dVec.y, dVec.z);
+      }
+      rimGeo.computeVertexNormals();
+
+      const caveRimMesh = new THREE.Mesh(rimGeo, ruinStoneMat);
+      caveRimMesh.position.set(0, 1.0, 1.5);
+      caveGroup.add(caveRimMesh);
+
+      // C. Dark Interior Background (Deep Cave Tunnel Depth)
+      const interiorMat = new THREE.MeshStandardMaterial({
+        color: 0x00060d,
+        roughness: 0.95,
+        metalness: 0.05,
+        side: THREE.BackSide,
       });
-      const subDisc = new THREE.Mesh(new THREE.CircleGeometry(6.8, 32), subDiscMat);
-      subDisc.position.set(px, py, pz - 0.1);
-      newWorldGroup.add(subDisc);
+      const interiorGeo = new THREE.CylinderGeometry(9.8, 8.2, 16, 24, 1, true);
+      const interiorMesh = new THREE.Mesh(interiorGeo, interiorMat);
+      interiorMesh.rotation.x = Math.PI / 2;
+      interiorMesh.position.set(0, 0, -5.0);
+      caveGroup.add(interiorMesh);
+
+      // D. Large Stalactites (Hanging from Cave Roof)
+      const stalactitePositions = [
+        { x: -6.2, y: 6.2, z: 0.8, h: 6.2, r: 1.1 },
+        { x: -3.6, y: 7.4, z: 1.2, h: 7.8, r: 1.3 },
+        { x: -0.8, y: 8.0, z: 1.0, h: 7.0, r: 1.2 },
+        { x: 2.2, y: 7.6, z: 1.4, h: 8.2, r: 1.4 },
+        { x: 5.4, y: 6.6, z: 0.9, h: 5.8, r: 1.0 },
+        { x: 0.0, y: 6.8, z: -2.2, h: 7.2, r: 1.25 },
+        { x: -4.2, y: 6.0, z: -2.8, h: 6.4, r: 1.1 },
+      ];
+
+      stalactitePositions.forEach((st) => {
+        const stGeo = new THREE.ConeGeometry(st.r, st.h, 7);
+        const stMesh = new THREE.Mesh(stGeo, cliffRockMat);
+        stMesh.rotation.x = Math.PI;
+        stMesh.position.set(st.x, st.y - st.h / 2, st.z);
+        caveGroup.add(stMesh);
+      });
+
+      // E. Large Stalagmites (Rising from Cave Floor)
+      const stalagmitePositions = [
+        { x: -7.2, y: -5.8, z: 1.0, h: 5.8, r: 1.3 },
+        { x: -4.6, y: -6.2, z: 1.4, h: 7.4, r: 1.5 },
+        { x: -1.8, y: -6.8, z: 0.9, h: 5.4, r: 1.2 },
+        { x: 1.6, y: -6.5, z: 1.6, h: 7.8, r: 1.6 },
+        { x: 4.8, y: -6.2, z: 1.1, h: 6.6, r: 1.3 },
+        { x: 7.0, y: -5.8, z: 0.8, h: 5.0, r: 1.1 },
+        { x: -1.0, y: -6.2, z: -2.8, h: 6.8, r: 1.4 },
+      ];
+
+      stalagmitePositions.forEach((sm) => {
+        const smGeo = new THREE.ConeGeometry(sm.r, sm.h, 7);
+        const smMesh = new THREE.Mesh(smGeo, cliffRockMat);
+        smMesh.position.set(sm.x, sm.y + sm.h / 2, sm.z);
+        caveGroup.add(smMesh);
+      });
+
+      // F. Subtle Cyan/Blue Bioluminescent Crystals glowing on the Cave Floor
+      const caveCrystals = [0x00f0ff, 0x0284c7, 0x38bdf8, 0x00e5ff];
+      for (let cr = 0; cr < 10; cr++) {
+        const cGeo = new THREE.OctahedronGeometry(1.0 + Math.random() * 0.8, 1);
+        const cMat = new THREE.MeshStandardMaterial({
+          color: 0x011e30,
+          emissive: caveCrystals[cr % caveCrystals.length],
+          emissiveIntensity: 2.5,
+          roughness: 0.2,
+        });
+        const cMesh = new THREE.Mesh(cGeo, cMat);
+        const angle = (cr / 10) * Math.PI - Math.PI / 2;
+        cMesh.position.set(Math.cos(angle) * 5.8, -6.0, Math.sin(angle) * 2.8 - 1.0);
+        cMesh.rotation.set(Math.random(), Math.random(), 0);
+        caveGroup.add(cMesh);
+      }
+
+      // G. Subtle Cyan/Blue Light glowing from deep inside the cave mouth
+      const caveGlowLight = new THREE.PointLight(0x00f0ff, 7.5, 45);
+      caveGlowLight.position.set(0, -1.0, -4.5);
+      caveGroup.add(caveGlowLight);
+
+      caveGroup.userData = { eventData: node };
+      newWorldGroup.add(caveGroup);
+      caveMeshes.push(caveGroup);
 
       // 4. 3D Event Banner attached to the Rock Platform (POLE BEHIND THE POSTER)
       const { x: bx, y: by, z: bz, rotY: bRotY } = node.bannerPos;
+
+      const bannerGroup = new THREE.Group();
 
       // Banner Support Post (Positioned BEHIND the Poster at bz - 0.6)
       const postGeo = new THREE.CylinderGeometry(0.4, 0.5, 16, 12);
       const postMesh = new THREE.Mesh(postGeo, bannerFrameMat);
       postMesh.position.set(bx, by - 4.5, bz - 0.6);
-      newWorldGroup.add(postMesh);
+      bannerGroup.add(postMesh);
 
       // Horizontal Rear Mounting Brackets connecting Pole to Poster
       const bracketGeo = new THREE.BoxGeometry(4.0, 0.4, 0.8);
       const bracket1 = new THREE.Mesh(bracketGeo, bannerFrameMat);
       bracket1.position.set(bx, by + 2.0, bz - 0.3);
-      newWorldGroup.add(bracket1);
+      bannerGroup.add(bracket1);
 
       const bracket2 = new THREE.Mesh(bracketGeo, bannerFrameMat);
       bracket2.position.set(bx, by - 2.0, bz - 0.3);
-      newWorldGroup.add(bracket2);
+      bannerGroup.add(bracket2);
 
       // 3D Event Banner Panel with Front & Back Texture
       const bannerTexture = createEventBannerTexture(node);
@@ -948,7 +1026,7 @@ export default function Scene() {
       bannerMesh.position.set(bx, by, bz);
       bannerMesh.rotation.y = bRotY;
       bannerMesh.userData = { eventData: node };
-      newWorldGroup.add(bannerMesh);
+      bannerGroup.add(bannerMesh);
       bannerMeshes.push(bannerMesh);
 
       // Glowing Neon Cyan Bezel Frame around Poster Panel
@@ -962,12 +1040,15 @@ export default function Scene() {
       const bezelMesh = new THREE.Mesh(bezelGeo, bezelMat);
       bezelMesh.position.set(bx, by, bz - 0.25);
       bezelMesh.rotation.y = bRotY;
-      newWorldGroup.add(bezelMesh);
+      bannerGroup.add(bezelMesh);
 
       // Dedicated PointLight illuminating each Event Poster Panel
       const posterLight = new THREE.PointLight(0x00f0ff, 5.0, 45);
       posterLight.position.set(bx, by, bz + 4.0);
-      newWorldGroup.add(posterLight);
+      bannerGroup.add(posterLight);
+
+      newWorldGroup.add(bannerGroup);
+      eventBannerGroups[node.id] = bannerGroup;
 
       // Bioluminescent corals on each rock platform plateau
       for (let c = 0; c < 8; c++) {
@@ -1064,62 +1145,10 @@ export default function Scene() {
     terrainMesh.position.set(0, -385, -450);
     scene.add(terrainMesh);
 
-    // --- CYBER SEABED DIGITAL PARTICLE GRID ---
-    const seabedCount = isMobile ? 45000 : 95000;
-    const seabedGeometry = new THREE.BufferGeometry();
-    const seabedPositions = new Float32Array(seabedCount * 3);
-    const seabedRandoms = new Float32Array(seabedCount);
-    const seabedGridCoords = new Float32Array(seabedCount * 2);
 
-    for (let i = 0; i < seabedCount; i++) {
-      const x = (Math.random() - 0.5) * 600;
-      const z = (Math.random() - 0.5) * 750 - 250;
-      seabedPositions[i * 3] = x;
-      seabedPositions[i * 3 + 1] = -382;
-      seabedPositions[i * 3 + 2] = z;
-      seabedRandoms[i] = Math.random();
-      seabedGridCoords[i * 2] = x;
-      seabedGridCoords[i * 2 + 1] = z;
-    }
-
-    seabedGeometry.setAttribute("position", new THREE.BufferAttribute(seabedPositions, 3));
-    seabedGeometry.setAttribute("aRandom", new THREE.BufferAttribute(seabedRandoms, 1));
-    seabedGeometry.setAttribute("aGridCoord", new THREE.BufferAttribute(seabedGridCoords, 2));
-
-    const seabedMaterial = new THREE.ShaderMaterial({
-      vertexShader: seabedVertex,
-      fragmentShader: seabedFragment,
-      uniforms: {
-        uTime: { value: 0 },
-        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
-        uSize: { value: 3.5 },
-        uNoiseScale: { value: 0.05 },
-        uNoiseHeight: { value: 6.0 },
-        uColor1: { value: new THREE.Color(0x022538) },
-        uColor2: { value: new THREE.Color(0x0088b3) },
-        uColor3: { value: new THREE.Color(0x00f0ff) },
-        uSandColor: { value: new THREE.Color(0x04354c) },
-        uRockColor: { value: new THREE.Color(0x0c4a6e) },
-        uGlowIntensity: { value: 0.7 },
-        uWaveSpeed: { value: 0.15 },
-        uWaveAmplitude: { value: 1.2 },
-        uFogColor: { value: new THREE.Color(0x021627) },
-        uFogNear: { value: 15 },
-        uFogFar: { value: 280 },
-        uScrollSpeed: { value: 2.0 },
-        uScrollOffset: { value: 0 },
-      },
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-
-    const seabedMesh = new THREE.Points(seabedGeometry, seabedMaterial);
-    seabedMesh.frustumCulled = false;
-    scene.add(seabedMesh);
 
     // --- RISING BUBBLES PARTICLE STREAM ---
-    const bubbleCount = isMobile ? 1200 : 3000;
+    const bubbleCount = isMobile ? 3000 : 7500;
     const bubbleGeo = new THREE.BufferGeometry();
     const bubbleInitialPos = new Float32Array(bubbleCount * 3);
     const bubbleSizes = new Float32Array(bubbleCount);
@@ -1127,12 +1156,12 @@ export default function Scene() {
     const bubbleOffsets = new Float32Array(bubbleCount);
 
     for (let i = 0; i < bubbleCount; i++) {
-      bubbleInitialPos[i * 3] = (Math.random() - 0.5) * 350;
-      bubbleInitialPos[i * 3 + 1] = -385 + Math.random() * 15;
-      bubbleInitialPos[i * 3 + 2] = -30 - Math.random() * 620;
+      bubbleInitialPos[i * 3] = (Math.random() - 0.5) * 450;
+      bubbleInitialPos[i * 3 + 1] = -385 + Math.random() * 20;
+      bubbleInitialPos[i * 3 + 2] = -20 - Math.random() * 650;
 
-      bubbleSizes[i] = 4.0 + Math.random() * 12.0;
-      bubbleSpeeds[i] = 0.4 + Math.random() * 1.2;
+      bubbleSizes[i] = 3.0 + Math.random() * 10.0;
+      bubbleSpeeds[i] = 0.4 + Math.random() * 1.4;
       bubbleOffsets[i] = Math.random() * 100.0;
     }
 
@@ -1200,6 +1229,44 @@ export default function Scene() {
     const dustMesh = new THREE.Points(dustGeo, dustMat);
     scene.add(dustMesh);
 
+    // --- FLOATING AQUATIC SMALL WATER BALLS ---
+    const ballCount = isMobile ? 3000 : 7000;
+    const ballGeo = new THREE.BufferGeometry();
+    const ballPositions = new Float32Array(ballCount * 3);
+    const ballSizes = new Float32Array(ballCount);
+    const ballAlphas = new Float32Array(ballCount);
+    const ballTypes = new Float32Array(ballCount);
+
+    for (let i = 0; i < ballCount; i++) {
+      ballPositions[i * 3] = (Math.random() - 0.5) * 450;
+      ballPositions[i * 3 + 1] = -400 + Math.random() * 420;
+      ballPositions[i * 3 + 2] = -20 - Math.random() * 650;
+      ballSizes[i] = 2.5 + Math.random() * 6.5;
+      ballAlphas[i] = 0.4 + Math.random() * 0.55;
+      ballTypes[i] = Math.random();
+    }
+
+    ballGeo.setAttribute("position", new THREE.BufferAttribute(ballPositions, 3));
+    ballGeo.setAttribute("velocity", new THREE.BufferAttribute(new Float32Array(ballCount * 3), 3));
+    ballGeo.setAttribute("size", new THREE.BufferAttribute(ballSizes, 1));
+    ballGeo.setAttribute("alpha", new THREE.BufferAttribute(ballAlphas, 1));
+    ballGeo.setAttribute("particleType", new THREE.BufferAttribute(ballTypes, 1));
+
+    const ballMat = new THREE.ShaderMaterial({
+      vertexShader: flowFieldVertex,
+      fragmentShader: flowFieldFragment,
+      uniforms: {
+        uColor: { value: new THREE.Color(0x38bdf8) },
+        uTime: { value: 0 },
+      },
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const ballMesh = new THREE.Points(ballGeo, ballMat);
+    scene.add(ballMesh);
+
     // --- DISTANT SMALL FISH SCHOOLS ---
     const fishCount = isMobile ? 35 : 75;
     const fishGeo = new THREE.ConeGeometry(0.3, 1.4, 5);
@@ -1250,7 +1317,7 @@ export default function Scene() {
       mouseVector.y = -(event.clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouseVector, camera);
 
-      const intersects = raycaster.intersectObjects([portalRingMesh, ...pinMarkers, ...bannerMeshes]);
+      const intersects = raycaster.intersectObjects([portalRingMesh, ...pinMarkers, ...bannerMeshes, ...caveMeshes], true);
       if (intersects.length > 0) {
         const hit = intersects[0].object;
         if (hit === portalRingMesh) {
@@ -1287,7 +1354,7 @@ export default function Scene() {
       mouseVector.y = targetMouse.y;
       raycaster.setFromCamera(mouseVector, camera);
 
-      const intersects = raycaster.intersectObjects([portalRingMesh, ...pinMarkers, ...bannerMeshes]);
+      const intersects = raycaster.intersectObjects([portalRingMesh, ...pinMarkers, ...bannerMeshes, ...caveMeshes], true);
       if (intersects.length > 0) {
         document.body.style.cursor = "pointer";
         const hit = intersects[0].object;
@@ -1504,8 +1571,6 @@ export default function Scene() {
         sunLight.intensity = 2.5;
         ambientLight.color.setHex(0xffffff);
         ambientLight.intensity = 1.0;
-        godRayCone1.visible = false;
-        godRayCone2.visible = false;
         waterCeilingMesh.visible = false;
         caveMesh.visible = false;
         sideCliffGroup.visible = false;
@@ -1520,8 +1585,6 @@ export default function Scene() {
         sunLight.intensity = Math.max(0.1, 2.5 * (1.0 - depthFactor * 0.9));
         ambientLight.color.setHex(0x0a4b66).lerp(new THREE.Color(0x011220), depthFactor);
         ambientLight.intensity = 1.2;
-        godRayCone1.visible = true;
-        godRayCone2.visible = true;
         waterCeilingMesh.visible = true;
         caveMesh.visible = true;
         sideCliffGroup.visible = true;
@@ -1535,8 +1598,7 @@ export default function Scene() {
         newWorldGroup.visible = false;
       }
 
-      // Update Volumetric God Rays, Portal Vortex Shader, and Flow Field Water Particles
-      godRayMaterial.uniforms.uTime.value = t;
+      // Update Portal Vortex Shader and Flow Field Water Particles
       portalDiscMat.uniforms.uTime.value = t;
       flowFieldMat.uniforms.uTime.value = t;
 
@@ -1566,11 +1628,10 @@ export default function Scene() {
       }
       portalParticleGeo.attributes.position.needsUpdate = true;
 
-      // Update Rising Bubbles & Seabed
+      // Update Rising Bubbles & Floating Water Balls
       bubbleMat.uniforms.uTime.value = t;
-      seabedMaterial.uniforms.uTime.value = t;
-      seabedMaterial.uniforms.uScrollOffset.value = t * 1.5;
       dustMat.uniforms.uTime.value = t;
+      ballMat.uniforms.uTime.value = t;
 
       // Pulse Portal Ring Backlight
       portalBackLight.intensity = 8.0 + Math.sin(t * 2.5) * 3.0;
@@ -1635,6 +1696,34 @@ export default function Scene() {
       camera.rotation.z = floatRotZ;
 
       renderer.render(scene, camera);
+
+      // Active Event state determination based on camera Z position depth
+      let currentActiveId = null;
+      if (camState.z < -140) {
+        let minZDist = Infinity;
+        eventNodes.forEach((node) => {
+          const zDist = Math.abs(camState.z - node.pos.z);
+          if (zDist < minZDist) {
+            minZDist = zDist;
+            currentActiveId = node.id;
+          }
+        });
+      }
+
+      if (currentActiveId && currentActiveId !== activeEventRef.current) {
+        activeEventRef.current = currentActiveId;
+        setActiveEvent(currentActiveId);
+      }
+
+      // Render ONLY the active event 3D banner group, hide all inactive event banners
+      eventNodes.forEach((node) => {
+        const group = eventBannerGroups[node.id];
+        if (group) {
+          group.visible = (node.id === currentActiveId);
+        }
+      });
+
+
     }
     animate();
 
@@ -1666,8 +1755,6 @@ export default function Scene() {
       icePlateGeo.dispose();
       iceMaterial.dispose();
       for (const g of smallIceGeos) g.dispose();
-      rayConeGeo.dispose();
-      godRayMaterial.dispose();
       caveGeometry.dispose();
       caveMaterial.dispose();
       cliffWallMat.dispose();
@@ -1695,12 +1782,12 @@ export default function Scene() {
       }
       terrainGeo.dispose();
       terrainMat.dispose();
-      seabedGeometry.dispose();
-      seabedMaterial.dispose();
       bubbleGeo.dispose();
       bubbleMat.dispose();
       dustGeo.dispose();
       dustMat.dispose();
+      ballGeo.dispose();
+      ballMat.dispose();
       kelpGeo.dispose();
       kelpMat.dispose();
       fishGeo.dispose();
@@ -1788,43 +1875,7 @@ export default function Scene() {
           </div>
         )}
 
-        {/* Floating Event Pins HTML Overlay in New World */}
-        <div
-          className={`pointer-events-auto fixed inset-0 z-40 transition-opacity duration-700 ${
-            isInsideNewWorld ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-        >
-          {eventNodes.map((ev, index) => {
-            const isVisiblePin = scrollProgress >= ev.minScroll;
-            return (
-              <div
-                key={ev.id}
-                onClick={() => setSelectedEvent(ev)}
-                className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group hover:scale-110 transition-all duration-500 ${
-                  isVisiblePin ? "opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none"
-                }`}
-                style={{
-                  left: index === 0 ? "24%" : index === 1 ? "76%" : index === 2 ? "26%" : index === 3 ? "74%" : "50%",
-                  top: index === 0 ? "32%" : index === 1 ? "42%" : index === 2 ? "54%" : index === 3 ? "66%" : "78%",
-                }}
-              >
-                <div className="flex flex-col items-center">
-                  <div className="relative flex items-center justify-center">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-cyan-400 bg-cyan-950/80 backdrop-blur-md shadow-[0_0_25px_rgba(0,255,255,0.6)] flex items-center justify-center group-hover:border-white">
-                      <div className="w-4 h-4 rounded-full bg-cyan-300 animate-pulse shadow-[0_0_12px_rgba(0,255,255,0.9)]" />
-                    </div>
-                    <div className="absolute -bottom-2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-cyan-400" />
-                  </div>
-                  <div className="mt-3 bg-black/80 border border-cyan-400/80 px-4 py-1.5 rounded-full backdrop-blur-md shadow-[0_0_20px_rgba(0,255,255,0.3)]">
-                    <span className="font-mono text-xs md:text-sm font-black text-cyan-300 tracking-wider group-hover:text-white uppercase whitespace-nowrap">
-                      EVENT {ev.num} // {ev.name}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+
 
         {/* Surface Semaphore 2K26 Hero UI */}
         <div
