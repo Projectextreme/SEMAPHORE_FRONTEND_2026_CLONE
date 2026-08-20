@@ -37,9 +37,9 @@ const eventNodes = [
     venue: "MCA Lab 1",
     prize: "₹ 12,000",
     rules: ["Individual participation", "Languages allowed: C, C++, Java, Python", "Time-bound algorithmic problems"],
-    pos: { x: -42, y: -110, z: -240 },
-    bannerPos: { x: -26, y: -103, z: -235, rotY: 0.35 },
-    portalPos: { x: -50, y: -105, z: -248 },
+    pos: { x: -42, y: -110, z: -300 },
+    bannerPos: { x: -26, y: -103, z: -295, rotY: 0.35 },
+    portalPos: { x: -50, y: -105, z: -308 },
     minScroll: 42,
   },
   {
@@ -53,9 +53,9 @@ const eventNodes = [
     venue: "Web Lab 2",
     prize: "₹ 12,000",
     rules: ["Individual or teams of 2", "HTML5, CSS3, JavaScript allowed", "Live prototype evaluation"],
-    pos: { x: 42, y: -150, z: -320 },
-    bannerPos: { x: 26, y: -143, z: -315, rotY: -0.35 },
-    portalPos: { x: 50, y: -145, z: -328 },
+    pos: { x: 42, y: -150, z: -400 },
+    bannerPos: { x: 26, y: -143, z: -395, rotY: -0.35 },
+    portalPos: { x: 50, y: -145, z: -408 },
     minScroll: 48,
   },
   {
@@ -69,9 +69,9 @@ const eventNodes = [
     venue: "Main Auditorium",
     prize: "₹ 10,000",
     rules: ["Teams of 2 members", "Preliminary written round followed by live stage quiz"],
-    pos: { x: -42, y: -190, z: -400 },
-    bannerPos: { x: -26, y: -183, z: -395, rotY: 0.35 },
-    portalPos: { x: -50, y: -185, z: -408 },
+    pos: { x: -42, y: -190, z: -500 },
+    bannerPos: { x: -26, y: -183, z: -495, rotY: 0.35 },
+    portalPos: { x: -50, y: -185, z: -508 },
     minScroll: 54,
   },
   {
@@ -85,9 +85,9 @@ const eventNodes = [
     venue: "E-Sports Arena",
     prize: "₹ 20,000",
     rules: ["Squads of 4 members", "Time-bound physical & digital clues"],
-    pos: { x: 42, y: -230, z: -480 },
-    bannerPos: { x: 26, y: -223, z: -475, rotY: -0.35 },
-    portalPos: { x: 50, y: -225, z: -488 },
+    pos: { x: 42, y: -230, z: -600 },
+    bannerPos: { x: 26, y: -223, z: -595, rotY: -0.35 },
+    portalPos: { x: 50, y: -225, z: -608 },
     minScroll: 60,
   },
   {
@@ -101,9 +101,9 @@ const eventNodes = [
     venue: "Seminar Hall 1",
     prize: "₹ 10,000",
     rules: ["Open to all registered delegates", "Q&A session with keynote speakers"],
-    pos: { x: -42, y: -270, z: -560 },
-    bannerPos: { x: -26, y: -263, z: -555, rotY: 0.35 },
-    portalPos: { x: -50, y: -265, z: -568 },
+    pos: { x: -42, y: -270, z: -700 },
+    bannerPos: { x: -26, y: -263, z: -695, rotY: 0.35 },
+    portalPos: { x: -50, y: -265, z: -708 },
     minScroll: 66,
   },
   {
@@ -117,9 +117,9 @@ const eventNodes = [
     venue: "Open Arena",
     prize: "₹ 10,000",
     rules: ["Rules announced on spot", "Teams of 2 members"],
-    pos: { x: 42, y: -310, z: -640 },
-    bannerPos: { x: 26, y: -303, z: -635, rotY: -0.35 },
-    portalPos: { x: 50, y: -305, z: -648 },
+    pos: { x: 42, y: -310, z: -800 },
+    bannerPos: { x: 26, y: -303, z: -795, rotY: -0.35 },
+    portalPos: { x: 50, y: -305, z: -808 },
     minScroll: 72,
   },
   {
@@ -133,9 +133,9 @@ const eventNodes = [
     venue: "MCA Seminar Hall",
     prize: "₹ 15,000",
     rules: ["Individual participation", "Multiple stress rounds & mock press conference"],
-    pos: { x: -42, y: -350, z: -720 },
-    bannerPos: { x: -26, y: -343, z: -715, rotY: 0.35 },
-    portalPos: { x: -50, y: -345, z: -728 },
+    pos: { x: -42, y: -350, z: -900 },
+    bannerPos: { x: -26, y: -343, z: -895, rotY: 0.35 },
+    portalPos: { x: -50, y: -345, z: -908 },
     minScroll: 78,
   },
   {
@@ -149,9 +149,9 @@ const eventNodes = [
     venue: "Incubation Center",
     prize: "₹ 15,000",
     rules: ["Teams of up to 3 members", "5-minute pitch + 3-minute Q&A with judges"],
-    pos: { x: 42, y: -390, z: -800 },
-    bannerPos: { x: 26, y: -383, z: -795, rotY: -0.35 },
-    portalPos: { x: 50, y: -385, z: -808 },
+    pos: { x: 42, y: -390, z: -1000 },
+    bannerPos: { x: 26, y: -383, z: -995, rotY: -0.35 },
+    portalPos: { x: 50, y: -385, z: -1008 },
     minScroll: 84,
   },
   {
@@ -165,9 +165,9 @@ const eventNodes = [
     venue: "Open Air Theater",
     prize: "₹ 18,000",
     rules: ["Group performance", "Time limit: 6 to 8 minutes", "Props permitted"],
-    pos: { x: -42, y: -430, z: -880 },
-    bannerPos: { x: -26, y: -423, z: -875, rotY: 0.35 },
-    portalPos: { x: -50, y: -425, z: -888 },
+    pos: { x: -42, y: -430, z: -1100 },
+    bannerPos: { x: -26, y: -423, z: -1095, rotY: 0.35 },
+    portalPos: { x: -50, y: -425, z: -1108 },
     minScroll: 90,
   },
   {
@@ -181,132 +181,53 @@ const eventNodes = [
     venue: "Campus Grounds",
     prize: "₹ 12,000",
     rules: ["Individual participation", "Original unedited RAW & edited submission", "Theme provided on spot"],
-    pos: { x: 0, y: -470, z: -960 },
-    bannerPos: { x: 16, y: -463, z: -955, rotY: -0.2 },
-    portalPos: { x: -18, y: -465, z: -968 },
+    pos: { x: 0, y: -470, z: -1200 },
+    bannerPos: { x: 16, y: -463, z: -1195, rotY: -0.2 },
+    portalPos: { x: -18, y: -465, z: -1208 },
     minScroll: 96,
   },
 ];
 
-// Helper function to dynamically draw futuristic 3D Event Banners onto a Canvas Texture
+// Helper function to dynamically draw futuristic 3D Event Title Text onto a Canvas Texture
 function createEventBannerTexture(node) {
   const canvas = document.createElement("canvas");
-  canvas.width = 1024;
+  canvas.width = 2048;
   canvas.height = 512;
   const ctx = canvas.getContext("2d");
 
-  // Dark metallic cyber background gradient
-  const grad = ctx.createLinearGradient(0, 0, 1024, 512);
-  grad.addColorStop(0, "#011326");
-  grad.addColorStop(0.5, "#032847");
-  grad.addColorStop(1, "#010e1c");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 1024, 512);
+  // Fully transparent background
+  ctx.clearRect(0, 0, 2048, 512);
 
-  // Hexagon / Cyber Grid Pattern
-  ctx.strokeStyle = "rgba(0, 240, 255, 0.09)";
-  ctx.lineWidth = 1;
-  for (let x = 0; x < 1024; x += 32) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 512); ctx.stroke();
-  }
-  for (let y = 0; y < 512; y += 32) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1024, y); ctx.stroke();
-  }
+  // Soft subtle ambient cyan radial back-glow behind typography
+  const bgGlow = ctx.createRadialGradient(1024, 256, 20, 1024, 256, 750);
+  bgGlow.addColorStop(0, "rgba(0, 240, 255, 0.28)");
+  bgGlow.addColorStop(0.5, "rgba(2, 132, 199, 0.08)");
+  bgGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = bgGlow;
+  ctx.fillRect(0, 0, 2048, 512);
 
-  // Glowing Outer Neon Frame
-  ctx.shadowColor = "#00f0ff";
-  ctx.shadowBlur = 24;
-  ctx.strokeStyle = "#00f0ff";
-  ctx.lineWidth = 10;
-  ctx.strokeRect(16, 16, 992, 480);
-
-  // Inner Accent Frame
-  ctx.shadowBlur = 0;
-  ctx.strokeStyle = "rgba(0, 240, 255, 0.5)";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(30, 30, 964, 452);
-
-  // Corner Brackets (White)
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 6;
-  ctx.beginPath(); ctx.moveTo(22, 55); ctx.lineTo(22, 22); ctx.lineTo(55, 22); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(969, 22); ctx.lineTo(1002, 22); ctx.lineTo(1002, 55); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(22, 457); ctx.lineTo(22, 490); ctx.lineTo(55, 490); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(969, 490); ctx.lineTo(1002, 490); ctx.lineTo(1002, 457); ctx.stroke();
-
-  // Top Header Bar Background
-  const headerGrad = ctx.createLinearGradient(0, 0, 1024, 0);
-  headerGrad.addColorStop(0, "rgba(0, 240, 255, 0.25)");
-  headerGrad.addColorStop(1, "rgba(2, 132, 199, 0.15)");
-  ctx.fillStyle = headerGrad;
-  ctx.fillRect(32, 32, 960, 90);
-
-  // Large Event Index Number (e.g. EVENT 01)
-  ctx.shadowColor = "#00f0ff";
-  ctx.shadowBlur = 15;
-  ctx.font = "bold 64px monospace";
-  ctx.fillStyle = "#00f0ff";
-  ctx.fillText(`EVENT // ${node.num}`, 60, 98);
-
-  // Category Badge Pill
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = "rgba(0, 240, 255, 0.2)";
-  ctx.strokeStyle = "#00f0ff";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.roundRect(640, 48, 320, 58, 29);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.font = "bold 24px monospace";
-  ctx.fillStyle = "#a5f3fc";
   ctx.textAlign = "center";
-  ctx.fillText(node.category.toUpperCase(), 800, 85);
-  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
 
-  // Event Name Title
-  ctx.shadowColor = "#ffffff";
-  ctx.shadowBlur = 20;
-  ctx.font = "900 60px sans-serif";
-  ctx.fillStyle = "#ffffff";
-  ctx.fillText(node.name.toUpperCase(), 60, 205);
-
-  // Date & Venue Subtitle
-  ctx.shadowBlur = 0;
-  ctx.font = "bold 22px monospace";
-  ctx.fillStyle = "#67e8f9";
-  ctx.fillText(`📅 ${node.date} @ ${node.time}   📍 ${node.venue.toUpperCase()}`, 60, 255);
-
-  // Prize Pool Pill Badge
-  ctx.fillStyle = "rgba(234, 179, 8, 0.2)";
-  ctx.strokeStyle = "#eab308";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.roundRect(60, 295, 380, 60, 18);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.shadowColor = "#eab308";
-  ctx.shadowBlur = 10;
-  ctx.font = "bold 26px monospace";
-  ctx.fillStyle = "#fef08a";
-  ctx.fillText(`🏆 PRIZE POOL: ${node.prize}`, 85, 335);
-
-  // Register Action Button Prompt
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = "rgba(0, 240, 255, 0.25)";
-  ctx.strokeStyle = "#00f0ff";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.roundRect(60, 385, 904, 68, 18);
-  ctx.fill();
-  ctx.stroke();
-
+  // PRIMARY EVENT NAME TITLE ONLY (Large Bold Glowing Neon Cyan/White)
+  const eventNameUpper = node.name.toUpperCase();
   ctx.shadowColor = "#00f0ff";
-  ctx.shadowBlur = 16;
-  ctx.font = "bold 28px monospace";
+  ctx.shadowBlur = 55;
+  ctx.lineWidth = 14;
+  ctx.strokeStyle = "#00f0ff";
+
+  // Dynamic font size scaling so long event names fit cleanly without clipping
+  let nameFontSize = 150;
+  if (eventNameUpper.length > 22) {
+    nameFontSize = 86;
+  } else if (eventNameUpper.length > 15) {
+    nameFontSize = 110;
+  }
+  ctx.font = `900 ${nameFontSize}px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+
+  ctx.strokeText(eventNameUpper, 1024, 256);
   ctx.fillStyle = "#ffffff";
-  ctx.fillText("⚡ CLICK POSTER TO VIEW DETAILS & REGISTER ⚡", 110, 430);
+  ctx.fillText(eventNameUpper, 1024, 256);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
@@ -626,24 +547,24 @@ export default function Scene() {
     const coralGlowColors = [0x00f0ff, 0xa855f7, 0xec4899, 0x0284c7];
 
     function createSideCliffWall(xPos, isRight) {
-      const cliffWallGeo = new THREE.BoxGeometry(32, 130, 180, 16, 24, 16);
+      const cliffWallGeo = new THREE.BoxGeometry(32, 130, 110, 16, 24, 16);
       const pos = cliffWallGeo.attributes.position;
       const v = new THREE.Vector3();
       for (let i = 0; i < pos.count; i++) {
         v.fromBufferAttribute(pos, i);
         const bump =
-          Math.sin(v.y * 0.08) * Math.cos(v.z * 0.08) * 6.0 +
-          Math.sin(v.y * 0.2 + v.x * 0.1) * 2.5;
+          Math.sin(v.y * 0.08) * Math.cos(v.z * 0.08) * 5.0 +
+          Math.sin(v.y * 0.2 + v.x * 0.1) * 2.0;
         v.x += isRight ? -bump : bump;
         pos.setXYZ(i, v.x, v.y, v.z);
       }
       cliffWallGeo.computeVertexNormals();
 
       const cliffMesh = new THREE.Mesh(cliffWallGeo, cliffWallMat);
-      cliffMesh.position.set(xPos, -95, -160);
+      cliffMesh.position.set(xPos, -95, -120);
       sideCliffGroup.add(cliffMesh);
 
-      // Add glowing corals & sponges along the cliff face shelves
+      // Add glowing corals & sponges along the pre-portal cliff face shelves (z = -65 to -175)
       for (let c = 0; c < 20; c++) {
         const cGeo = new THREE.ConeGeometry(1.0 + Math.random() * 0.6, 4.0 + Math.random() * 3.0, 7);
         const cMat = new THREE.MeshStandardMaterial({
@@ -658,7 +579,7 @@ export default function Scene() {
         coralMesh.position.set(
           xPos + sideOffset,
           -35 - Math.random() * 90,
-          -80 - Math.random() * 140
+          -65 - Math.random() * 105
         );
         coralMesh.rotation.set(
           (Math.random() - 0.5) * 0.4,
@@ -669,8 +590,8 @@ export default function Scene() {
       }
     }
 
-    createSideCliffWall(-68, false); // Left Cliff Wall
-    createSideCliffWall(68, true);   // Right Cliff Wall
+    createSideCliffWall(-88, false); // Left Cliff Wall (Pushed outward to x=-88 to clear portal ring)
+    createSideCliffWall(88, true);   // Right Cliff Wall (Pushed outward to x=+88 to clear portal ring)
     scene.add(sideCliffGroup);
 
     // --- LAYER 3 & 4: DISTANT UNDERWATER MOUNTAIN PEAKS & CAVERN WALLS ---
@@ -1014,323 +935,291 @@ export default function Scene() {
     scene.add(newWorldGroup);
 
     const cliffRockMat = new THREE.MeshStandardMaterial({
-      color: 0x06283d,
+      color: 0x072235,
       roughness: 0.85,
       metalness: 0.15,
       flatShading: true,
     });
 
-    const nodeGlowMat = new THREE.MeshStandardMaterial({
-      color: 0x006688,
-      emissive: 0x00f0ff,
-      emissiveIntensity: 0.9,
-      roughness: 0.2,
-      metalness: 0.4,
+    const stairStoneMat = new THREE.MeshStandardMaterial({
+      color: 0x0b3248,
+      roughness: 0.80,
+      metalness: 0.20,
+      flatShading: true,
     });
 
-    const bannerFrameMat = new THREE.MeshStandardMaterial({
-      color: 0x092635,
-      roughness: 0.3,
-      metalness: 0.8,
+    // Multi-tone glowing crystal materials (cyan, purple/pink, warm amber) matching reference image
+    const cyanCrystalMat = new THREE.MeshStandardMaterial({
+      color: 0x022538,
+      emissive: 0x00f0ff,
+      emissiveIntensity: 2.2,
+      roughness: 0.15,
+      metalness: 0.3,
+      flatShading: true,
     });
+
+    const purpleCrystalMat = new THREE.MeshStandardMaterial({
+      color: 0x240038,
+      emissive: 0xd946ef,
+      emissiveIntensity: 2.2,
+      roughness: 0.15,
+      metalness: 0.3,
+      flatShading: true,
+    });
+
+    const amberCrystalMat = new THREE.MeshStandardMaterial({
+      color: 0x381e00,
+      emissive: 0xf59e0b,
+      emissiveIntensity: 2.2,
+      roughness: 0.15,
+      metalness: 0.3,
+      flatShading: true,
+    });
+
+    const crystalMats = [cyanCrystalMat, purpleCrystalMat, amberCrystalMat];
 
     const cliffMeshes = [];
-    const pinMarkers = [];
     const bannerMeshes = [];
-    const caveMeshes = [];
+    const crystalShrineMeshes = [];
     const eventBannerGroups = {};
 
-    const coralColors = [0x00f0ff, 0xa855f7, 0x0284c7, 0xec4899];
-
-    // Construct each distinct Event Location (Platform + Event Portal + 3D Banner)
+    // Construct each distinct Event Location matching Image 2 target reference with mirrored sideSign offsets
     function createEventPlatformAndBanner(node) {
       const { x, y, z } = node.pos;
-      const width = 34;
-      const depth = 34;
-      const seabedY = Math.min(-385, y - 80);
-      const height = Math.abs(y - seabedY) + 25;
+      const eventGroup = new THREE.Group();
+      eventGroup.position.set(x, y, z);
 
-      // 1. Sculpted Natural Cliff Mountain Base with Rocky Crags & Ridges
-      const cliffGeo = new THREE.CylinderGeometry(width * 0.5, width * 0.85, height, 20, 32);
-      const pos = cliffGeo.attributes.position;
-      const v = new THREE.Vector3();
-      for (let i = 0; i < pos.count; i++) {
-        v.fromBufferAttribute(pos, i);
-        const cragNoise =
-          Math.sin(v.y * 0.12) * Math.cos(v.x * 0.15) * 5.0 +
-          Math.sin(v.z * 0.2 + v.y * 0.08) * 3.5 +
-          Math.cos(v.x * 0.25 + v.z * 0.25) * 2.2;
-        const rad = Math.sqrt(v.x * v.x + v.z * v.z);
+      // Determine event side: -1 for left side (x < 0), +1 for right side (x > 0)
+      const sideSign = x < 0 ? -1 : (x > 0 ? 1 : (parseInt(node.num, 10) % 2 === 0 ? 1 : -1));
+
+      // Structural variation per event so each location feels like a unique miniature destination
+      const eventIdx = parseInt(node.num, 10) || 1;
+      const stairCurvature = sideSign * 0.16;
+      const altarScale = 1.0 + (eventIdx % 3) * 0.08;
+
+      // 1. Secondary Background Cliff Mountain (Positioned behind & outer side of main mound)
+      const bgCliffGeo = new THREE.CylinderGeometry(10, 18, 34, 10, 3);
+      const bgCPos = bgCliffGeo.attributes.position;
+      const bVec = new THREE.Vector3();
+      for (let i = 0; i < bgCPos.count; i++) {
+        bVec.fromBufferAttribute(bgCliffGeo.attributes.position, i);
+        const noise = Math.sin(bVec.y * 0.15) * Math.cos(bVec.x * 0.2) * 3.0;
+        bVec.x += noise;
+        bVec.z += noise;
+        bgCPos.setXYZ(i, bVec.x, bVec.y, bVec.z);
+      }
+      bgCliffGeo.computeVertexNormals();
+
+      const bgCliffMesh = new THREE.Mesh(bgCliffGeo, cliffRockMat);
+      bgCliffMesh.position.set(sideSign * 18, 14, -14);
+      eventGroup.add(bgCliffMesh);
+      cliffMeshes.push(bgCliffMesh);
+
+      // Background Crystal Cluster on Top Ledge of Secondary Cliff
+      const bgCrystalGroup = new THREE.Group();
+      bgCrystalGroup.position.set(sideSign * 18, 29, -14);
+      for (let bgc = 0; bgc < 4; bgc++) {
+        const xtGeo = new THREE.ConeGeometry(0.8 + bgc * 0.3, 3.2, 5);
+        const xtMesh = new THREE.Mesh(xtGeo, cyanCrystalMat);
+        xtMesh.position.set(sideSign * (bgc - 1.5) * 1.2, 0, (Math.random() - 0.5) * 1.5);
+        xtMesh.rotation.set((Math.random() - 0.5) * 0.4, Math.random() * Math.PI, (Math.random() - 0.5) * 0.4);
+        bgCrystalGroup.add(xtMesh);
+      }
+      eventGroup.add(bgCrystalGroup);
+
+      // 2. Main Terraced Low-Poly Faceted Rock Formation (Centered at eventGroup origin)
+      const lowerRockGeo = new THREE.CylinderGeometry(18 * altarScale, 24 * altarScale, 20, 12, 3);
+      const lrPos = lowerRockGeo.attributes.position;
+      for (let i = 0; i < lrPos.count; i++) {
+        bVec.fromBufferAttribute(lowerRockGeo.attributes.position, i);
+        const facetNoise = Math.sin(bVec.y * 0.16 + bVec.x * 0.22) * 3.2 + Math.cos(bVec.z * 0.25) * 2.5;
+        const rad = Math.sqrt(bVec.x * bVec.x + bVec.z * bVec.z);
         if (rad > 0.1) {
-          v.x += (v.x / rad) * cragNoise;
-          v.z += (v.z / rad) * cragNoise;
+          bVec.x += (bVec.x / rad) * facetNoise;
+          bVec.z += (bVec.z / rad) * facetNoise;
         }
-        pos.setXYZ(i, v.x, v.y, v.z);
+        lrPos.setXYZ(i, bVec.x, bVec.y, bVec.z);
       }
-      cliffGeo.computeVertexNormals();
+      lowerRockGeo.computeVertexNormals();
 
-      const cliffMesh = new THREE.Mesh(cliffGeo, cliffRockMat);
-      cliffMesh.position.set(x, y - height / 2, z);
-      newWorldGroup.add(cliffMesh);
-      cliffMeshes.push(cliffMesh);
+      const lowerRockMesh = new THREE.Mesh(lowerRockGeo, cliffRockMat);
+      lowerRockMesh.position.set(0, -8, 0);
+      eventGroup.add(lowerRockMesh);
+      cliffMeshes.push(lowerRockMesh);
 
-      // Add Bioluminescent Crystal Veins & Glowing Rock Ledges onto Platform Face
-      const crystalColors = [0x00f0ff, 0xa855f7, 0x0284c7, 0x38bdf8];
-      for (let cr = 0; cr < 12; cr++) {
-        const xtalGeo = new THREE.OctahedronGeometry(0.8 + Math.random() * 0.8, 1);
-        const xtalMat = new THREE.MeshStandardMaterial({
-          color: 0x022538,
-          emissive: crystalColors[cr % crystalColors.length],
-          emissiveIntensity: 1.0,
-          roughness: 0.2,
-          flatShading: true,
-        });
-        const xtalMesh = new THREE.Mesh(xtalGeo, xtalMat);
-        const angle = Math.random() * Math.PI * 2;
-        const r = (width * 0.45) + (Math.random() - 0.5) * 4;
-        xtalMesh.position.set(
-          x + Math.cos(angle) * r,
-          y - Math.random() * 25,
-          z + Math.sin(angle) * r
+      // Upper Terraced Plateau (Outer side)
+      const upperTerraceGeo = new THREE.CylinderGeometry(9, 14, 10, 10, 2);
+      const utPos = upperTerraceGeo.attributes.position;
+      for (let i = 0; i < utPos.count; i++) {
+        bVec.fromBufferAttribute(upperTerraceGeo.attributes.position, i);
+        const noise = Math.sin(bVec.x * 0.28) * Math.cos(bVec.z * 0.28) * 2.0;
+        bVec.x += noise;
+        bVec.z += noise;
+        utPos.setXYZ(i, bVec.x, bVec.y, bVec.z);
+      }
+      upperTerraceGeo.computeVertexNormals();
+
+      const upperTerraceMesh = new THREE.Mesh(upperTerraceGeo, cliffRockMat);
+      upperTerraceMesh.position.set(sideSign * 12, 7, -4);
+      eventGroup.add(upperTerraceMesh);
+
+      // 3. Carved Low-Poly Staircase (Curving up front face of rock mound)
+      const numSteps = 8;
+      const stepWidth = 8.0;
+      const stepHeight = 1.1;
+      const stepDepth = 2.0;
+      for (let s = 0; s < numSteps; s++) {
+        const stepGeo = new THREE.BoxGeometry(stepWidth - s * 0.4, stepHeight, stepDepth);
+        const stepMesh = new THREE.Mesh(stepGeo, stairStoneMat);
+        const angle = -0.3 + s * stairCurvature;
+        const radius = 11.5 - s * 1.0;
+        stepMesh.position.set(
+          sideSign * (Math.sin(angle) * radius),
+          -14.0 + s * stepHeight,
+          6 + Math.cos(angle) * radius
         );
-        xtalMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-        newWorldGroup.add(xtalMesh);
+        stepMesh.rotation.y = sideSign * (angle + 0.35);
+        eventGroup.add(stepMesh);
       }
 
-      // 2. Event Pin Marker on Top of Rock Platform
-      const pinPedestalGeo = new THREE.TorusGeometry(3.2, 0.4, 12, 24);
-      const pinPedestal = new THREE.Mesh(pinPedestalGeo, nodeGlowMat);
-      pinPedestal.rotation.x = Math.PI / 2;
-      pinPedestal.position.set(x, y + 0.3, z);
-      newWorldGroup.add(pinPedestal);
+      // 4. Main Central Glowing Crystal Orb Shrine (Centered on top of rock mound)
+      const mainShrineGroup = new THREE.Group();
+      mainShrineGroup.position.set(0, 4, 0);
 
-      const pinStemGeo = new THREE.CylinderGeometry(0.2, 0.4, 4, 8);
-      const pinStem = new THREE.Mesh(pinStemGeo, nodeGlowMat);
-      pinStem.position.set(x, y + 2.3, z);
-      newWorldGroup.add(pinStem);
+      // Rock Cradle Altar Base
+      const altarBaseGeo = new THREE.CylinderGeometry(4.5, 6.0, 3.0, 8);
+      const altarMesh = new THREE.Mesh(altarBaseGeo, cliffRockMat);
+      mainShrineGroup.add(altarMesh);
 
-      const pinNodeGeo = new THREE.OctahedronGeometry(1.6, 2);
-      const pinNode = new THREE.Mesh(pinNodeGeo, nodeGlowMat);
-      pinNode.position.set(x, y + 5.0, z);
-      pinNode.userData = { eventData: node };
-      newWorldGroup.add(pinNode);
-      pinMarkers.push(pinNode);
+      // Inner Glowing Crystal Orb
+      const orbGeo = new THREE.IcosahedronGeometry(3.0, 1);
+      const orbMesh = new THREE.Mesh(orbGeo, cyanCrystalMat);
+      orbMesh.position.set(0, 3.2, 0);
+      orbMesh.userData = { eventData: node };
+      mainShrineGroup.add(orbMesh);
 
-      // 3. Grand Underwater Rock Cave Entrance near each event platform
-      const { x: px, y: py, z: pz } = node.portalPos;
-      const caveGroup = new THREE.Group();
-      // Offset position left & back so it does NOT overlap with the 3D Banner Poster
-      caveGroup.position.set(px - 7.0, py + 1.5, pz - 7.0);
-      // Rotate cave mouth to directly face the camera/viewer side
-      caveGroup.rotation.y = Math.PI * 0.25;
-
-      // A. Large Irregular Rock Cavern Dome / Mound
-      const domeGeo = new THREE.SphereGeometry(15.5, 24, 24, 0, Math.PI * 2, 0, Math.PI * 0.68);
-      const domePos = domeGeo.attributes.position;
-      const dVec = new THREE.Vector3();
-      for (let i = 0; i < domePos.count; i++) {
-        dVec.fromBufferAttribute(domePos, i);
-        const rNoise =
-          Math.sin(dVec.y * 0.25) * Math.cos(dVec.x * 0.3) * 3.5 +
-          Math.cos(dVec.z * 0.4) * 2.5;
-        dVec.x += (dVec.x > 0 ? 1 : -1) * rNoise * 0.6;
-        dVec.z += rNoise * 0.5;
-        dVec.y += Math.sin(dVec.x * 0.2) * 1.5;
-        domePos.setXYZ(i, dVec.x, dVec.y, dVec.z);
-      }
-      domeGeo.computeVertexNormals();
-
-      const caveDomeMesh = new THREE.Mesh(domeGeo, cliffRockMat);
-      caveDomeMesh.rotation.x = Math.PI / 2;
-      caveDomeMesh.position.set(0, 2.0, 0);
-      caveGroup.add(caveDomeMesh);
-
-      // B. Outer Arched Entrance Rim (Large Irregular Rock Ring around Cave Mouth)
-      const rimGeo = new THREE.TorusGeometry(11.0, 2.8, 16, 32, Math.PI * 1.85);
-      const rimPos = rimGeo.attributes.position;
-      for (let i = 0; i < rimPos.count; i++) {
-        dVec.fromBufferAttribute(rimPos, i);
-        const noise = Math.sin(dVec.x * 0.5) * Math.cos(dVec.y * 0.5) * 1.4;
-        dVec.x += noise;
-        dVec.y += noise;
-        rimPos.setXYZ(i, dVec.x, dVec.y, dVec.z);
-      }
-      rimGeo.computeVertexNormals();
-
-      const caveRimMesh = new THREE.Mesh(rimGeo, ruinStoneMat);
-      caveRimMesh.position.set(0, 1.0, 1.5);
-      caveGroup.add(caveRimMesh);
-
-      // C. Dark Interior Background (Deep Cave Tunnel Depth)
-      const interiorMat = new THREE.MeshStandardMaterial({
-        color: 0x00060d,
-        roughness: 0.95,
-        metalness: 0.05,
-        side: THREE.BackSide,
+      // Outer Wireframe Gem Ring surrounding main orb
+      const wireGeo = new THREE.IcosahedronGeometry(3.5, 1);
+      const wireMat = new THREE.MeshBasicMaterial({
+        color: 0x00f0ff,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.75,
       });
-      const interiorGeo = new THREE.CylinderGeometry(9.8, 8.2, 16, 24, 1, true);
-      const interiorMesh = new THREE.Mesh(interiorGeo, interiorMat);
-      interiorMesh.rotation.x = Math.PI / 2;
-      interiorMesh.position.set(0, 0, -5.0);
-      caveGroup.add(interiorMesh);
+      const wireMesh = new THREE.Mesh(wireGeo, wireMat);
+      wireMesh.position.set(0, 3.2, 0);
+      mainShrineGroup.add(wireMesh);
 
-      // D. Large Stalactites (Hanging from Cave Roof)
-      const stalactitePositions = [
-        { x: -6.2, y: 6.2, z: 0.8, h: 6.2, r: 1.1 },
-        { x: -3.6, y: 7.4, z: 1.2, h: 7.8, r: 1.3 },
-        { x: -0.8, y: 8.0, z: 1.0, h: 7.0, r: 1.2 },
-        { x: 2.2, y: 7.6, z: 1.4, h: 8.2, r: 1.4 },
-        { x: 5.4, y: 6.6, z: 0.9, h: 5.8, r: 1.0 },
-        { x: 0.0, y: 6.8, z: -2.2, h: 7.2, r: 1.25 },
-        { x: -4.2, y: 6.0, z: -2.8, h: 6.4, r: 1.1 },
+      // Surrounding Faceted Crystal Points
+      const shrineCrystalCount = 8;
+      for (let sc = 0; sc < shrineCrystalCount; sc++) {
+        const scGeo = new THREE.ConeGeometry(0.9 + (sc % 3) * 0.3, 3.5 + (sc % 2) * 1.2, 5);
+        const scMat = crystalMats[(sc + eventIdx) % crystalMats.length];
+        const scMesh = new THREE.Mesh(scGeo, scMat);
+        const cAngle = (sc / shrineCrystalCount) * Math.PI * 2;
+        const cRad = 3.6;
+        scMesh.position.set(Math.cos(cAngle) * cRad, 1.2, Math.sin(cAngle) * cRad);
+        scMesh.rotation.set(0.4, cAngle, (sc % 2 === 0 ? 0.3 : -0.3));
+        mainShrineGroup.add(scMesh);
+      }
+
+      // Strong Directional PointLight from main shrine
+      const mainShrineLight = new THREE.PointLight(0x00f0ff, 8.0, 40);
+      mainShrineLight.position.set(0, 4.5, 0);
+      mainShrineGroup.add(mainShrineLight);
+
+      eventGroup.add(mainShrineGroup);
+      crystalShrineMeshes.push(orbMesh);
+
+      // 5. Upper Terrace Crystal Altar
+      const upperShrineGroup = new THREE.Group();
+      upperShrineGroup.position.set(sideSign * 12, 13, -4);
+      const upperOrbGeo = new THREE.OctahedronGeometry(2.0, 1);
+      const upperOrbMesh = new THREE.Mesh(upperOrbGeo, cyanCrystalMat);
+      upperShrineGroup.add(upperOrbMesh);
+      const upperLight = new THREE.PointLight(0x00f0ff, 4.0, 25);
+      upperLight.position.set(0, 1.0, 0);
+      upperShrineGroup.add(upperLight);
+      eventGroup.add(upperShrineGroup);
+
+      // 6. 3D Embedded Faceted Crystals across Rock Surface
+      const crystalPlacements = [
+        { pos: [sideSign * 10, 2, 8], mat: cyanCrystalMat, scale: 1.4 },
+        { pos: [sideSign * 4, 3, 6], mat: cyanCrystalMat, scale: 1.2 },
+        { pos: [sideSign * 14, 9, -2], mat: cyanCrystalMat, scale: 1.6 },
+        { pos: [sideSign * 12, 8, -8], mat: cyanCrystalMat, scale: 1.3 },
+        { pos: [sideSign * 12, -4, 10], mat: amberCrystalMat, scale: 1.5 },
+        { pos: [sideSign * 2, -3, 4], mat: amberCrystalMat, scale: 1.4 },
+        { pos: [sideSign * 18, 2, -4], mat: amberCrystalMat, scale: 1.2 },
+        { pos: [sideSign * 20, -10, 4], mat: purpleCrystalMat, scale: 1.6 },
+        { pos: [sideSign * 2, -12, 8], mat: purpleCrystalMat, scale: 1.5 },
+        { pos: [sideSign * 16, -14, -6], mat: purpleCrystalMat, scale: 1.4 },
+        { pos: [sideSign * 8, -16, 10], mat: purpleCrystalMat, scale: 1.3 },
       ];
 
-      stalactitePositions.forEach((st) => {
-        const stGeo = new THREE.ConeGeometry(st.r, st.h, 7);
-        const stMesh = new THREE.Mesh(stGeo, cliffRockMat);
-        stMesh.rotation.x = Math.PI;
-        stMesh.position.set(st.x, st.y - st.h / 2, st.z);
-        caveGroup.add(stMesh);
+      crystalPlacements.forEach((cp) => {
+        const xtalGeo = new THREE.ConeGeometry(0.8 * cp.scale, 3.2 * cp.scale, 5);
+        const xtalMesh = new THREE.Mesh(xtalGeo, cp.mat);
+        xtalMesh.position.set(cp.pos[0], cp.pos[1], cp.pos[2]);
+        xtalMesh.rotation.set((Math.random() - 0.5) * 0.6, Math.random() * Math.PI, (Math.random() - 0.5) * 0.6);
+        eventGroup.add(xtalMesh);
       });
 
-      // E. Large Stalagmites (Rising from Cave Floor)
-      const stalagmitePositions = [
-        { x: -7.2, y: -5.8, z: 1.0, h: 5.8, r: 1.3 },
-        { x: -4.6, y: -6.2, z: 1.4, h: 7.4, r: 1.5 },
-        { x: -1.8, y: -6.8, z: 0.9, h: 5.4, r: 1.2 },
-        { x: 1.6, y: -6.5, z: 1.6, h: 7.8, r: 1.6 },
-        { x: 4.8, y: -6.2, z: 1.1, h: 6.6, r: 1.3 },
-        { x: 7.0, y: -5.8, z: 0.8, h: 5.0, r: 1.1 },
-        { x: -1.0, y: -6.2, z: -2.8, h: 6.8, r: 1.4 },
-      ];
+      // 7. Floating 3D Code Symbol Glyphs (Positioned behind shrine away from camera line of sight)
+      const codeGlyphsCanvas = document.createElement("canvas");
+      codeGlyphsCanvas.width = 512;
+      codeGlyphsCanvas.height = 256;
+      const gCtx = codeGlyphsCanvas.getContext("2d");
+      gCtx.clearRect(0, 0, 512, 256);
+      gCtx.shadowColor = "#00f0ff";
+      gCtx.shadowBlur = 18;
+      gCtx.font = "900 120px monospace";
+      gCtx.fillStyle = "#67e8f9";
+      gCtx.fillText("</>", 140, 160);
+      const glyphTex = new THREE.CanvasTexture(codeGlyphsCanvas);
 
-      stalagmitePositions.forEach((sm) => {
-        const smGeo = new THREE.ConeGeometry(sm.r, sm.h, 7);
-        const smMesh = new THREE.Mesh(smGeo, cliffRockMat);
-        smMesh.position.set(sm.x, sm.y + sm.h / 2, sm.z);
-        caveGroup.add(smMesh);
+      const glyphMat = new THREE.MeshBasicMaterial({
+        map: glyphTex,
+        transparent: true,
+        side: THREE.DoubleSide,
+        depthWrite: false,
       });
 
-      // F. Subtle Cyan/Blue Bioluminescent Crystals glowing on the Cave Floor
-      const caveCrystals = [0x00f0ff, 0x0284c7, 0x38bdf8, 0x00e5ff];
-      for (let cr = 0; cr < 10; cr++) {
-        const cGeo = new THREE.OctahedronGeometry(1.0 + Math.random() * 0.8, 1);
-        const cMat = new THREE.MeshStandardMaterial({
-          color: 0x011e30,
-          emissive: caveCrystals[cr % caveCrystals.length],
-          emissiveIntensity: 2.5,
-          roughness: 0.2,
-        });
-        const cMesh = new THREE.Mesh(cGeo, cMat);
-        const angle = (cr / 10) * Math.PI - Math.PI / 2;
-        cMesh.position.set(Math.cos(angle) * 5.8, -6.0, Math.sin(angle) * 2.8 - 1.0);
-        cMesh.rotation.set(Math.random(), Math.random(), 0);
-        caveGroup.add(cMesh);
-      }
+      const glyphMesh1 = new THREE.Mesh(new THREE.PlaneGeometry(8, 4), glyphMat);
+      glyphMesh1.position.set(sideSign * 10, 16, -8);
+      eventGroup.add(glyphMesh1);
 
-      // G. Subtle Cyan/Blue Light glowing from deep inside the cave mouth
-      const caveGlowLight = new THREE.PointLight(0x00f0ff, 7.5, 45);
-      caveGlowLight.position.set(0, -1.0, -4.5);
-      caveGroup.add(caveGlowLight);
+      const glyphMesh2 = new THREE.Mesh(new THREE.PlaneGeometry(6, 3), glyphMat);
+      glyphMesh2.position.set(sideSign * -10, 16, -12);
+      eventGroup.add(glyphMesh2);
 
-      caveGroup.userData = { eventData: node };
-      newWorldGroup.add(caveGroup);
-      caveMeshes.push(caveGroup);
+      newWorldGroup.add(eventGroup);
 
-      // 4. 3D Event Banner attached to the Rock Platform (POLE BEHIND THE POSTER)
-      const { x: bx, y: by, z: bz, rotY: bRotY } = node.bannerPos;
-
+      // 8. Floating Event Title Text Card (Centered directly over crystal shrine)
       const bannerGroup = new THREE.Group();
+      bannerGroup.position.set(x, y + 14.0, z);
+      bannerGroup.rotation.y = 0;
 
-      // Banner Support Post (Positioned BEHIND the Poster at bz - 0.6)
-      const postGeo = new THREE.CylinderGeometry(0.4, 0.5, 16, 12);
-      const postMesh = new THREE.Mesh(postGeo, bannerFrameMat);
-      postMesh.position.set(bx, by - 4.5, bz - 0.6);
-      bannerGroup.add(postMesh);
-
-      // Horizontal Rear Mounting Brackets connecting Pole to Poster
-      const bracketGeo = new THREE.BoxGeometry(4.0, 0.4, 0.8);
-      const bracket1 = new THREE.Mesh(bracketGeo, bannerFrameMat);
-      bracket1.position.set(bx, by + 2.0, bz - 0.3);
-      bannerGroup.add(bracket1);
-
-      const bracket2 = new THREE.Mesh(bracketGeo, bannerFrameMat);
-      bracket2.position.set(bx, by - 2.0, bz - 0.3);
-      bannerGroup.add(bracket2);
-
-      // 3D Event Banner Panel with Front & Back Texture
       const bannerTexture = createEventBannerTexture(node);
-
-      const bannerMat = new THREE.MeshStandardMaterial({
+      const bannerMat = new THREE.MeshBasicMaterial({
         map: bannerTexture,
-        roughness: 0.2,
-        metalness: 0.3,
-        emissive: 0x003344,
-        emissiveIntensity: 0.6,
+        transparent: true,
+        side: THREE.DoubleSide,
+        depthWrite: false,
       });
 
-      const frameBackMat = new THREE.MeshStandardMaterial({
-        color: 0x061c2d,
-        roughness: 0.4,
-        metalness: 0.8,
-      });
-
-      const materials = [
-        frameBackMat, // right
-        frameBackMat, // left
-        frameBackMat, // top
-        frameBackMat, // bottom
-        bannerMat,    // front
-        bannerMat,    // back
-      ];
-
-      const bannerBoxGeo = new THREE.BoxGeometry(18, 9, 0.4);
-      const bannerMesh = new THREE.Mesh(bannerBoxGeo, materials);
-      bannerMesh.position.set(bx, by, bz);
-      bannerMesh.rotation.y = bRotY;
+      const bannerPlaneGeo = new THREE.PlaneGeometry(28, 7);
+      const bannerMesh = new THREE.Mesh(bannerPlaneGeo, bannerMat);
       bannerMesh.userData = { eventData: node };
       bannerGroup.add(bannerMesh);
       bannerMeshes.push(bannerMesh);
 
-      // Glowing Neon Cyan Bezel Frame around Poster Panel
-      const bezelGeo = new THREE.BoxGeometry(18.6, 9.6, 0.2);
-      const bezelMat = new THREE.MeshStandardMaterial({
-        color: 0x005577,
-        emissive: 0x00f0ff,
-        emissiveIntensity: 1.5,
-        roughness: 0.1,
-      });
-      const bezelMesh = new THREE.Mesh(bezelGeo, bezelMat);
-      bezelMesh.position.set(bx, by, bz - 0.25);
-      bezelMesh.rotation.y = bRotY;
-      bannerGroup.add(bezelMesh);
-
-      // Dedicated PointLight illuminating each Event Poster Panel
-      const posterLight = new THREE.PointLight(0x00f0ff, 5.0, 45);
-      posterLight.position.set(bx, by, bz + 4.0);
+      const posterLight = new THREE.PointLight(0x00f0ff, 4.0, 40);
+      posterLight.position.set(0, 0, 2.0);
       bannerGroup.add(posterLight);
 
       newWorldGroup.add(bannerGroup);
       eventBannerGroups[node.id] = bannerGroup;
-
-      // Bioluminescent corals on each rock platform plateau
-      for (let c = 0; c < 8; c++) {
-        const coralGeo = new THREE.ConeGeometry(0.7 + Math.random() * 0.6, 3.5 + Math.random() * 2.5, 6);
-        const coralMat = new THREE.MeshStandardMaterial({
-          color: 0x042840,
-          emissive: coralColors[c % coralColors.length],
-          emissiveIntensity: 0.75,
-          roughness: 0.4,
-          flatShading: true,
-        });
-        const coral = new THREE.Mesh(coralGeo, coralMat);
-        coral.position.set(
-          x + (Math.random() - 0.5) * (width * 0.7),
-          y + 1.2,
-          z + (Math.random() - 0.5) * (depth * 0.7)
-        );
-        newWorldGroup.add(coral);
-      }
     }
 
     eventNodes.forEach((node) => {
@@ -1580,7 +1469,7 @@ export default function Scene() {
       mouseVector.y = -(event.clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouseVector, camera);
 
-      const intersects = raycaster.intersectObjects([portalRingMesh, ...pinMarkers, ...bannerMeshes, ...caveMeshes], true);
+      const intersects = raycaster.intersectObjects([portalRingMesh, ...crystalShrineMeshes, ...bannerMeshes], true);
       if (intersects.length > 0) {
         const hit = intersects[0].object;
         if (hit === portalRingMesh) {
@@ -1628,7 +1517,7 @@ export default function Scene() {
       mouseVector.y = targetMouse.y;
       raycaster.setFromCamera(mouseVector, camera);
 
-      const intersects = raycaster.intersectObjects([portalRingMesh, ...pinMarkers, ...bannerMeshes, ...caveMeshes], true);
+      const intersects = raycaster.intersectObjects([portalRingMesh, ...crystalShrineMeshes, ...bannerMeshes], true);
       if (intersects.length > 0) {
         document.body.style.cursor = "pointer";
         const hit = intersects[0].object;
@@ -1727,206 +1616,537 @@ export default function Scene() {
       1.5
     );
 
-    // Phase 3: Fly DIRECTLY INSIDE the Circular Portal Stargate (40% - 48%)
+    // Phase 3: Fly STRAIGHT THROUGH CENTER of Circular Portal Stargate (40% - 46%)
     tl.to(
       camState,
       {
         x: 0,
         y: -110,
-        z: -195,
+        z: -210,
         targetX: 0,
         targetY: -110,
-        targetZ: -245,
+        targetZ: -260,
         rx: 0,
         ry: 0,
-        fogDensity: 0.018,
-        duration: 1.2,
-        ease: "power2.in",
+        fogDensity: 0.015,
+        duration: 1.0,
+        ease: "power1.inOut",
       },
       4.0
     );
 
-    // INSIDE EVENT PORTAL: Waypoint-based exploration journey toward each event rock location
-
-    // Event 01: Coding (Rock Platform 1 at x = -42) - Move slightly LEFT
-    tl.to(
-      camState,
-      {
-        x: -18,
-        y: -102,
-        z: -210,
-        targetX: -30,
-        targetY: -105,
-        targetZ: -238,
-        fogDensity: 0.015,
-        duration: 1.6,
-        ease: "power2.inOut",
-      },
-      5.2
-    );
-    tl.to(camState, { targetX: -30, targetY: -105, targetZ: -238, duration: 0.6 }, 6.8);
-
-    // Event 02: Web Design (Rock Platform 2 at x = 42) - Move RIGHT
-    tl.to(
-      camState,
-      {
-        x: 18,
-        y: -142,
-        z: -290,
-        targetX: 30,
-        targetY: -145,
-        targetZ: -318,
-        fogDensity: 0.017,
-        duration: 1.6,
-        ease: "power2.inOut",
-      },
-      7.4
-    );
-    tl.to(camState, { targetX: 30, targetY: -145, targetZ: -318, duration: 0.6 }, 9.0);
-
-    // Event 03: IT Quiz (Rock Platform 3 at x = -42) - Move DIAGONALLY LEFT
-    tl.to(
-      camState,
-      {
-        x: -24,
-        y: -182,
-        z: -370,
-        targetX: -32,
-        targetY: -185,
-        targetZ: -398,
-        fogDensity: 0.019,
-        duration: 1.6,
-        ease: "power2.inOut",
-      },
-      9.6
-    );
-    tl.to(camState, { targetX: -32, targetY: -185, targetZ: -398, duration: 0.6 }, 11.2);
-
-    // Event 04: Gaming (Rock Platform 4 at x = 42) - Move DIAGONALLY RIGHT
-    tl.to(
-      camState,
-      {
-        x: 22,
-        y: -222,
-        z: -450,
-        targetX: 32,
-        targetY: -225,
-        targetZ: -478,
-        fogDensity: 0.021,
-        duration: 1.6,
-        ease: "power2.inOut",
-      },
-      11.8
-    );
-    tl.to(camState, { targetX: 32, targetY: -225, targetZ: -478, duration: 0.6 }, 13.4);
-
-    // Event 05: Tech Talk (Rock Platform 5 at x = -42) - Move FORWARD / DEEPER
-    tl.to(
-      camState,
-      {
-        x: -12,
-        y: -262,
-        z: -530,
-        targetX: -28,
-        targetY: -265,
-        targetZ: -558,
-        fogDensity: 0.022,
-        duration: 1.6,
-        ease: "power2.inOut",
-      },
-      14.0
-    );
-    tl.to(camState, { targetX: -28, targetY: -265, targetZ: -558, duration: 0.6 }, 15.6);
-
-    // Event 06: Surprise Event (Rock Platform 6 at x = 42) - Move LEFT + DEEPER
-    tl.to(
-      camState,
-      {
-        x: 26,
-        y: -302,
-        z: -610,
-        targetX: 34,
-        targetY: -305,
-        targetZ: -638,
-        fogDensity: 0.024,
-        duration: 1.6,
-        ease: "power2.inOut",
-      },
-      16.2
-    );
-    tl.to(camState, { targetX: 34, targetY: -305, targetZ: -638, duration: 0.6 }, 17.8);
-
-    // Event 07: IT Manager (Rock Platform 7 at x = -42) - Move RIGHT + DEEPER
-    tl.to(
-      camState,
-      {
-        x: -16,
-        y: -342,
-        z: -690,
-        targetX: -30,
-        targetY: -345,
-        targetZ: -718,
-        fogDensity: 0.025,
-        duration: 1.6,
-        ease: "power2.inOut",
-      },
-      18.4
-    );
-    tl.to(camState, { targetX: -30, targetY: -345, targetZ: -718, duration: 0.6 }, 20.0);
-
-    // Event 08: Startup Event (Rock Platform 8 at x = 42) - Move DIAGONALLY LEFT
-    tl.to(
-      camState,
-      {
-        x: 20,
-        y: -382,
-        z: -770,
-        targetX: 30,
-        targetY: -385,
-        targetZ: -798,
-        fogDensity: 0.026,
-        duration: 1.6,
-        ease: "power2.inOut",
-      },
-      20.6
-    );
-    tl.to(camState, { targetX: 30, targetY: -385, targetZ: -798, duration: 0.6 }, 22.2);
-
-    // Event 09: Dance (Rock Platform 9 at x = -42) - Move RIGHT + DEEPER
-    tl.to(
-      camState,
-      {
-        x: -20,
-        y: -422,
-        z: -850,
-        targetX: -32,
-        targetY: -425,
-        targetZ: -878,
-        fogDensity: 0.027,
-        duration: 1.6,
-        ease: "power2.inOut",
-      },
-      22.8
-    );
-    tl.to(camState, { targetX: -32, targetY: -425, targetZ: -878, duration: 0.6 }, 24.4);
-
-    // Event 10: Photography & Videography (Rock Platform 10 at x = 0) - Move TOWARD FINAL DESTINATION
+    // Exit / Clear Portal Area (46% - 50%) — Fly forward in open water to z: -250, leaving stargate ring behind
     tl.to(
       camState,
       {
         x: 0,
-        y: -458,
-        z: -930,
-        targetX: 10,
-        targetY: -464,
-        targetZ: -958,
-        fogDensity: 0.028,
-        duration: 1.6,
-        ease: "power2.inOut",
+        y: -110,
+        z: -250,
+        targetX: 0,
+        targetY: -110,
+        targetZ: -300,
+        fogDensity: 0.015,
+        duration: 0.8,
+        ease: "power1.out",
       },
-      25.0
+      5.0
     );
-    tl.to(camState, { targetX: 10, targetY: -464, targetZ: -958, duration: 1.0 }, 26.6);
+
+    // INSIDE EVENT PORTAL: 3-Step Per-Event Camera Choreography:
+    // Main Portal (z=-190) -> Exit Portal Area (z=-250) -> Event 01 (z=-300) -> Event 02 (z=-400) ... -> Event 10 (z=-1200)
+
+    // Event 01: Coding (Rock Platform 1 at x = -42, z = -300)
+    // Step 1A: Arrive at Wide Overview
+    tl.to(
+      camState,
+      {
+        x: -10,
+        y: -102,
+        z: -235,
+        targetX: -34,
+        targetY: -106,
+        targetZ: -300,
+        fogDensity: 0.015,
+        duration: 1.2,
+        ease: "power2.out",
+      },
+      5.8
+    );
+    // Step 1B: Move IN Close to Event Poster & Shrine
+    tl.to(
+      camState,
+      {
+        x: -42,
+        y: -96,
+        z: -268,
+        targetX: -42,
+        targetY: -96,
+        targetZ: -300,
+        duration: 1.0,
+        ease: "power1.inOut",
+      },
+      7.4
+    );
+    tl.to(camState, { targetX: -42, targetY: -96, targetZ: -300, duration: 0.6 }, 8.4);
+
+    // Transit 1 -> 2: Arc through open center channel at x = 0
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -124,
+        z: -290,
+        targetX: 0,
+        targetY: -126,
+        targetZ: -350,
+        fogDensity: 0.016,
+        duration: 0.8,
+        ease: "power1.inOut",
+      },
+      9.0
+    );
+
+    // Event 02: Web Design (Rock Platform 2 at x = 42, z = -400)
+    // Step 2A: Arrive at Wide Overview
+    tl.to(
+      camState,
+      {
+        x: 10,
+        y: -142,
+        z: -335,
+        targetX: 34,
+        targetY: -146,
+        targetZ: -400,
+        fogDensity: 0.017,
+        duration: 1.2,
+        ease: "power2.out",
+      },
+      10.0
+    );
+    // Step 2B: Move IN Close to Event Poster & Shrine
+    tl.to(
+      camState,
+      {
+        x: 42,
+        y: -136,
+        z: -368,
+        targetX: 42,
+        targetY: -136,
+        targetZ: -400,
+        duration: 1.0,
+        ease: "power1.inOut",
+      },
+      11.6
+    );
+    tl.to(camState, { targetX: 42, targetY: -136, targetZ: -400, duration: 0.6 }, 12.6);
+
+    // Transit 2 -> 3: Arc through open center channel at x = 0
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -164,
+        z: -390,
+        targetX: 0,
+        targetY: -166,
+        targetZ: -450,
+        fogDensity: 0.018,
+        duration: 0.8,
+        ease: "power1.inOut",
+      },
+      13.2
+    );
+
+    // Event 03: IT Quiz (Rock Platform 3 at x = -42, z = -500)
+    // Step 3A: Arrive at Wide Overview
+    tl.to(
+      camState,
+      {
+        x: -10,
+        y: -182,
+        z: -435,
+        targetX: -34,
+        targetY: -186,
+        targetZ: -500,
+        fogDensity: 0.019,
+        duration: 1.2,
+        ease: "power2.out",
+      },
+      14.2
+    );
+    // Step 3B: Move IN Close to Event Poster & Shrine
+    tl.to(
+      camState,
+      {
+        x: -42,
+        y: -176,
+        z: -468,
+        targetX: -42,
+        targetY: -176,
+        targetZ: -500,
+        duration: 1.0,
+        ease: "power1.inOut",
+      },
+      15.8
+    );
+    tl.to(camState, { targetX: -42, targetY: -176, targetZ: -500, duration: 0.6 }, 16.8);
+
+    // Transit 3 -> 4: Arc through open center channel at x = 0
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -204,
+        z: -490,
+        targetX: 0,
+        targetY: -206,
+        targetZ: -550,
+        fogDensity: 0.020,
+        duration: 0.8,
+        ease: "power1.inOut",
+      },
+      17.4
+    );
+
+    // Event 04: Gaming (Rock Platform 4 at x = 42, z = -600)
+    // Step 4A: Arrive at Wide Overview
+    tl.to(
+      camState,
+      {
+        x: 10,
+        y: -222,
+        z: -535,
+        targetX: 34,
+        targetY: -226,
+        targetZ: -600,
+        fogDensity: 0.021,
+        duration: 1.2,
+        ease: "power2.out",
+      },
+      18.4
+    );
+    // Step 4B: Move IN Close to Event Poster & Shrine
+    tl.to(
+      camState,
+      {
+        x: 42,
+        y: -216,
+        z: -568,
+        targetX: 42,
+        targetY: -216,
+        targetZ: -600,
+        duration: 1.0,
+        ease: "power1.inOut",
+      },
+      20.0
+    );
+    tl.to(camState, { targetX: 42, targetY: -216, targetZ: -600, duration: 0.6 }, 21.0);
+
+    // Transit 4 -> 5: Arc through open center channel at x = 0
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -244,
+        z: -590,
+        targetX: 0,
+        targetY: -246,
+        targetZ: -650,
+        fogDensity: 0.0215,
+        duration: 0.8,
+        ease: "power1.inOut",
+      },
+      21.6
+    );
+
+    // Event 05: Tech Talk (Rock Platform 5 at x = -42, z = -700)
+    // Step 5A: Arrive at Wide Overview
+    tl.to(
+      camState,
+      {
+        x: -10,
+        y: -262,
+        z: -635,
+        targetX: -34,
+        targetY: -266,
+        targetZ: -700,
+        fogDensity: 0.022,
+        duration: 1.2,
+        ease: "power2.out",
+      },
+      22.6
+    );
+    // Step 5B: Move IN Close to Event Poster & Shrine
+    tl.to(
+      camState,
+      {
+        x: -42,
+        y: -256,
+        z: -668,
+        targetX: -42,
+        targetY: -256,
+        targetZ: -700,
+        duration: 1.0,
+        ease: "power1.inOut",
+      },
+      24.2
+    );
+    tl.to(camState, { targetX: -42, targetY: -256, targetZ: -700, duration: 0.6 }, 25.2);
+
+    // Transit 5 -> 6: Arc through open center channel at x = 0
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -284,
+        z: -690,
+        targetX: 0,
+        targetY: -286,
+        targetZ: -750,
+        fogDensity: 0.023,
+        duration: 0.8,
+        ease: "power1.inOut",
+      },
+      25.8
+    );
+
+    // Event 06: Surprise Event (Rock Platform 6 at x = 42, z = -800)
+    // Step 6A: Arrive at Wide Overview
+    tl.to(
+      camState,
+      {
+        x: 10,
+        y: -302,
+        z: -735,
+        targetX: 34,
+        targetY: -306,
+        targetZ: -800,
+        fogDensity: 0.024,
+        duration: 1.2,
+        ease: "power2.out",
+      },
+      26.8
+    );
+    // Step 6B: Move IN Close to Event Poster & Shrine
+    tl.to(
+      camState,
+      {
+        x: 42,
+        y: -296,
+        z: -768,
+        targetX: 42,
+        targetY: -296,
+        targetZ: -800,
+        duration: 1.0,
+        ease: "power1.inOut",
+      },
+      28.4
+    );
+    tl.to(camState, { targetX: 42, targetY: -296, targetZ: -800, duration: 0.6 }, 29.4);
+
+    // Transit 6 -> 7: Arc through open center channel at x = 0
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -324,
+        z: -790,
+        targetX: 0,
+        targetY: -326,
+        targetZ: -850,
+        fogDensity: 0.0245,
+        duration: 0.8,
+        ease: "power1.inOut",
+      },
+      30.0
+    );
+
+    // Event 07: IT Manager (Rock Platform 7 at x = -42, z = -900)
+    // Step 7A: Arrive at Wide Overview
+    tl.to(
+      camState,
+      {
+        x: -10,
+        y: -342,
+        z: -835,
+        targetX: -34,
+        targetY: -346,
+        targetZ: -900,
+        fogDensity: 0.025,
+        duration: 1.2,
+        ease: "power2.out",
+      },
+      31.0
+    );
+    // Step 7B: Move IN Close to Event Poster & Shrine
+    tl.to(
+      camState,
+      {
+        x: -42,
+        y: -336,
+        z: -868,
+        targetX: -42,
+        targetY: -336,
+        targetZ: -900,
+        duration: 1.0,
+        ease: "power1.inOut",
+      },
+      32.6
+    );
+    tl.to(camState, { targetX: -42, targetY: -336, targetZ: -900, duration: 0.6 }, 33.6);
+
+    // Transit 7 -> 8: Arc through open center channel at x = 0
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -364,
+        z: -890,
+        targetX: 0,
+        targetY: -366,
+        targetZ: -950,
+        fogDensity: 0.0255,
+        duration: 0.8,
+        ease: "power1.inOut",
+      },
+      34.2
+    );
+
+    // Event 08: Startup Event (Rock Platform 8 at x = 42, z = -1000)
+    // Step 8A: Arrive at Wide Overview
+    tl.to(
+      camState,
+      {
+        x: 10,
+        y: -382,
+        z: -935,
+        targetX: 34,
+        targetY: -386,
+        targetZ: -1000,
+        fogDensity: 0.026,
+        duration: 1.2,
+        ease: "power2.out",
+      },
+      35.2
+    );
+    // Step 8B: Move IN Close to Event Poster & Shrine
+    tl.to(
+      camState,
+      {
+        x: 42,
+        y: -376,
+        z: -968,
+        targetX: 42,
+        targetY: -376,
+        targetZ: -1000,
+        duration: 1.0,
+        ease: "power1.inOut",
+      },
+      36.8
+    );
+    tl.to(camState, { targetX: 42, targetY: -376, targetZ: -1000, duration: 0.6 }, 37.8);
+
+    // Transit 8 -> 9: Arc through open center channel at x = 0
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -404,
+        z: -990,
+        targetX: 0,
+        targetY: -406,
+        targetZ: -1050,
+        fogDensity: 0.0265,
+        duration: 0.8,
+        ease: "power1.inOut",
+      },
+      38.4
+    );
+
+    // Event 09: Dance (Rock Platform 9 at x = -42, z = -1100)
+    // Step 9A: Arrive at Wide Overview
+    tl.to(
+      camState,
+      {
+        x: -10,
+        y: -422,
+        z: -1035,
+        targetX: -34,
+        targetY: -426,
+        targetZ: -1100,
+        fogDensity: 0.027,
+        duration: 1.2,
+        ease: "power2.out",
+      },
+      39.4
+    );
+    // Step 9B: Move IN Close to Event Poster & Shrine
+    tl.to(
+      camState,
+      {
+        x: -42,
+        y: -416,
+        z: -1068,
+        targetX: -42,
+        targetY: -416,
+        targetZ: -1100,
+        duration: 1.0,
+        ease: "power1.inOut",
+      },
+      41.0
+    );
+    tl.to(camState, { targetX: -42, targetY: -416, targetZ: -1100, duration: 0.6 }, 42.0);
+
+    // Transit 9 -> 10: Arc through open center channel at x = 0
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -444,
+        z: -1090,
+        targetX: 0,
+        targetY: -446,
+        targetZ: -1150,
+        fogDensity: 0.0275,
+        duration: 0.8,
+        ease: "power1.inOut",
+      },
+      42.6
+    );
+
+    // Event 10: Photography & Videography (Rock Platform 10 at x = 0, z = -1200)
+    // Step 10A: Arrive at Wide Overview
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -462,
+        z: -1135,
+        targetX: 0,
+        targetY: -466,
+        targetZ: -1200,
+        fogDensity: 0.028,
+        duration: 1.2,
+        ease: "power2.out",
+      },
+      43.6
+    );
+    // Step 10B: Move IN Close to Event Poster & Shrine
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -456,
+        z: -1168,
+        targetX: 0,
+        targetY: -456,
+        targetZ: -1200,
+        duration: 1.0,
+        ease: "power1.inOut",
+      },
+      45.0
+    );
+    tl.to(camState, { targetX: 0, targetY: -456, targetZ: -1200, duration: 0.8 }, 46.2);
 
     tl.to({}, { duration: 1 });
 
@@ -1999,6 +2219,7 @@ export default function Scene() {
       // STRICT REQUIREMENT: Event World is STRICTLY INVISIBLE until camera passes inside circular portal ring (camState.z < -185)!
       if (camState.z < -185) {
         newWorldGroup.visible = true;
+        sideCliffGroup.visible = false;
       } else {
         newWorldGroup.visible = false;
       }
@@ -2042,10 +2263,9 @@ export default function Scene() {
       // Pulse Portal Ring Backlight
       portalBackLight.intensity = 8.0 + Math.sin(t * 2.5) * 3.0;
 
-      // Rotate Event Pin Marker Nodes and add gentle swaying to 3D Event Banners
-      for (const pin of pinMarkers) {
-        pin.rotation.y = t * 1.5;
-        pin.rotation.z = Math.sin(t * 1.8) * 0.2;
+      // Rotate top glowing central crystal shrines and add gentle swaying to 3D Event Banners
+      for (const xtal of crystalShrineMeshes) {
+        xtal.rotation.y = t * 0.8;
       }
 
       for (let b = 0; b < bannerMeshes.length; b++) {
@@ -2171,11 +2391,11 @@ export default function Scene() {
         setActiveEvent(currentActiveId);
       }
 
-      // Render ONLY the active event 3D banner group, hide all inactive event banners
+      // Ensure all event banners remain visible on their respective rock platforms
       eventNodes.forEach((node) => {
         const group = eventBannerGroups[node.id];
         if (group) {
-          group.visible = (node.id === currentActiveId);
+          group.visible = true;
         }
       });
 
@@ -2226,13 +2446,17 @@ export default function Scene() {
       flowFieldGeo.dispose();
       flowFieldMat.dispose();
       cliffRockMat.dispose();
-      nodeGlowMat.dispose();
-      bannerFrameMat.dispose();
+      stairStoneMat.dispose();
+      cyanCrystalMat.dispose();
+      purpleCrystalMat.dispose();
+      amberCrystalMat.dispose();
       for (const c of cliffMeshes) c.geometry.dispose();
       for (const b of bannerMeshes) {
         b.geometry.dispose();
-        if (b.material instanceof THREE.MeshStandardMaterial && b.material.map) {
+        if (b.material && b.material.map) {
           b.material.map.dispose();
+        }
+        if (b.material) {
           b.material.dispose();
         }
       }
