@@ -6,6 +6,7 @@ import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader.js";
 import { Water } from "three/examples/jsm/objects/Water.js";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Loader from "./Loader";
 
 import {
   seabedVertex,
@@ -2164,65 +2165,9 @@ export default function Scene() {
 
   return (
     <div ref={wrapperRef} style={{ height: "1600vh", position: "relative", backgroundColor: "#000" }}>
-      {/* Compass Loading Screen */}
-      <div
-        className={`fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[#020914] transition-opacity duration-1000 ${loading ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-      >
-        <div className="relative w-48 h-48 md:w-64 md:h-64 mb-10">
-          <div className="absolute inset-0 rounded-full border-2 border-cyan-500/40 shadow-[0_0_30px_rgba(0,200,255,0.15)]" />
-          <div className="absolute inset-2 rounded-full border border-cyan-400/20">
-            {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
-              <div key={deg} className="absolute w-full h-full" style={{ transform: `rotate(${deg}deg)` }}>
-                <div
-                  className={`absolute top-0 left-1/2 -translate-x-1/2 ${deg % 90 === 0 ? "w-0.5 h-4 bg-cyan-400" : "w-px h-2 bg-cyan-600/60"
-                    }`}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="absolute inset-0 font-mono text-[10px] md:text-xs font-bold tracking-widest text-cyan-300">
-            <span className="absolute top-5 left-1/2 -translate-x-1/2 text-cyan-400 text-sm">N</span>
-            <span className="absolute bottom-5 left-1/2 -translate-x-1/2 text-cyan-600">S</span>
-            <span className="absolute top-1/2 right-5 -translate-y-1/2 text-cyan-600">E</span>
-            <span className="absolute top-1/2 left-5 -translate-y-1/2 text-cyan-600">W</span>
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center animate-[spin_3s_ease-in-out_infinite]">
-            <div className="w-1 h-1/2 origin-bottom">
-              <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[40px] md:border-b-[55px] border-l-transparent border-r-transparent border-b-cyan-400 mx-auto drop-shadow-[0_0_8px_rgba(0,255,255,0.7)]" />
-            </div>
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center" style={{ transform: "rotate(180deg)" }}>
-            <div className="w-1 h-1/2 origin-bottom animate-[spin_3s_ease-in-out_infinite]">
-              <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[35px] md:border-b-[45px] border-l-transparent border-r-transparent border-b-red-500/70 mx-auto" />
-            </div>
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(0,255,255,0.8)]" />
-          </div>
-          <svg className="absolute inset-0 w-full h-full -rotate-90">
-            <circle cx="50%" cy="50%" r="46%" fill="none" stroke="rgba(0,200,255,0.1)" strokeWidth="2" />
-            <circle
-              cx="50%"
-              cy="50%"
-              r="46%"
-              fill="none"
-              stroke="rgba(0,200,255,0.6)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeDasharray={`${progress * 2.88} 288`}
-              className="transition-all duration-300 ease-out drop-shadow-[0_0_6px_rgba(0,255,255,0.5)]"
-            />
-          </svg>
-        </div>
-        <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 tracking-[0.3em] uppercase mb-4">
-          NAVIGATING
-        </h1>
-        <p className="text-cyan-300/60 font-mono text-xs tracking-[0.4em] uppercase mb-6">
-          Entering Deep Submerged Cavern
-        </p>
-        <p className="text-cyan-400 font-mono text-lg font-bold">{progress}%</p>
-      </div>
+      {/* Custom Loader */}
+      <Loader loading={loading} progress={progress} />
+
 
       {/* 3D Canvas Container */}
       <div ref={containerRef} style={{ position: "sticky", top: 0, width: "100vw", height: "100vh", overflow: "hidden" }}>
