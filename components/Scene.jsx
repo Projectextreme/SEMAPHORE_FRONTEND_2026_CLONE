@@ -1601,10 +1601,21 @@ export default function Scene() {
       x: 0,
       y: 2,
       z: 0,
+      targetX: 0,
+      targetY: 2,
+      targetZ: -50,
       rx: 0,
       ry: 0,
       fogDensity: 0.0,
     };
+
+    const currentLookAt = new THREE.Vector3(0, 2, -50);
+    const desiredLookAt = new THREE.Vector3(0, 2, -50);
+    const travelTarget = new THREE.Vector3(0, 2, -50);
+    const blendedTarget = new THREE.Vector3(0, 2, -50);
+    const smoothCamPos = new THREE.Vector3(0, 2, 0);
+    const lastCamPos = new THREE.Vector3(0, 2, 0);
+    let currentBank = 0;
 
     const mouse = { x: 0, y: 0 };
     const targetMouse = { x: 0, y: 0 };
@@ -1685,6 +1696,9 @@ export default function Scene() {
         x: 0,
         y: -40,
         z: -35,
+        targetX: 0,
+        targetY: -40,
+        targetZ: -85,
         rx: -0.08,
         ry: 0,
         fogDensity: 0.012,
@@ -1701,6 +1715,9 @@ export default function Scene() {
         x: 0,
         y: -110,
         z: -125,
+        targetX: 0,
+        targetY: -110,
+        targetZ: -190,
         rx: 0,
         ry: 0,
         fogDensity: 0.016,
@@ -1717,6 +1734,9 @@ export default function Scene() {
         x: 0,
         y: -110,
         z: -195,
+        targetX: 0,
+        targetY: -110,
+        targetZ: -245,
         rx: 0,
         ry: 0,
         fogDensity: 0.018,
@@ -1726,165 +1746,187 @@ export default function Scene() {
       4.0
     );
 
-    // Phase 4: Event 01 (Coding - Rock Platform 1)
+    // INSIDE EVENT PORTAL: Waypoint-based exploration journey toward each event rock location
+
+    // Event 01: Coding (Rock Platform 1 at x = -42) - Move slightly LEFT
     tl.to(
       camState,
       {
-        x: 0,
-        y: -98,
-        z: -198,
-        rx: -0.02,
-        ry: 0.06,
+        x: -18,
+        y: -102,
+        z: -210,
+        targetX: -30,
+        targetY: -105,
+        targetZ: -238,
         fogDensity: 0.015,
-        duration: 2.0,
-        ease: "power1.out",
+        duration: 1.6,
+        ease: "power2.inOut",
       },
       5.2
     );
+    tl.to(camState, { targetX: -30, targetY: -105, targetZ: -238, duration: 0.6 }, 6.8);
 
-    // Phase 5: Event 02 (Web Design - Rock Platform 2)
+    // Event 02: Web Design (Rock Platform 2 at x = 42) - Move RIGHT
     tl.to(
       camState,
       {
-        x: 0,
-        y: -138,
-        z: -278,
-        rx: -0.02,
-        ry: -0.06,
+        x: 18,
+        y: -142,
+        z: -290,
+        targetX: 30,
+        targetY: -145,
+        targetZ: -318,
         fogDensity: 0.017,
-        duration: 2.0,
-        ease: "power1.inOut",
+        duration: 1.6,
+        ease: "power2.inOut",
       },
-      7.2
+      7.4
     );
+    tl.to(camState, { targetX: 30, targetY: -145, targetZ: -318, duration: 0.6 }, 9.0);
 
-    // Phase 6: Event 03 (IT Quiz - Rock Platform 3)
+    // Event 03: IT Quiz (Rock Platform 3 at x = -42) - Move DIAGONALLY LEFT
     tl.to(
       camState,
       {
-        x: 0,
-        y: -178,
-        z: -358,
-        rx: -0.02,
-        ry: 0.05,
+        x: -24,
+        y: -182,
+        z: -370,
+        targetX: -32,
+        targetY: -185,
+        targetZ: -398,
         fogDensity: 0.019,
-        duration: 2.0,
-        ease: "power1.inOut",
+        duration: 1.6,
+        ease: "power2.inOut",
       },
-      9.2
+      9.6
     );
+    tl.to(camState, { targetX: -32, targetY: -185, targetZ: -398, duration: 0.6 }, 11.2);
 
-    // Phase 7: Event 04 (Gaming - Rock Platform 4)
+    // Event 04: Gaming (Rock Platform 4 at x = 42) - Move DIAGONALLY RIGHT
     tl.to(
       camState,
       {
-        x: 0,
-        y: -218,
-        z: -438,
-        rx: -0.02,
-        ry: -0.05,
+        x: 22,
+        y: -222,
+        z: -450,
+        targetX: 32,
+        targetY: -225,
+        targetZ: -478,
         fogDensity: 0.021,
-        duration: 2.0,
-        ease: "power1.inOut",
+        duration: 1.6,
+        ease: "power2.inOut",
       },
-      11.2
+      11.8
     );
+    tl.to(camState, { targetX: 32, targetY: -225, targetZ: -478, duration: 0.6 }, 13.4);
 
-    // Phase 8: Event 05 (Tech Talk - Rock Platform 5)
+    // Event 05: Tech Talk (Rock Platform 5 at x = -42) - Move FORWARD / DEEPER
     tl.to(
       camState,
       {
-        x: 0,
-        y: -258,
-        z: -518,
-        rx: -0.02,
-        ry: 0,
+        x: -12,
+        y: -262,
+        z: -530,
+        targetX: -28,
+        targetY: -265,
+        targetZ: -558,
         fogDensity: 0.022,
-        duration: 2.0,
-        ease: "power1.inOut",
+        duration: 1.6,
+        ease: "power2.inOut",
       },
-      13.2
+      14.0
     );
+    tl.to(camState, { targetX: -28, targetY: -265, targetZ: -558, duration: 0.6 }, 15.6);
 
-    // Phase 9: Event 06 (Surprise Event - Rock Platform 6)
+    // Event 06: Surprise Event (Rock Platform 6 at x = 42) - Move LEFT + DEEPER
     tl.to(
       camState,
       {
-        x: 0,
-        y: -298,
-        z: -598,
-        rx: -0.02,
-        ry: 0.06,
+        x: 26,
+        y: -302,
+        z: -610,
+        targetX: 34,
+        targetY: -305,
+        targetZ: -638,
         fogDensity: 0.024,
-        duration: 2.0,
-        ease: "power1.inOut",
+        duration: 1.6,
+        ease: "power2.inOut",
       },
-      15.2
+      16.2
     );
+    tl.to(camState, { targetX: 34, targetY: -305, targetZ: -638, duration: 0.6 }, 17.8);
 
-    // Phase 10: Event 07 (IT Manager - Rock Platform 7)
+    // Event 07: IT Manager (Rock Platform 7 at x = -42) - Move RIGHT + DEEPER
     tl.to(
       camState,
       {
-        x: 0,
-        y: -338,
-        z: -678,
-        rx: -0.02,
-        ry: -0.06,
+        x: -16,
+        y: -342,
+        z: -690,
+        targetX: -30,
+        targetY: -345,
+        targetZ: -718,
         fogDensity: 0.025,
-        duration: 2.0,
-        ease: "power1.inOut",
+        duration: 1.6,
+        ease: "power2.inOut",
       },
-      17.2
+      18.4
     );
+    tl.to(camState, { targetX: -30, targetY: -345, targetZ: -718, duration: 0.6 }, 20.0);
 
-    // Phase 11: Event 08 (Startup Event - Rock Platform 8)
+    // Event 08: Startup Event (Rock Platform 8 at x = 42) - Move DIAGONALLY LEFT
     tl.to(
       camState,
       {
-        x: 0,
-        y: -378,
-        z: -758,
-        rx: -0.02,
-        ry: 0.05,
+        x: 20,
+        y: -382,
+        z: -770,
+        targetX: 30,
+        targetY: -385,
+        targetZ: -798,
         fogDensity: 0.026,
-        duration: 2.0,
-        ease: "power1.inOut",
+        duration: 1.6,
+        ease: "power2.inOut",
       },
-      19.2
+      20.6
     );
+    tl.to(camState, { targetX: 30, targetY: -385, targetZ: -798, duration: 0.6 }, 22.2);
 
-    // Phase 12: Event 09 (Dance - Rock Platform 9)
+    // Event 09: Dance (Rock Platform 9 at x = -42) - Move RIGHT + DEEPER
     tl.to(
       camState,
       {
-        x: 0,
-        y: -418,
-        z: -838,
-        rx: -0.02,
-        ry: -0.05,
+        x: -20,
+        y: -422,
+        z: -850,
+        targetX: -32,
+        targetY: -425,
+        targetZ: -878,
         fogDensity: 0.027,
-        duration: 2.0,
-        ease: "power1.inOut",
+        duration: 1.6,
+        ease: "power2.inOut",
       },
-      21.2
+      22.8
     );
+    tl.to(camState, { targetX: -32, targetY: -425, targetZ: -878, duration: 0.6 }, 24.4);
 
-    // Phase 13: Event 10 (Photography & Videography - Rock Platform 10)
+    // Event 10: Photography & Videography (Rock Platform 10 at x = 0) - Move TOWARD FINAL DESTINATION
     tl.to(
       camState,
       {
         x: 0,
         y: -458,
-        z: -918,
-        rx: -0.02,
-        ry: 0,
+        z: -930,
+        targetX: 10,
+        targetY: -464,
+        targetZ: -958,
         fogDensity: 0.028,
-        duration: 2.0,
-        ease: "power1.inOut",
+        duration: 1.6,
+        ease: "power2.inOut",
       },
-      23.2
+      25.0
     );
+    tl.to(camState, { targetX: 10, targetY: -464, targetZ: -958, duration: 1.0 }, 26.6);
 
     tl.to({}, { duration: 1 });
 
@@ -2050,14 +2092,64 @@ export default function Scene() {
       mouse.x += (targetMouse.x - mouse.x) * parallaxEase;
       mouse.y += (targetMouse.y - mouse.y) * parallaxEase;
 
+      // Calculate frame travel velocity vector & physical movement speed
+      const vx = camState.x - lastCamPos.x;
+      const vy = camState.y - lastCamPos.y;
+      const vz = camState.z - lastCamPos.z;
+      lastCamPos.set(camState.x, camState.y, camState.z);
+
+      const moveSpeed = Math.sqrt(vx * vx + vy * vy + vz * vz);
+
+      // Dynamic micro-banking roll on lateral turns (capped at ±0.07 rads / ~4°)
+      const targetBank = Math.max(-0.07, Math.min(0.07, -vx * 0.018));
+      currentBank += (targetBank - currentBank) * (isMobile ? 0.12 : 0.08);
+
+      // Position spring lerp to prevent fast scroll snapping/jitter
+      smoothCamPos.lerp(new THREE.Vector3(camState.x, camState.y, camState.z), isMobile ? 0.12 : 0.08);
+
+      // Directional steering & look-ahead blending:
+      desiredLookAt.set(camState.targetX, camState.targetY, camState.targetZ);
+
+      if (moveSpeed > 0.02) {
+        // Camera turns to face direction of travel while moving between rocks
+        const dirX = vx / moveSpeed;
+        const dirY = vy / moveSpeed;
+        const dirZ = vz / moveSpeed;
+        travelTarget.set(
+          smoothCamPos.x + dirX * 35,
+          smoothCamPos.y + dirY * 35,
+          smoothCamPos.z + dirZ * 35
+        );
+
+        // Blend weight leads into turn during transit, then settles onto event target on arrival
+        const blendWeight = Math.min(0.5, moveSpeed * 0.2);
+        blendedTarget.lerpVectors(desiredLookAt, travelTarget, blendWeight);
+      } else {
+        blendedTarget.copy(desiredLookAt);
+      }
+
+      currentLookAt.lerp(blendedTarget, isMobile ? 0.10 : 0.07);
+
       camera.position.set(
-        camState.x + mouse.x * parallaxStrength + floatX,
-        camState.y + mouse.y * parallaxStrength + floatY,
-        camState.z
+        smoothCamPos.x + mouse.x * parallaxStrength + floatX,
+        smoothCamPos.y + mouse.y * parallaxStrength + floatY,
+        smoothCamPos.z
       );
-      camera.rotation.x = camState.rx + mouse.y * (isMobile ? 0.02 : 0.04);
-      camera.rotation.y = camState.ry - mouse.x * (isMobile ? 0.02 : 0.04);
-      camera.rotation.z = floatRotZ;
+
+      if (camState.z > -185) {
+        // Surface and dive sequence before entering stargate
+        camera.rotation.x = camState.rx + mouse.y * (isMobile ? 0.02 : 0.04);
+        camera.rotation.y = camState.ry - mouse.x * (isMobile ? 0.02 : 0.04);
+        camera.rotation.z = floatRotZ;
+      } else {
+        // Inside Event Portal: Smooth underwater steadicam look-ahead gaze with micro-banking roll
+        camera.lookAt(
+          currentLookAt.x + mouse.x * (isMobile ? 0.6 : 1.2),
+          currentLookAt.y + mouse.y * (isMobile ? 0.6 : 1.2),
+          currentLookAt.z
+        );
+        camera.rotation.z = floatRotZ + currentBank;
+      }
 
       renderer.render(scene, camera);
 
