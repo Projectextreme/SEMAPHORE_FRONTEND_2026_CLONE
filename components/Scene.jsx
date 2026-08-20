@@ -28,6 +28,38 @@ const eventNodes = [
   {
     id: "event-1",
     num: "01",
+    name: "Coding",
+    category: "Technical",
+    desc: "Test your speed, algorithmic thinking, and problem-solving skills in competitive programming.",
+    date: "9 October 2026",
+    time: "10:00 AM",
+    venue: "MCA Lab 1",
+    prize: "₹ 12,000",
+    rules: ["Individual participation", "Languages allowed: C, C++, Java, Python", "Time-bound algorithmic problems"],
+    pos: { x: -42, y: -110, z: -240 },
+    bannerPos: { x: -26, y: -103, z: -235, rotY: 0.35 },
+    portalPos: { x: -50, y: -105, z: -248 },
+    minScroll: 42,
+  },
+  {
+    id: "event-2",
+    num: "02",
+    name: "Web Design",
+    category: "Technical",
+    desc: "Design and build stunning, responsive, and interactive modern web interfaces under time pressure.",
+    date: "9 October 2026",
+    time: "11:30 AM",
+    venue: "Web Lab 2",
+    prize: "₹ 12,000",
+    rules: ["Individual or teams of 2", "HTML5, CSS3, JavaScript allowed", "Live prototype evaluation"],
+    pos: { x: 42, y: -150, z: -320 },
+    bannerPos: { x: 26, y: -143, z: -315, rotY: -0.35 },
+    portalPos: { x: 50, y: -145, z: -328 },
+    minScroll: 48,
+  },
+  {
+    id: "event-3",
+    num: "03",
     name: "IT Quiz",
     category: "Technical",
     desc: "Test your knowledge on Programming, DBMS, Operating Systems, Networks, and Cyber Security. Battle against top tech minds.",
@@ -36,14 +68,62 @@ const eventNodes = [
     venue: "Main Auditorium",
     prize: "₹ 10,000",
     rules: ["Teams of 2 members", "Preliminary written round followed by live stage quiz"],
-    pos: { x: -32, y: -110, z: -240 }, // HIGH CLIFF PLATEAU
-    bannerPos: { x: -16, y: -103, z: -235, rotY: 0.3 },
-    portalPos: { x: -40, y: -105, z: -248 },
-    minScroll: 48,
+    pos: { x: -42, y: -190, z: -400 },
+    bannerPos: { x: -26, y: -183, z: -395, rotY: 0.35 },
+    portalPos: { x: -50, y: -185, z: -408 },
+    minScroll: 54,
   },
   {
-    id: "event-2",
-    num: "02",
+    id: "event-4",
+    num: "04",
+    name: "Gaming",
+    category: "E-Sports",
+    desc: "Survive intense gaming trenches (BGMI & Valorant) and solve cryptic tech clues across campus to unearth the hidden treasure.",
+    date: "10 October 2026",
+    time: "01:30 PM",
+    venue: "E-Sports Arena",
+    prize: "₹ 20,000",
+    rules: ["Squads of 4 members", "Time-bound physical & digital clues"],
+    pos: { x: 42, y: -230, z: -480 },
+    bannerPos: { x: 26, y: -223, z: -475, rotY: -0.35 },
+    portalPos: { x: 50, y: -225, z: -488 },
+    minScroll: 60,
+  },
+  {
+    id: "event-5",
+    num: "05",
+    name: "Tech Talk",
+    category: "Seminar",
+    desc: "Engage with industry leaders and explore cutting-edge developments in AI, Cloud Computing, and Next-Gen Architecture.",
+    date: "9 October 2026",
+    time: "02:00 PM",
+    venue: "Seminar Hall 1",
+    prize: "₹ 10,000",
+    rules: ["Open to all registered delegates", "Q&A session with keynote speakers"],
+    pos: { x: -42, y: -270, z: -560 },
+    bannerPos: { x: -26, y: -263, z: -555, rotY: 0.35 },
+    portalPos: { x: -50, y: -265, z: -568 },
+    minScroll: 66,
+  },
+  {
+    id: "event-6",
+    num: "06",
+    name: "Surprise Event",
+    category: "Special",
+    desc: "Expect the unexpected! A mystery challenge designed to test adaptability, quick thinking, and creative problem solving under pressure.",
+    date: "9 October 2026",
+    time: "03:30 PM",
+    venue: "Open Arena",
+    prize: "₹ 10,000",
+    rules: ["Rules announced on spot", "Teams of 2 members"],
+    pos: { x: 42, y: -310, z: -640 },
+    bannerPos: { x: 26, y: -303, z: -635, rotY: -0.35 },
+    portalPos: { x: 50, y: -305, z: -648 },
+    minScroll: 72,
+  },
+  {
+    id: "event-7",
+    num: "07",
     name: "IT Manager",
     category: "Management",
     desc: "You are the technology manager of a company. Something goes wrong. Test your leadership, crisis management, and decision-making skills.",
@@ -52,31 +132,15 @@ const eventNodes = [
     venue: "MCA Seminar Hall",
     prize: "₹ 15,000",
     rules: ["Individual participation", "Multiple stress rounds & mock press conference"],
-    pos: { x: 32, y: -210, z: -330 }, // DEEP OCEAN TRENCH (DOWN)
-    bannerPos: { x: 16, y: -203, z: -325, rotY: -0.3 },
-    portalPos: { x: 40, y: -205, z: -338 },
-    minScroll: 58,
+    pos: { x: -42, y: -350, z: -720 },
+    bannerPos: { x: -26, y: -343, z: -715, rotY: 0.35 },
+    portalPos: { x: -50, y: -345, z: -728 },
+    minScroll: 78,
   },
   {
-    id: "event-3",
-    num: "03",
-    name: "Techno Hive",
-    category: "Technical",
-    desc: "A pure technical and IT-oriented challenge designed to test your core tech competencies, web dev, and adaptability.",
-    date: "9 October 2026",
-    time: "02:00 PM",
-    venue: "Computer Lab 3",
-    prize: "₹ 12,000",
-    rules: ["Teams of 2 members", "Coding, debugging, and live prototype deployment"],
-    pos: { x: -28, y: -160, z: -420 }, // ELEVATED SPIRE (HIGH)
-    bannerPos: { x: -12, y: -153, z: -415, rotY: 0.25 },
-    portalPos: { x: -36, y: -155, z: -428 },
-    minScroll: 68,
-  },
-  {
-    id: "event-4",
-    num: "04",
-    name: "Hyper Launch",
+    id: "event-8",
+    num: "08",
+    name: "Startup Event",
     category: "Innovation",
     desc: "An innovation, product, and business-oriented challenge. Pitch your startup ideas and show your entrepreneurial spirit.",
     date: "10 October 2026",
@@ -84,26 +148,42 @@ const eventNodes = [
     venue: "Incubation Center",
     prize: "₹ 15,000",
     rules: ["Teams of up to 3 members", "5-minute pitch + 3-minute Q&A with judges"],
-    pos: { x: 28, y: -310, z: -510 }, // ULTRA-DEEP ABYSS (DOWN)
-    bannerPos: { x: 14, y: -303, z: -505, rotY: -0.25 },
-    portalPos: { x: 36, y: -305, z: -518 },
-    minScroll: 78,
+    pos: { x: 42, y: -390, z: -800 },
+    bannerPos: { x: 26, y: -383, z: -795, rotY: -0.35 },
+    portalPos: { x: 50, y: -385, z: -808 },
+    minScroll: 84,
   },
   {
-    id: "event-5",
-    num: "05",
-    name: "Gaming & Treasure Hunt",
-    category: "E-Sports & Fun",
-    desc: "Survive intense gaming trenches (BGMI & Valorant) and solve cryptic tech clues across campus to unearth the hidden treasure.",
+    id: "event-9",
+    num: "09",
+    name: "Dance",
+    category: "Cultural",
+    desc: "Showcase your energy, rhythm, and choreography in an epic stage dance performance celebrating art and music.",
     date: "10 October 2026",
-    time: "01:30 PM",
-    venue: "E-Sports Arena & Campus Grounds",
-    prize: "₹ 20,000",
-    rules: ["Squads of 4 members", "Time-bound physical & digital clues"],
-    pos: { x: 0, y: -260, z: -600 }, // SEABED CITADEL (MID)
-    bannerPos: { x: 16, y: -253, z: -595, rotY: -0.2 },
-    portalPos: { x: -18, y: -255, z: -608 },
-    minScroll: 88,
+    time: "04:00 PM",
+    venue: "Open Air Theater",
+    prize: "₹ 18,000",
+    rules: ["Group performance", "Time limit: 6 to 8 minutes", "Props permitted"],
+    pos: { x: -42, y: -430, z: -880 },
+    bannerPos: { x: -26, y: -423, z: -875, rotY: 0.35 },
+    portalPos: { x: -50, y: -425, z: -888 },
+    minScroll: 90,
+  },
+  {
+    id: "event-10",
+    num: "10",
+    name: "Photography & Videography",
+    category: "Creative",
+    desc: "Capture breathtaking visual stories, creative angles, and cinematic highlights of Semaphore 2k26 across campus.",
+    date: "10 October 2026",
+    time: "10:00 AM",
+    venue: "Campus Grounds",
+    prize: "₹ 12,000",
+    rules: ["Individual participation", "Original unedited RAW & edited submission", "Theme provided on spot"],
+    pos: { x: 0, y: -470, z: -960 },
+    bannerPos: { x: 16, y: -463, z: -955, rotY: -0.2 },
+    portalPos: { x: -18, y: -465, z: -968 },
+    minScroll: 96,
   },
 ];
 
@@ -238,6 +318,7 @@ export default function Scene() {
   const audioRef = useRef(null);
   const pinRefs = useRef([]);
   const activeEventRef = useRef("event-1");
+  const userMutedRef = useRef(false);
   const [activeEvent, setActiveEvent] = useState("event-1");
 
   const [progress, setProgress] = useState(0);
@@ -254,25 +335,83 @@ export default function Scene() {
   });
 
   useEffect(() => {
-    const bgm = new Audio("/assets/audio/bgm.mp3");
-    bgm.loop = true;
-    bgm.volume = 0.5;
-    audioRef.current = bgm;
+    if (typeof window !== "undefined") {
+      const bgm = new Audio("/assets/audio/bgm.mp3");
+      bgm.loop = true;
+      bgm.volume = 0.5;
+      bgm.preload = "auto";
+      audioRef.current = bgm;
+    }
 
     return () => {
-      bgm.pause();
-      audioRef.current = null;
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
     };
   }, []);
 
-  const toggleAudio = () => {
+  // Automatically play audio by default when first entering the ocean on user scroll gesture, and pause outside ocean
+  useEffect(() => {
     if (!audioRef.current) return;
-    if (isAudioPlaying) {
-      audioRef.current.pause();
-      setIsAudioPlaying(false);
+
+    const handleInitialOceanScroll = () => {
+      if (scrollProgress >= 4 && !userMutedRef.current && audioRef.current && audioRef.current.paused) {
+        audioRef.current
+          .play()
+          .then(() => setIsAudioPlaying(true))
+          .catch(() => {});
+      }
+    };
+
+    if (scrollProgress >= 4) {
+      handleInitialOceanScroll();
+      window.addEventListener("wheel", handleInitialOceanScroll, { passive: true });
+      window.addEventListener("scroll", handleInitialOceanScroll, { passive: true });
+      window.addEventListener("touchmove", handleInitialOceanScroll, { passive: true });
     } else {
-      audioRef.current.play().catch((err) => console.warn("Audio error:", err));
-      setIsAudioPlaying(true);
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+        setIsAudioPlaying(false);
+      }
+    }
+
+    return () => {
+      window.removeEventListener("wheel", handleInitialOceanScroll);
+      window.removeEventListener("scroll", handleInitialOceanScroll);
+      window.removeEventListener("touchmove", handleInitialOceanScroll);
+    };
+  }, [scrollProgress]);
+
+  const toggleAudio = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (!audioRef.current) {
+      const bgm = new Audio("/assets/audio/bgm.mp3");
+      bgm.loop = true;
+      bgm.volume = 0.5;
+      audioRef.current = bgm;
+    }
+
+    const audio = audioRef.current;
+    if (audio.paused) {
+      userMutedRef.current = false; // User explicitly turned ON audio
+      audio
+        .play()
+        .then(() => {
+          setIsAudioPlaying(true);
+        })
+        .catch((err) => {
+          console.warn("Audio play error:", err);
+          setIsAudioPlaying(false);
+        });
+    } else {
+      userMutedRef.current = true; // User explicitly turned OFF audio
+      audio.pause();
+      setIsAudioPlaying(false);
     }
   };
 
@@ -432,16 +571,16 @@ export default function Scene() {
 
     const icePlateGeo = new THREE.CylinderGeometry(4, 5, 0.8, 7);
     const icePlate = new THREE.Mesh(icePlateGeo, iceMaterial);
-    icePlate.position.set(-6, -2, -35);
+    icePlate.position.set(-24, -4.5, -36);
     icePlate.rotation.y = 0.4;
     scene.add(icePlate);
 
     const smallIcePositions = [
-      { x: 12, y: -3, z: -30, s: 1.8 },
-      { x: -35, y: -2.5, z: -42, s: 2.5 },
-      { x: 30, y: -3.5, z: -38, s: 1.5 },
-      { x: -10, y: -4, z: -55, s: 2.0 },
-      { x: 18, y: -2, z: -25, s: 1.2 },
+      { x: 26, y: -4, z: -32, s: 1.6 },
+      { x: -35, y: -3.5, z: -42, s: 2.2 },
+      { x: 34, y: -4.5, z: -38, s: 1.5 },
+      { x: -18, y: -5, z: -50, s: 1.8 },
+      { x: 22, y: -3.5, z: -26, s: 1.2 },
     ];
     const smallIceGeos = [];
     for (const p of smallIcePositions) {
@@ -465,9 +604,9 @@ export default function Scene() {
     tealUnderwaterLight.position.set(0, 50, -100);
     scene.add(tealUnderwaterLight);
 
-    // Glowing Portal Backlight (Positioned deep underwater at y: -110, z: -162)
+    // Glowing Portal Backlight (Positioned deep underwater at y: -110, z: -192)
     const portalBackLight = new THREE.PointLight(0x00f0ff, 8.0, 200);
-    portalBackLight.position.set(0, -110, -162);
+    portalBackLight.position.set(0, -110, -192);
     scene.add(portalBackLight);
 
 
@@ -572,12 +711,16 @@ export default function Scene() {
     });
 
     const mountainPositions = [
-      { x: -160, y: -100, z: -260, r: 65, h: 180 },
-      { x: 160, y: -110, z: -290, r: 75, h: 200 },
-      { x: -190, y: -150, z: -380, r: 85, h: 220 },
-      { x: 185, y: -160, z: -410, r: 90, h: 240 },
-      { x: -120, y: -220, z: -520, r: 105, h: 260 },
-      { x: 120, y: -230, z: -540, r: 110, h: 280 },
+      { x: -175, y: -100, z: -260, r: 65, h: 180 },
+      { x: 175, y: -110, z: -290, r: 70, h: 200 },
+      { x: -185, y: -150, z: -380, r: 75, h: 220 },
+      { x: 185, y: -160, z: -410, r: 75, h: 240 },
+      { x: -185, y: -220, z: -520, r: 80, h: 260 },
+      { x: 185, y: -230, z: -540, r: 80, h: 280 },
+      { x: -190, y: -330, z: -720, r: 80, h: 300 },
+      { x: 190, y: -340, z: -760, r: 80, h: 320 },
+      { x: -195, y: -410, z: -880, r: 85, h: 340 },
+      { x: 195, y: -420, z: -960, r: 85, h: 360 },
     ];
 
     for (const m of mountainPositions) {
@@ -616,7 +759,96 @@ export default function Scene() {
     });
 
     const portalGroup = new THREE.Group();
-    portalGroup.position.set(0, -110, -160);
+    portalGroup.position.set(0, -110, -190);
+
+    const archRockMat = new THREE.MeshStandardMaterial({
+      color: 0x06283d,
+      roughness: 0.85,
+      metalness: 0.15,
+      flatShading: true,
+    });
+
+    // Outer Natural Cavern Rock Arch framing the entire Stargate Structure
+    const mainArchGeo = new THREE.TorusGeometry(32, 5.5, 12, 32, Math.PI);
+    const archPos = mainArchGeo.attributes.position;
+    const aVec = new THREE.Vector3();
+    for (let i = 0; i < archPos.count; i++) {
+      aVec.fromBufferAttribute(archPos, i);
+      const noise = Math.sin(aVec.x * 0.15) * Math.cos(aVec.y * 0.15) * 3.5;
+      aVec.x += noise;
+      aVec.y += noise;
+      archPos.setXYZ(i, aVec.x, aVec.y, aVec.z);
+    }
+    mainArchGeo.computeVertexNormals();
+    const mainArchMesh = new THREE.Mesh(mainArchGeo, archRockMat);
+    mainArchMesh.position.set(0, -5, -4);
+    portalGroup.add(mainArchMesh);
+
+    // Concentric Glowing Outer Energy Ring around Portal Ring
+    const outerRingGeo = new THREE.TorusGeometry(18.5, 0.4, 16, 48);
+    const outerRingMesh = new THREE.Mesh(outerRingGeo, ruinGlowMat);
+    outerRingMesh.position.set(0, 0, -0.2);
+    portalGroup.add(outerRingMesh);
+
+    // Twin Guardian Obelisks / Spires (Left & Right of Portal Ring)
+    const obeliskPositions = [
+      { x: -26, y: 3, z: 0, rotZ: 0.1 },
+      { x: 26, y: 3, z: 0, rotZ: -0.1 },
+    ];
+    for (const ob of obeliskPositions) {
+      const obGroup = new THREE.Group();
+      obGroup.position.set(ob.x, ob.y, ob.z);
+      obGroup.rotation.z = ob.rotZ;
+
+      const obGeo = new THREE.CylinderGeometry(1.2, 3.2, 32, 6);
+      const obMesh = new THREE.Mesh(obGeo, ruinStoneMat);
+      obGroup.add(obMesh);
+
+      const obCapGeo = new THREE.OctahedronGeometry(2.2, 1);
+      const obCapMat = new THREE.MeshStandardMaterial({
+        color: 0x011e30,
+        emissive: 0x00f0ff,
+        emissiveIntensity: 2.2,
+        roughness: 0.1,
+      });
+      const obCap = new THREE.Mesh(obCapGeo, obCapMat);
+      obCap.position.set(0, 17, 0);
+      obGroup.add(obCap);
+
+      const obGlyphGeo = new THREE.BoxGeometry(0.5, 22, 0.5);
+      const obGlyph = new THREE.Mesh(obGlyphGeo, ruinGlowMat);
+      obGlyph.position.set(0, 0, 1.8);
+      obGroup.add(obGlyph);
+
+      portalGroup.add(obGroup);
+    }
+
+    // Bioluminescent Crystal Clusters surrounding the Stone Pedestal Steps
+    const pedestalCrystals = [
+      { x: -16, y: -12, z: 6, color: 0x00f0ff, scale: 1.6 },
+      { x: 16, y: -12, z: 6, color: 0x00f0ff, scale: 1.5 },
+      { x: -19, y: -15, z: 8, color: 0xa855f7, scale: 1.8 },
+      { x: 19, y: -15, z: 8, color: 0x38bdf8, scale: 1.7 },
+      { x: -22, y: -19, z: 10, color: 0x00e5ff, scale: 2.0 },
+      { x: 22, y: -19, z: 10, color: 0xa855f7, scale: 1.9 },
+      { x: -12, y: -10, z: -4, color: 0x0284c7, scale: 1.4 },
+      { x: 12, y: -10, z: -4, color: 0x00f0ff, scale: 1.4 },
+    ];
+
+    for (const c of pedestalCrystals) {
+      const cGeo = new THREE.OctahedronGeometry(c.scale, 1);
+      const cMat = new THREE.MeshStandardMaterial({
+        color: 0x011a28,
+        emissive: c.color,
+        emissiveIntensity: 2.5,
+        roughness: 0.2,
+        flatShading: true,
+      });
+      const cMesh = new THREE.Mesh(cGeo, cMat);
+      cMesh.position.set(c.x, c.y, c.z);
+      cMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+      portalGroup.add(cMesh);
+    }
 
     // Raised Stone Staircase Pedestal
     const stepDimensions = [
@@ -669,6 +901,36 @@ export default function Scene() {
     portalDisc.position.set(0, 0, -0.1);
     portalGroup.add(portalDisc);
 
+    // Soft Energy Blur Aura Disc specifically for ONLY the Portal Energy Core
+    const portalBlurGeo = new THREE.CircleGeometry(16.5, 48);
+    const portalBlurMat = new THREE.ShaderMaterial({
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec2 vUv;
+        void main() {
+          vec2 center = vUv - vec2(0.5);
+          float dist = length(center) * 2.0;
+          float alpha = smoothstep(1.0, 0.0, dist);
+          alpha = pow(alpha, 1.8) * 0.75;
+          vec3 blurColor = mix(vec3(0.0, 0.92, 1.0), vec3(0.01, 0.12, 0.35), dist);
+          gl_FragColor = vec4(blurColor, alpha);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    const portalBlurMesh = new THREE.Mesh(portalBlurGeo, portalBlurMat);
+    portalBlurMesh.position.set(0, 0, -0.3);
+    portalGroup.add(portalBlurMesh);
+
     // Swirling Energy Particles Orbiting Main Portal Ring
     const portalParticleCount = 350;
     const portalParticleGeo = new THREE.BufferGeometry();
@@ -710,8 +972,8 @@ export default function Scene() {
     for (let i = 0; i < flowFieldCount; i++) {
       const i3 = i * 3;
       flowFieldPositions[i3] = (Math.random() - 0.5) * 320;
-      flowFieldPositions[i3 + 1] = -380 + Math.random() * 360;
-      flowFieldPositions[i3 + 2] = -30 - Math.random() * 620;
+      flowFieldPositions[i3 + 1] = -520 + Math.random() * 540;
+      flowFieldPositions[i3 + 2] = -30 - Math.random() * 990;
 
       flowFieldVelocities[i3] = (Math.random() - 0.5) * 0.1;
       flowFieldVelocities[i3 + 1] = (Math.random() - 0.5) * 0.1;
@@ -745,7 +1007,7 @@ export default function Scene() {
     scene.add(flowFieldMesh);
 
     // --- THE NEW WORLD BEYOND THE MAIN STARGATE: INVISIBLE UNTIL ENTERING STARGATE (z < -155) ---
-    // Features 5 DISTINCT DESCENDING ROCK PLATFORMS, PORTALS & 3D EVENT BANNERS
+    // Features 10 DISTINCT DESCENDING ROCK PLATFORMS, PORTALS & 3D EVENT BANNERS
     const newWorldGroup = new THREE.Group();
     newWorldGroup.visible = false; // Strictly hidden until passing inside the stargate (z < -155)!
     scene.add(newWorldGroup);
@@ -784,7 +1046,7 @@ export default function Scene() {
       const { x, y, z } = node.pos;
       const width = 34;
       const depth = 34;
-      const seabedY = -385;
+      const seabedY = Math.min(-385, y - 80);
       const height = Math.abs(y - seabedY) + 25;
 
       // 1. Sculpted Natural Cliff Mountain Base with Rocky Crags & Ridges
@@ -1384,12 +1646,30 @@ export default function Scene() {
       window.addEventListener("touchend", handleTouchEnd);
     }
 
+    const snapPoints = [0, 0.15, 0.35, 0.48, 0.60, 0.72, 0.84, 1.0];
+
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: wrapper,
         start: "top top",
         end: "bottom bottom",
         scrub: isMobile ? 2.5 : 1.5,
+        snap: {
+          snapTo: (progress, self) => {
+            if (progress > 0 && progress < 0.05) {
+              // Smooth direction-based snap: scrolling UP goes smoothly to top (0), scrolling DOWN stops exactly at 0.05 (5% progress view)
+              if (self && self.direction === -1) {
+                return 0;
+              }
+              return 0.05;
+            }
+            // No automatic snapping backward or forward after entering the underground ocean
+            return progress;
+          },
+          duration: { min: 0.4, max: 0.8 },
+          delay: 0.04,
+          ease: "power2.inOut",
+        },
         onUpdate: (self) => {
           const currentProgress = Math.floor(self.progress * 100);
           setScrollProgress(currentProgress);
@@ -1397,14 +1677,14 @@ export default function Scene() {
       },
     });
 
-    // Phase 1: Surface Ocean View (0 - 15%)
+    // Phase 1: Surface Ocean View (0 - 15%) - Dive directly down into ocean
     tl.to(
       camState,
       {
         x: 0,
-        y: -20,
-        z: -45,
-        rx: 0.04,
+        y: -40,
+        z: -35,
+        rx: -0.08,
         ry: 0,
         fogDensity: 0.012,
         duration: 1.5,
@@ -1413,13 +1693,13 @@ export default function Scene() {
       0
     );
 
-    // Phase 2: Align Camera with Deeper Submerged Main Portal Ring Center at y: -110, z: -140 (15% - 40%)
+    // Phase 2: Align Camera with Deeper Submerged Main Portal Ring Center at y: -110, z: -125 (15% - 40%)
     tl.to(
       camState,
       {
         x: 0,
         y: -110,
-        z: -140,
+        z: -125,
         rx: 0,
         ry: 0,
         fogDensity: 0.016,
@@ -1435,7 +1715,7 @@ export default function Scene() {
       {
         x: 0,
         y: -110,
-        z: -165,
+        z: -195,
         rx: 0,
         ry: 0,
         fogDensity: 0.018,
@@ -1445,15 +1725,15 @@ export default function Scene() {
       4.0
     );
 
-    // Phase 4: Event 1 (IT Quiz - High Cliff Plateau at y: -110)
+    // Phase 4: Event 01 (Coding - Rock Platform 1)
     tl.to(
       camState,
       {
         x: 0,
-        y: -105,
-        z: -205,
-        rx: 0.02,
-        ry: 0.08,
+        y: -98,
+        z: -198,
+        rx: -0.02,
+        ry: 0.06,
         fogDensity: 0.015,
         duration: 2.0,
         ease: "power1.out",
@@ -1461,61 +1741,61 @@ export default function Scene() {
       5.2
     );
 
-    // Phase 5: Event 2 (IT Manager - Deep Ocean Trench at y: -210)
+    // Phase 5: Event 02 (Web Design - Rock Platform 2)
     tl.to(
       camState,
       {
         x: 0,
-        y: -205,
-        z: -295,
-        rx: -0.05,
-        ry: -0.08,
-        fogDensity: 0.02,
+        y: -138,
+        z: -278,
+        rx: -0.02,
+        ry: -0.06,
+        fogDensity: 0.017,
         duration: 2.0,
         ease: "power1.inOut",
       },
       7.2
     );
 
-    // Phase 6: Event 3 (Techno Hive - Elevated Spire at y: -160)
+    // Phase 6: Event 03 (IT Quiz - Rock Platform 3)
     tl.to(
       camState,
       {
         x: 0,
-        y: -155,
-        z: -385,
-        rx: 0.01,
-        ry: 0.06,
-        fogDensity: 0.018,
+        y: -178,
+        z: -358,
+        rx: -0.02,
+        ry: 0.05,
+        fogDensity: 0.019,
         duration: 2.0,
         ease: "power1.inOut",
       },
       9.2
     );
 
-    // Phase 7: Event 4 (Hyper Launch - Ultra-Deep Abyss at y: -310)
+    // Phase 7: Event 04 (Gaming - Rock Platform 4)
     tl.to(
       camState,
       {
         x: 0,
-        y: -305,
-        z: -475,
-        rx: -0.05,
-        ry: -0.06,
-        fogDensity: 0.024,
+        y: -218,
+        z: -438,
+        rx: -0.02,
+        ry: -0.05,
+        fogDensity: 0.021,
         duration: 2.0,
         ease: "power1.inOut",
       },
       11.2
     );
 
-    // Phase 8: Event 5 (Gaming & Treasure Hunt - Seabed Citadel at y: -260)
+    // Phase 8: Event 05 (Tech Talk - Rock Platform 5)
     tl.to(
       camState,
       {
         x: 0,
-        y: -255,
-        z: -565,
+        y: -258,
+        z: -518,
         rx: -0.02,
         ry: 0,
         fogDensity: 0.022,
@@ -1523,6 +1803,86 @@ export default function Scene() {
         ease: "power1.inOut",
       },
       13.2
+    );
+
+    // Phase 9: Event 06 (Surprise Event - Rock Platform 6)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -298,
+        z: -598,
+        rx: -0.02,
+        ry: 0.06,
+        fogDensity: 0.024,
+        duration: 2.0,
+        ease: "power1.inOut",
+      },
+      15.2
+    );
+
+    // Phase 10: Event 07 (IT Manager - Rock Platform 7)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -338,
+        z: -678,
+        rx: -0.02,
+        ry: -0.06,
+        fogDensity: 0.025,
+        duration: 2.0,
+        ease: "power1.inOut",
+      },
+      17.2
+    );
+
+    // Phase 11: Event 08 (Startup Event - Rock Platform 8)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -378,
+        z: -758,
+        rx: -0.02,
+        ry: 0.05,
+        fogDensity: 0.026,
+        duration: 2.0,
+        ease: "power1.inOut",
+      },
+      19.2
+    );
+
+    // Phase 12: Event 09 (Dance - Rock Platform 9)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -418,
+        z: -838,
+        rx: -0.02,
+        ry: -0.05,
+        fogDensity: 0.027,
+        duration: 2.0,
+        ease: "power1.inOut",
+      },
+      21.2
+    );
+
+    // Phase 13: Event 10 (Photography & Videography - Rock Platform 10)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -458,
+        z: -918,
+        rx: -0.02,
+        ry: 0,
+        fogDensity: 0.028,
+        duration: 2.0,
+        ease: "power1.inOut",
+      },
+      23.2
     );
 
     tl.to({}, { duration: 1 });
@@ -1576,23 +1936,25 @@ export default function Scene() {
         sideCliffGroup.visible = false;
         bgMountainsGroup.visible = false;
       } else {
-        // Deepening Fog & Dynamic Lighting Transition with Depth
-        const depthFactor = Math.min(1.0, Math.abs(camState.y) / 350);
-        const caveFogColor = new THREE.Color(0x031e30).lerp(new THREE.Color(0x010814), depthFactor);
+        // Deepening Fog & Dynamic Dark-Ocean Lighting Transition with Depth (y: -4 down to y: -470)
+        const depthFactor = Math.min(1.0, Math.abs(camState.y) / 470);
+        const caveFogColor = new THREE.Color(0x031e30).lerp(new THREE.Color(0x000612), depthFactor);
         scene.background = caveFogColor;
-        scene.fog = new THREE.FogExp2(caveFogColor, camState.fogDensity);
+        
+        const dynamicFogDensity = camState.fogDensity * (1.0 + depthFactor * 0.4);
+        scene.fog = new THREE.FogExp2(caveFogColor, dynamicFogDensity);
 
-        sunLight.intensity = Math.max(0.1, 2.5 * (1.0 - depthFactor * 0.9));
+        sunLight.intensity = Math.max(0.05, 2.5 * (1.0 - depthFactor * 0.95));
         ambientLight.color.setHex(0x0a4b66).lerp(new THREE.Color(0x011220), depthFactor);
-        ambientLight.intensity = 1.2;
+        ambientLight.intensity = 1.2 * (1.0 - depthFactor * 0.3);
         waterCeilingMesh.visible = true;
         caveMesh.visible = true;
         sideCliffGroup.visible = true;
         bgMountainsGroup.visible = true;
       }
 
-      // STRICT REQUIREMENT: Event World is STRICTLY INVISIBLE until camera passes inside circular portal ring (camState.z < -155)!
-      if (camState.z < -155) {
+      // STRICT REQUIREMENT: Event World is STRICTLY INVISIBLE until camera passes inside circular portal ring (camState.z < -185)!
+      if (camState.z < -185) {
         newWorldGroup.visible = true;
       } else {
         newWorldGroup.visible = false;
@@ -1600,6 +1962,7 @@ export default function Scene() {
 
       // Update Portal Vortex Shader and Flow Field Water Particles
       portalDiscMat.uniforms.uTime.value = t;
+      outerRingMesh.rotation.z = -t * 0.25;
       flowFieldMat.uniforms.uTime.value = t;
 
       // Update Flow Field Water Particle position drift in 3D currents
@@ -1611,7 +1974,7 @@ export default function Scene() {
         ffPositions[i3 + 2] += Math.sin(t * 0.5 + i * 2) * 0.05;
 
         if (ffPositions[i3 + 1] > 30) {
-          ffPositions[i3 + 1] = -385;
+          ffPositions[i3 + 1] = -520;
         }
       }
       flowFieldGeo.attributes.position.needsUpdate = true;
@@ -1795,16 +2158,16 @@ export default function Scene() {
     };
   }, []);
 
-  const hudVisible = scrollProgress > 15;
-  const isInsideNewWorld = scrollProgress > 48;
+  const heroVisible = scrollProgress <= 5;
+  const hudVisible = scrollProgress >= 4;
+  const isInsideNewWorld = scrollProgress > 42;
 
   return (
     <div ref={wrapperRef} style={{ height: "1600vh", position: "relative", backgroundColor: "#000" }}>
       {/* Compass Loading Screen */}
       <div
-        className={`fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[#020914] transition-opacity duration-1000 ${
-          loading ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[#020914] transition-opacity duration-1000 ${loading ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
       >
         <div className="relative w-48 h-48 md:w-64 md:h-64 mb-10">
           <div className="absolute inset-0 rounded-full border-2 border-cyan-500/40 shadow-[0_0_30px_rgba(0,200,255,0.15)]" />
@@ -1812,9 +2175,8 @@ export default function Scene() {
             {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
               <div key={deg} className="absolute w-full h-full" style={{ transform: `rotate(${deg}deg)` }}>
                 <div
-                  className={`absolute top-0 left-1/2 -translate-x-1/2 ${
-                    deg % 90 === 0 ? "w-0.5 h-4 bg-cyan-400" : "w-px h-2 bg-cyan-600/60"
-                  }`}
+                  className={`absolute top-0 left-1/2 -translate-x-1/2 ${deg % 90 === 0 ? "w-0.5 h-4 bg-cyan-400" : "w-px h-2 bg-cyan-600/60"
+                    }`}
                 />
               </div>
             ))}
@@ -1854,7 +2216,7 @@ export default function Scene() {
           </svg>
         </div>
         <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 tracking-[0.3em] uppercase mb-4">
-          CYBER OCEAN
+          NAVIGATING
         </h1>
         <p className="text-cyan-300/60 font-mono text-xs tracking-[0.4em] uppercase mb-6">
           Entering Deep Submerged Cavern
@@ -1875,13 +2237,10 @@ export default function Scene() {
           </div>
         )}
 
-
-
         {/* Surface Semaphore 2K26 Hero UI */}
         <div
-          className={`pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-12 text-white transition-opacity duration-700 ${
-            !hudVisible ? "opacity-100" : "opacity-0"
-          }`}
+          className={`pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-12 text-white transition-opacity duration-700 ${heroVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
         >
           <header className="flex justify-between items-center w-full">
             <div className="flex items-center gap-3">
@@ -1895,14 +2254,14 @@ export default function Scene() {
                 <span className="font-mono text-[9px] tracking-[0.3em] text-cyan-300/70">FOUNDATION</span>
               </div>
             </div>
-            <nav className="hidden md:flex items-center gap-8 font-mono text-xs tracking-[0.25em] text-cyan-100/80">
+            {/* <nav className="hidden md:flex items-center gap-8 font-mono text-xs tracking-[0.25em] text-cyan-100/80">
               <span className="hover:text-cyan-300 cursor-pointer transition-colors">JOURNEYS</span>
               <span className="hover:text-cyan-300 cursor-pointer transition-colors">ABOUT</span>
               <span className="hover:text-cyan-300 cursor-pointer transition-colors">GET INVOLVED</span>
               <span className="hover:text-cyan-300 cursor-pointer transition-colors">EDUCATION</span>
               <span className="hover:text-cyan-300 cursor-pointer transition-colors">SHARE +</span>
               <span className="text-cyan-400 font-bold">EN v</span>
-            </nav>
+            </nav> */}
           </header>
 
           <main className="flex flex-col items-center justify-center text-center my-auto">
@@ -1912,11 +2271,9 @@ export default function Scene() {
             <h1 className="font-mono text-6xl md:text-9xl font-black tracking-[0.25em] text-white drop-shadow-[0_0_40px_rgba(0,200,255,0.6)] my-2 select-none">
               2 K 2 6
             </h1>
-            <div className="bg-black/30 border border-cyan-400/30 px-6 py-2 rounded-full backdrop-blur-md mt-4 shadow-[0_0_20px_rgba(0,200,255,0.15)]">
-              <span className="font-mono text-xs md:text-sm tracking-[0.35em] text-cyan-200 uppercase font-bold">
-                NATIONAL LEVEL IT & CULTURAL FEST
-              </span>
-            </div>
+            <span className="font-mono text-xs md:text-sm tracking-[0.35em] text-cyan-200 uppercase font-bold">
+              NATIONAL LEVEL IT & CULTURAL FEST
+            </span>
           </main>
 
           <footer className="flex justify-between items-end w-full">
@@ -1926,15 +2283,9 @@ export default function Scene() {
               </div>
               <div className="flex flex-col font-mono text-[10px] md:text-xs">
                 <span className="font-bold text-cyan-300 tracking-[0.2em]">DEEP TRENCH</span>
-                <span className="text-cyan-100/70 tracking-widest">DISCOVERY PROGRESS: 0%</span>
-                <span className="text-cyan-400/60 text-[9px] tracking-wider mt-0.5">DEPTH: 2M | TEMP: 28.0°C</span>
+                <span className="text-cyan-100/70 tracking-widest">DISCOVERY PROGRESS: {scrollProgress}%</span>
+                <span className="text-cyan-400/60 text-[9px] tracking-wider mt-0.5">DEPTH: {stats.depth}M | TEMP: 28.0°C</span>
               </div>
-            </div>
-
-            <div className="pointer-events-auto bg-black/40 border border-cyan-400/50 px-8 py-3 rounded-full backdrop-blur-md shadow-[0_0_25px_rgba(0,255,255,0.2)] hover:border-cyan-300 transition-all cursor-pointer">
-              <span className="font-mono text-xs font-bold tracking-[0.3em] text-cyan-300">
-                ⌜ SCROLL TO DIVE ⌟
-              </span>
             </div>
 
             <div className="hidden lg:flex flex-col text-right font-mono text-[9px] text-cyan-200/60 tracking-widest leading-relaxed">
@@ -1961,83 +2312,58 @@ export default function Scene() {
             <div className="logo">{isInsideNewWorld ? "NEW WORLD // DESCENDING EVENTS REALM" : "CYBER OCEAN"}</div>
           </div>
 
-          {/* Left Telemetry Panel */}
-          <div className="side-panel left">
-            <div className="panel-header">
-              <span className="dot" /> <span>TELEMETRY</span>
+          {/* Animated Scroll Down Mouse Logo (Visible only at beginning surface view, scrollProgress < 10) */}
+          <div
+            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none transition-all duration-500 font-mono select-none ${scrollProgress < 10 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+              }`}
+          >
+            <div className="relative w-6 h-10 rounded-full border-2 border-cyan-400/80 shadow-[0_0_15px_rgba(0,255,255,0.4)] flex justify-center pt-2 bg-[#010c18]/60 backdrop-blur-sm">
+              <div className="w-1.5 h-3 rounded-full bg-cyan-300 animate-bounce shadow-[0_0_8px_rgba(0,255,255,0.9)]" />
             </div>
-            <div className="stat-item">
-              <div className="stat-label">Depth</div>
-              <div className="stat-value">
-                <span>{stats.depth}</span>
-                <span className="unit">M</span>
-              </div>
-              <div className="stat-bar">
-                <div className="stat-bar-fill" style={{ width: `${Math.min(stats.depth, 100)}%` }} />
-              </div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-label">Velocity</div>
-              <div className="stat-value">
-                <span>{stats.speed}</span>
-                <span className="unit">M/S</span>
-              </div>
-              <div className="stat-bar">
-                <div
-                  className="stat-bar-fill"
-                  style={{ width: `${Math.min(Number(stats.speed) * 20, 100)}%` }}
-                />
-              </div>
+            <div className="flex items-center gap-1 text-[11px] font-bold tracking-[0.25em] text-cyan-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] uppercase">
+              <span>SCROLL TO DIVE</span>
+              <span className="text-cyan-400 text-xs animate-bounce">↓</span>
             </div>
           </div>
 
-          {/* Right Controls Panel */}
-          <div className="side-panel right">
-            <div className="panel-header">
-              <span className="dot" /> <span>CONTROLS</span>
+          {/* Right-Side Down Telemetry HUD Readout (Clean Panel-less design) */}
+          <div className="fixed bottom-20 right-6 md:right-10 z-50 flex flex-col items-end gap-1.5 font-mono text-right select-none pointer-events-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+
+            <div className="flex items-baseline gap-2 text-cyan-100 font-bold text-sm tracking-wider">
+              <span className="text-[10px] text-cyan-400/70 font-semibold uppercase">DEPTH:</span>
+              <span className="text-cyan-300 font-extrabold text-base">{stats.depth}</span>
+              <span className="text-[10px] text-cyan-400/80">M</span>
             </div>
-            <div className="control-row">
-              <span className="control-key">MOUSE</span>
-              <span>Navigate</span>
-            </div>
-            <div className="control-row">
-              <span className="control-key">CLICK PORTAL/BANNER</span>
-              <span>View Event</span>
-            </div>
-            <div className="audio-toggle" onClick={toggleAudio}>
-              <button className={`audio-btn ${isAudioPlaying ? "" : "muted"}`} aria-label="Toggle audio">
-                {isAudioPlaying ? (
-                  <svg viewBox="0 0 24 24">
-                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24">
-                    <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
-                  </svg>
-                )}
-              </button>
-              <span className={`audio-label ${isAudioPlaying ? "playing" : ""}`}>
-                {isAudioPlaying ? "SOUND ON" : "SOUND OFF"}
-              </span>
+
+            <div className="flex items-baseline gap-2 text-cyan-100 font-bold text-sm tracking-wider">
+              <span className="text-[10px] text-cyan-400/70 font-semibold uppercase">SPEED:</span>
+              <span className="text-cyan-300 font-extrabold text-base">{stats.speed}</span>
+              <span className="text-[10px] text-cyan-400/80">M/S</span>
             </div>
           </div>
 
-          {/* Bottom Bar */}
-          <div className="bottom-bar">
-            <span>
-              SYS <span className="coord">ONLINE</span>
-            </span>
-            <span className="separator" />
-            <span>
-              POS <span className="coord">{stats.coords}</span>
-            </span>
-            <span className="separator" />
-            <span>
-              FPS <span className="coord">{stats.fps}</span>
-            </span>
-          </div>
         </div>
       </div>
+
+      {/* Minimal Top-Right Speaker Audio Toggle Icon (Panel-less bare icon design) */}
+      <button
+        onClick={toggleAudio}
+        className={`fixed top-6 right-6 md:top-8 md:right-10 z-[80] p-1 text-cyan-300 hover:text-white transition-all duration-500 cursor-pointer pointer-events-auto hover:scale-110 active:scale-95 drop-shadow-[0_0_15px_rgba(0,255,255,0.8)] ${
+          scrollProgress >= 4 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+        }`}
+        aria-label="Toggle Audio"
+        title={isAudioPlaying ? "Mute Audio" : "Play Audio"}
+      >
+        {isAudioPlaying ? (
+          <svg className="w-6 h-6 fill-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]" viewBox="0 0 24 24">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+          </svg>
+        ) : (
+          <svg className="w-6 h-6 fill-cyan-400/50 hover:fill-cyan-300" viewBox="0 0 24 24">
+            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+          </svg>
+        )}
+      </button>
 
       {/* Interactive Event Detail Modal when clicking on any Event Portal, Pin, or 3D Banner */}
       {selectedEvent && (
