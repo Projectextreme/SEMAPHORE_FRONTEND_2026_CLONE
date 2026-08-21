@@ -69,7 +69,7 @@ export default function MyRegistration() {
         return {
           title: amount > 0 ? `Payment Required: ₹${amount}` : "Payment Required",
           desc: "Please complete your payment to finalize registration.",
-          btnText: "Proceed to Payment",
+          btnText: "Pay to Confirm Registration",
           btnColor: "bg-gradient-to-r from-cyan-500 to-blue-500 text-white cursor-pointer hover:shadow-md border-transparent hover:from-cyan-400 hover:to-blue-400"
         };
     }
