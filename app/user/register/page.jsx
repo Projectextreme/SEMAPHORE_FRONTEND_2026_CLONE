@@ -2,6 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+const WaterWave = dynamic(() => import('react-water-wave'), { ssr: false });
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '168801764074-kcn9c9to0daenc3o5pn9nfutgho8pcin.apps.googleusercontent.com';
@@ -77,7 +82,7 @@ export default function UserRegisterPage() {
 
     gisBtnRef.current.innerHTML = '';
     window.google.accounts.id.renderButton(gisBtnRef.current, {
-      theme: 'filled_black',
+      theme: 'filled_blue',
       size: 'large',
       width: 320,
       text: 'continue_with',
@@ -87,263 +92,140 @@ export default function UserRegisterPage() {
   const canContinue = Boolean(finalCollegeName) && !loading;
 
   return (
-    <div style={styles.page}>
-      {/* ambient glow blobs */}
-      <div style={styles.glowTop} />
-      <div style={styles.glowBottom} />
-
-      <div style={styles.card}>
-        <div style={styles.cardInnerGlow} />
-
-        <div style={styles.badge}>SEMAPHORE 2K26</div>
-        <h2 style={styles.title}> Register/Signin </h2>
-        <p style={styles.subtitle}>Select your college, then continue with Google</p>
-
-        <label style={styles.label}>
-          <span style={styles.labelIndex}>01</span> Select college name
-        </label>
-
-        {!isCustom ? (
-          <select
-            style={styles.select}
-            value={collegeName}
-            onChange={(e) => setCollegeName(e.target.value)}
-          >
-            {COLLEGES.map((c) => (
-              <option key={c} value={c} style={{ background: '#0a1420', color: '#f2f2f5' }}>
-                {c}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <input
-            style={styles.select}
-            placeholder="Type your college name"
-            value={customCollege}
-            onChange={(e) => setCustomCollege(e.target.value)}
-            autoFocus
-          />
-        )}
-
-        <button type="button" onClick={() => setIsCustom((v) => !v)} style={styles.linkBtn}>
-          {isCustom ? '← Choose from list instead' : "Can't find your college? Type custom name"}
-        </button>
-
-        <label style={{ ...styles.label, marginTop: 24 }}>
-          <span style={styles.labelIndex}>02</span> Authenticate with Google
-        </label>
-
-        <div style={styles.googleBtnWrap}>
-          <div
-            ref={gisBtnRef}
-            style={{ opacity: canContinue ? 1 : 0.35, pointerEvents: canContinue ? 'auto' : 'none' }}
-          />
-        </div>
-
-        {!canContinue && !loading && (
-          <p style={styles.hint}>
-            <span style={styles.hintDot} /> Enter a college name to enable Google sign-in.
-          </p>
-        )}
-        {loading && (
-          <p style={styles.hint}>
-            <span style={{ ...styles.hintDot, background: '#22d3ee' }} /> Signing you in…
-          </p>
-        )}
-        {error && <p style={styles.error}>⚠ {error}</p>}
-
-        <div style={styles.footerMeta}>
-          <span>DEPTH: SIGN-IN</span>
-          <span>STATUS: {loading ? 'CONNECTING' : canContinue ? 'READY' : 'STANDBY'}</span>
-        </div>
+    <div className="min-h-screen bg-[#020714] text-slate-100 font-sans selection:bg-cyan-500/30 overflow-hidden flex flex-col relative">
+      {/* BACKGROUND ELEMENTS */}
+      <div className="fixed inset-0 z-0 overflow-hidden">
+        <WaterWave
+          imageUrl="/login_bg.png"
+          dropRadius={25}
+          perturbance={0.03}
+          resolution={512}
+          className="absolute inset-0 w-full h-full opacity-60"
+        >
+          {() => <div className="w-full h-full" />}
+        </WaterWave>
+        
+        {/* Deep ocean gradient overlay to ensure text readability */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#020714]/80 via-transparent to-[#020714]/95" />
       </div>
+
+      {/* FLOATING ACTION BUTTON: BACK TO SURFACE */}
+      <div className="fixed top-4 left-4 sm:left-6 z-50">
+        <Link
+          href="/"
+          className="inline-flex items-center space-x-2 text-[10px] font-mono font-bold tracking-widest text-cyan-300 hover:text-white px-4 py-2 rounded-full border border-white/10 border-t-white/20 bg-white/5 hover:bg-white/10 backdrop-blur-xl transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.5)] hover:shadow-[0_8px_25px_rgba(0,219,233,0.3)] focus:outline-none focus:ring-2 focus:ring-cyan-400 group"
+        >
+          <svg className="w-3 h-3 transform group-hover:-translate-x-0.5 transition-transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          </svg>
+          <span>BACK TO SURFACE</span>
+        </Link>
+      </div>
+
+      <main className="relative z-10 w-full max-w-lg mx-auto px-4 py-12 flex-grow flex items-center justify-center">
+        <div className="w-full relative p-8 sm:p-12 rounded-[2rem] bg-white/5 border border-white/10 border-t-white/20 border-l-white/20 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_0_40px_rgba(255,255,255,0.02)] overflow-hidden">
+          {/* Glowing Orbs behind the plate */}
+          <div className="absolute top-0 left-1/4 w-72 h-72 bg-cyan-500/20 rounded-full blur-[80px] pointer-events-none" />
+          <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-blue-600/20 rounded-full blur-[80px] pointer-events-none" />
+
+          <div className="relative z-10 space-y-6 flex flex-col items-center w-full">
+            {/* Futuristic Label Badge */}
+            <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-black/40 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono tracking-[0.25em] uppercase shadow-[0_0_15px_rgba(0,219,233,0.2)] backdrop-blur-md">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping shadow-[0_0_6px_#00dbe9]" />
+              <span>SEMAPHORE 2K26 // AUTH</span>
+            </div>
+
+            <div className="text-center">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl whitespace-nowrap font-black tracking-[0.1em] uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-400 drop-shadow-[0_0_25px_rgba(0,219,233,0.8)]">
+                Register
+              </h2>
+              <p className="text-xs sm:text-sm font-mono tracking-[0.15em] text-cyan-200/80 mt-2">
+                SELECT YOUR COLLEGE, THEN CONTINUE WITH GOOGLE
+              </p>
+            </div>
+
+            <div className="w-full space-y-4 text-left">
+              <label className="flex items-center space-x-2 text-[11px] font-bold tracking-widest text-cyan-200 uppercase">
+                <span className="bg-cyan-500 text-black px-1.5 py-0.5 rounded text-[9px] font-black">01</span>
+                <span>Select college name</span>
+              </label>
+
+              {!isCustom ? (
+                <select
+                  className="w-full bg-[#040f1a]/60 border border-cyan-400/30 text-slate-200 text-sm rounded-xl px-4 py-3 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all duration-300 backdrop-blur-sm"
+                  value={collegeName}
+                  onChange={(e) => setCollegeName(e.target.value)}
+                >
+                  {COLLEGES.map((c) => (
+                    <option key={c} value={c} className="bg-[#0a1420] text-slate-200">
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  className="w-full bg-[#040f1a]/60 border border-cyan-400/30 text-slate-200 text-sm rounded-xl px-4 py-3 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all duration-300 backdrop-blur-sm placeholder:text-slate-500"
+                  placeholder="Type your college name"
+                  value={customCollege}
+                  onChange={(e) => setCustomCollege(e.target.value)}
+                  autoFocus
+                />
+              )}
+
+              <button 
+                type="button" 
+                onClick={() => setIsCustom((v) => !v)} 
+                className="text-cyan-400 hover:text-cyan-300 text-xs tracking-wide transition-colors duration-200 text-left w-full"
+              >
+                {isCustom ? '← Choose from list instead' : "Can't find your college? Type custom name"}
+              </button>
+            </div>
+
+            <div className="w-full space-y-4 pt-4 border-t border-white/10">
+              <label className="flex items-center space-x-2 text-[11px] font-bold tracking-widest text-cyan-200 uppercase">
+                <span className="bg-cyan-500 text-black px-1.5 py-0.5 rounded text-[9px] font-black">02</span>
+                <span>Authenticate with Google</span>
+              </label>
+
+              <div className="flex justify-center py-2 w-full">
+                <div
+                  ref={gisBtnRef}
+                  style={{ opacity: canContinue ? 1 : 0.35, pointerEvents: canContinue ? 'auto' : 'none' }}
+                  className="transition-opacity duration-300 min-h-[44px] min-w-[320px] flex justify-center items-center"
+                />
+              </div>
+
+              {!canContinue && !loading && (
+                <p className="flex items-center justify-center space-x-2 text-xs text-slate-400 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500" /> 
+                  <span>Enter a college name to enable sign-in.</span>
+                </p>
+              )}
+              {loading && (
+                <p className="flex items-center justify-center space-x-2 text-xs text-cyan-300 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> 
+                  <span>Signing you in…</span>
+                </p>
+              )}
+              {error && (
+                <p className="text-xs text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg p-2 text-center">
+                  ⚠ {error}
+                </p>
+              )}
+            </div>
+
+            <div className="w-full flex justify-between items-center text-[9px] font-mono tracking-widest text-slate-400 pt-6 border-t border-cyan-500/20 uppercase mt-4">
+              <span>DEPTH: SIGN-IN</span>
+              <span className="flex items-center space-x-1.5">
+                <span>STATUS:</span>
+                <span className={loading ? 'text-cyan-400 animate-pulse' : canContinue ? 'text-green-400' : 'text-slate-500'}>
+                  {loading ? 'CONNECTING' : canContinue ? 'READY' : 'STANDBY'}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: '100vh',
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    overflow: 'hidden',
-    padding: 24,
-    boxSizing: 'border-box',
-    background:
-      'radial-gradient(ellipse at 50% 0%, #2696f9 0%, rgb(20 80 139) 35%, #051220 70%, #000205 100%)',
-    
-  },
-
-  glowTop: {
-    position: 'absolute',
-    top: '-15%',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    width: 700,
-    height: 700,
-    background: 'radial-gradient(circle, rgba(34,211,238,0.18) 0%, rgba(34,211,238,0) 70%)',
-    filter: 'blur(10px)',
-    pointerEvents: 'none',
-  },
-  glowBottom: {
-    position: 'absolute',
-    bottom: '-20%',
-    right: '-10%',
-    width: 600,
-    height: 600,
-    background: 'radial-gradient(circle, rgba(56,189,248,0.12) 0%, rgba(56,189,248,0) 70%)',
-    filter: 'blur(10px)',
-    pointerEvents: 'none',
-  },
-
-  card: {
-    position: 'relative',
-    maxWidth: 400,
-    width: '100%',
-    margin: '0 auto',
-    padding: 32,
-    borderRadius: 20,
-    background: 'linear-gradient(180deg, rgba(20,40,60,0.55) 0%, rgba(10,25,40,0.65) 100%)',
-    backdropFilter: 'blur(18px) saturate(140%)',
-    WebkitBackdropFilter: 'blur(18px) saturate(140%)',
-    border: '1px solid rgba(42, 87, 219, 0.18)',
-    boxShadow:
-      '0 8px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.03) inset, 0 1px 0 rgba(255,255,255,0.06) inset',
-    color: '#eef6fb',
-    textAlign: 'center',
-    overflow: 'hidden',
-  },
-  cardInnerGlow: {
-    position: 'absolute',
-    top: -60,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    width: 260,
-    height: 160,
-    background: 'radial-gradient(ellipse, rgba(34,211,238,0.25) 0%, rgba(34,211,238,0) 70%)',
-    pointerEvents: 'none',
-  },
-
-  badge: {
-    display: 'inline-block',
-    fontSize: 10,
-    letterSpacing: 2,
-    fontWeight: 700,
-    color: '#67e8f9',
-    background: 'rgba(34,211,238,0.08)',
-    border: '1px solid rgba(34,211,238,0.3)',
-    borderRadius: 999,
-    padding: '5px 12px',
-    marginBottom: 16,
-  },
-
-  title: {
-    fontSize: 26,
-    fontWeight: 800,
-    margin: '0 0 6px',
-    letterSpacing: 1,
-    background: 'linear-gradient(180deg, #ffffff 0%, #b8e6f5 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#8fb3c7',
-    margin: '0 0 28px',
-    lineHeight: 1.5,
-  },
-
-  label: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    textAlign: 'left',
-    fontSize: 11,
-    fontWeight: 700,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: '#a9cddd',
-    marginBottom: 10,
-  },
-  labelIndex: {
-    fontSize: 10,
-    color: '#051220',
-    background: '#67e8f9',
-    borderRadius: 4,
-    padding: '2px 5px',
-    fontWeight: 800,
-  },
-
-  select: {
-    width: '100%',
-    padding: '12px 14px',
-    borderRadius: 10,
-    border: '1px solid rgba(103,232,249,0.2)',
-    background: 'rgba(4,15,26,0.55)',
-    color: '#eef6fb',
-    fontSize: 14,
-    boxSizing: 'border-box',
-    outline: 'none',
-    transition: 'border-color 0.2s, box-shadow 0.2s',
-  },
-
-  linkBtn: {
-    background: 'none',
-    border: 'none',
-    color: '#5eead4',
-    fontSize: 12,
-    cursor: 'pointer',
-    padding: '10px 0 0',
-    textAlign: 'left',
-    width: '100%',
-    letterSpacing: 0.2,
-  },
-
-  googleBtnWrap: {
-    display: 'flex',
-    justifyContent: 'center',
-    padding: '4px 0 2px',
-   },
-
-  hint: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    fontSize: 12,
-    color: '#7fa3b8',
-    marginTop: 12,
-  },
-  hintDot: {
-    width: 6,
-    height: 6,
-    borderRadius: '50%',
-    background: '#5b7a8c',
-    display: 'inline-block',
-  },
-
-  error: {
-    fontSize: 12,
-    color: '#fca5a5',
-    marginTop: 12,
-    background: 'rgba(248,113,113,0.08)',
-    border: '1px solid rgba(248,113,113,0.25)',
-    borderRadius: 8,
-    padding: '8px 10px',
-  },
-
-  footerMeta: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: 9,
-    letterSpacing: 1,
-    color: '#3d5c6e',
-    marginTop: 26,
-    paddingTop: 14,
-    borderTop: '1px solid rgba(103,232,249,0.1)',
-    textTransform: 'uppercase',
-  },
-};
