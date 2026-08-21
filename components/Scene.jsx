@@ -1245,16 +1245,20 @@ export default function Scene() {
     scene.add(newWorldGroup);
 
     const cliffRockMat = new THREE.MeshStandardMaterial({
-      color: 0x072235,
-      roughness: 0.85,
-      metalness: 0.15,
+      color: 0x061d32,
+      emissive: 0x001425,
+      emissiveIntensity: 0.18,
+      roughness: 0.74,
+      metalness: 0.24,
       flatShading: true,
     });
 
     const stairStoneMat = new THREE.MeshStandardMaterial({
-      color: 0x0b3248,
-      roughness: 0.80,
-      metalness: 0.20,
+      color: 0x0a3048,
+      emissive: 0x00101c,
+      emissiveIntensity: 0.12,
+      roughness: 0.7,
+      metalness: 0.28,
       flatShading: true,
     });
 
@@ -1268,37 +1272,103 @@ export default function Scene() {
       flatShading: true,
     });
 
-    const purpleCrystalMat = new THREE.MeshStandardMaterial({
-      color: 0x240038,
-      emissive: 0xd946ef,
-      emissiveIntensity: 2.2,
-      roughness: 0.15,
-      metalness: 0.3,
+    const mineralAccentMat = new THREE.MeshStandardMaterial({
+      color: 0x35134e,
+      emissive: 0xda70ff,
+      emissiveIntensity: 1.45,
+      roughness: 0.24,
+      metalness: 0.34,
       flatShading: true,
     });
-
-    const amberCrystalMat = new THREE.MeshStandardMaterial({
-      color: 0x381e00,
-      emissive: 0xf59e0b,
-      emissiveIntensity: 2.2,
-      roughness: 0.15,
-      metalness: 0.3,
-      flatShading: true,
-    });
-
-    const crystalMats = [cyanCrystalMat, purpleCrystalMat, amberCrystalMat];
 
     const cliffMeshes = [];
     const bannerMeshes = [];
     const crystalShrineMeshes = [];
     const eventBannerGroups = {};
+    const postPortalHologramGroups = [];
+    const postPortalMineralGroups = [];
+    // Shared post-portal presentation envelope, in local event coordinates.
+    // Shrine/cage top: 10.7, poster underside: 14.2 — leaving a deliberate 3.5 unit air gap.
+    const posterAnchorY = 17.8;
+
+    const causticUniforms = { uTime: { value: 0 } };
+    const causticMat = new THREE.ShaderMaterial({
+      uniforms: causticUniforms,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `
+        uniform float uTime;
+        varying vec2 vUv;
+        void main() {
+          vec2 uv = vUv * 6.0;
+          float waveA = sin(uv.x * 2.1 + uTime * 0.35) + sin(uv.y * 2.6 - uTime * 0.27);
+          float waveB = sin((uv.x + uv.y) * 2.8 + uTime * 0.22);
+          float caustic = smoothstep(1.48, 1.88, waveA + waveB * 0.7);
+          float edgeFade = smoothstep(0.0, 0.18, vUv.x) * smoothstep(0.0, 0.18, 1.0 - vUv.x)
+            * smoothstep(0.0, 0.18, vUv.y) * smoothstep(0.0, 0.18, 1.0 - vUv.y);
+          gl_FragColor = vec4(0.16, 0.84, 1.0, caustic * edgeFade * 0.2);
+        }
+      `,
+    });
+
+    const shaftUniforms = { uTime: { value: 0 } };
+    const lightShaftMat = new THREE.ShaderMaterial({
+      uniforms: shaftUniforms,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `
+        uniform float uTime;
+        varying vec2 vUv;
+        void main() {
+          float width = smoothstep(0.0, 0.28, vUv.x) * smoothstep(0.0, 0.28, 1.0 - vUv.x);
+          float falloff = smoothstep(0.0, 0.16, vUv.y) * (1.0 - smoothstep(0.55, 1.0, vUv.y));
+          float drift = 0.7 + sin(uTime * 0.15 + vUv.y * 7.0) * 0.12;
+          gl_FragColor = vec4(0.17, 0.72, 1.0, width * falloff * drift * 0.075);
+        }
+      `,
+    });
+
+    const createHologramTexture = (label, detail = "LINKED") => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 288;
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "rgba(1, 21, 40, 0.62)";
+      ctx.fillRect(10, 10, 492, 268);
+      ctx.strokeStyle = "rgba(62, 231, 244, 0.8)";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(10, 10, 492, 268);
+      ctx.fillStyle = "rgba(88, 241, 245, 0.12)";
+      for (let row = 34; row < 255; row += 20) ctx.fillRect(26, row, 460, 1);
+      ctx.shadowColor = "#00e6ef";
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = "#76f6f5";
+      ctx.font = "700 28px monospace";
+      ctx.fillText(label, 28, 54);
+      ctx.shadowBlur = 0;
+      ctx.font = "600 16px monospace";
+      ctx.fillStyle = "rgba(139, 246, 246, 0.78)";
+      ["node.status  / active", "signal.depth / stable", `protocol     / ${detail}`].forEach((line, index) => {
+        ctx.fillText(line, 28, 104 + index * 28);
+      });
+      ctx.strokeStyle = "rgba(204, 121, 255, 0.8)";
+      ctx.strokeRect(412, 176, 54, 54);
+      ctx.beginPath(); ctx.moveTo(426, 214); ctx.lineTo(438, 188); ctx.lineTo(452, 214); ctx.closePath(); ctx.stroke();
+      return new THREE.CanvasTexture(canvas);
+    };
 
     // Construct each distinct Event Location matching Image 2 target reference with mirrored sideSign offsets
     function createEventPlatformAndBanner(node) {
       const { x, y, z } = node.pos;
       const eventGroup = new THREE.Group();
       eventGroup.position.set(x, y, z);
-      const isCodingEvent = node.id === "event-1";
 
       // Determine event side: -1 for left side (x < 0), +1 for right side (x > 0)
       const sideSign = x < 0 ? -1 : (x > 0 ? 1 : (parseInt(node.num, 10) % 2 === 0 ? 1 : -1));
@@ -1314,21 +1384,16 @@ export default function Scene() {
       // 2. Main Terraced Low-Poly Faceted Rock Formation (Centered at eventGroup origin)
       const isEvent1 = node.id === "event-1";
       const rockHeight = isEvent1 ? 120 : (node.id === "event-5" ? 16 : (node.id === "event-7" ? 28 : 20));
-      const rockBotRad = isEvent1 ? 34 * altarScale : 24 * altarScale;
-      const lowerRockGeo = new THREE.CylinderGeometry(18 * altarScale, rockBotRad, rockHeight, 12, isEvent1 ? 12 : 4);
+      const rockBotRad = isEvent1 ? 32 * altarScale : 24 * altarScale;
+      const lowerRockGeo = new THREE.CylinderGeometry(18 * altarScale, rockBotRad, rockHeight, 12, 5);
       const lrPos = lowerRockGeo.attributes.position;
       for (let i = 0; i < lrPos.count; i++) {
         bVec.fromBufferAttribute(lowerRockGeo.attributes.position, i);
-        const angle = Math.atan2(bVec.z, bVec.x);
+        const facetNoise = Math.sin(bVec.y * 0.16 + bVec.x * 0.22) * 3.2 + Math.cos(bVec.z * 0.25) * 2.5;
         const rad = Math.sqrt(bVec.x * bVec.x + bVec.z * bVec.z);
         if (rad > 0.1) {
-          // Asymmetric angular noise + sedimentary strata layering for realistic underwater cliff faces & rock ledges
-          const ridgeNoise = Math.sin(angle * 3.0) * 8.5 + Math.cos(angle * 5.0 + bVec.y * 0.08) * 5.5;
-          const strataTerracing = isEvent1 ? Math.floor(bVec.y / 14.0) * 2.2 + Math.sin(bVec.y * 0.18) * 3.0 : 0;
-          const heightNoise = Math.sin(bVec.y * 0.12 + angle * 2.0) * 4.5 + strataTerracing;
-          const totalDisplacement = ridgeNoise + heightNoise;
-          bVec.x += (bVec.x / rad) * totalDisplacement;
-          bVec.z += (bVec.z / rad) * totalDisplacement;
+          bVec.x += (bVec.x / rad) * facetNoise;
+          bVec.z += (bVec.z / rad) * facetNoise;
         }
         lrPos.setXYZ(i, bVec.x, bVec.y, bVec.z);
       }
@@ -1338,6 +1403,11 @@ export default function Scene() {
       lowerRockMesh.position.set(0, isEvent1 ? -58 : -8, 0);
       eventGroup.add(lowerRockMesh);
       cliffMeshes.push(lowerRockMesh);
+
+      const platformCaustic = new THREE.Mesh(new THREE.CircleGeometry(15, 12), causticMat);
+      platformCaustic.rotation.x = -Math.PI / 2;
+      platformCaustic.position.set(0, 2.16, 0);
+      eventGroup.add(platformCaustic);
 
       // TECH TALK SPECIAL: Grand Hollow Underwater Cavern Grotto / Cave Hole Archway
       if (node.id === "event-5") {
@@ -1359,16 +1429,6 @@ export default function Scene() {
         techCaveDiscMesh.position.set(0, 12, -5);
         eventGroup.add(techCaveDiscMesh);
 
-        for (let c = 0; c < 8; c++) {
-          const angle = (c / 8) * Math.PI;
-          const cx = Math.cos(angle) * 17;
-          const cy = 12 + Math.sin(angle) * 17;
-          const cGeo = new THREE.ConeGeometry(1.2, 4.5, 5);
-          const cMesh = new THREE.Mesh(cGeo, cyanCrystalMat);
-          cMesh.position.set(cx, cy, -2);
-          cMesh.rotation.set(0, 0, -angle + Math.PI / 2);
-          eventGroup.add(cMesh);
-        }
       }
 
       // Upper Terraced Plateau (Omitted for Tech Talk so no rock structure sits above it)
@@ -1436,18 +1496,11 @@ export default function Scene() {
       wireMesh.position.set(0, 3.2, 0);
       mainShrineGroup.add(wireMesh);
 
-      // Surrounding Faceted Crystal Points
-      const shrineCrystalCount = 8;
-      for (let sc = 0; sc < shrineCrystalCount; sc++) {
-        const scGeo = new THREE.ConeGeometry(0.9 + (sc % 3) * 0.3, 3.5 + (sc % 2) * 1.2, 5);
-        const scMat = crystalMats[(sc + eventIdx) % crystalMats.length];
-        const scMesh = new THREE.Mesh(scGeo, scMat);
-        const cAngle = (sc / shrineCrystalCount) * Math.PI * 2;
-        const cRad = 3.6;
-        scMesh.position.set(Math.cos(cAngle) * cRad, 1.2, Math.sin(cAngle) * cRad);
-        scMesh.rotation.set(0.4, cAngle, (sc % 2 === 0 ? 0.3 : -0.3));
-        mainShrineGroup.add(scMesh);
-      }
+      const shrineCaustic = new THREE.Mesh(new THREE.CircleGeometry(4.2, 10), causticMat);
+      shrineCaustic.rotation.x = -Math.PI / 2;
+      shrineCaustic.position.set(0, 1.56, 0);
+      shrineCaustic.scale.setScalar(0.72);
+      mainShrineGroup.add(shrineCaustic);
 
       // Strong Directional PointLight from main shrine
       const mainShrineLight = new THREE.PointLight(0x00f0ff, 8.0, 40);
@@ -1459,7 +1512,9 @@ export default function Scene() {
 
       // 5. Upper Terrace Crystal Altar
       const upperShrineGroup = new THREE.Group();
-      upperShrineGroup.position.set(sideSign * 12, 13, -4);
+      // Keep the existing upper crystal visible as a clearly floating side accent,
+      // outside the upper terrace and below the poster envelope.
+      upperShrineGroup.position.set(sideSign * 27, 7, -4);
       const upperOrbGeo = new THREE.OctahedronGeometry(2.0, 1);
       const upperOrbMesh = new THREE.Mesh(upperOrbGeo, cyanCrystalMat);
       upperShrineGroup.add(upperOrbMesh);
@@ -1468,28 +1523,33 @@ export default function Scene() {
       upperShrineGroup.add(upperLight);
       eventGroup.add(upperShrineGroup);
 
-      // 6. 3D Embedded Faceted Crystals across Rock Surface
-      const crystalPlacements = [
-        { pos: [sideSign * 10, 2, 8], mat: cyanCrystalMat, scale: 1.4 },
-        { pos: [sideSign * 4, 3, 6], mat: cyanCrystalMat, scale: 1.2 },
-        { pos: [sideSign * 14, 9, -2], mat: cyanCrystalMat, scale: 1.6 },
-        { pos: [sideSign * 12, 8, -8], mat: cyanCrystalMat, scale: 1.3 },
-        { pos: [sideSign * 12, -4, 10], mat: amberCrystalMat, scale: 1.5 },
-        { pos: [sideSign * 2, -3, 4], mat: amberCrystalMat, scale: 1.4 },
-        { pos: [sideSign * 18, 2, -4], mat: amberCrystalMat, scale: 1.2 },
-        { pos: [sideSign * 20, -10, 4], mat: purpleCrystalMat, scale: 1.6 },
-        { pos: [sideSign * 2, -12, 8], mat: purpleCrystalMat, scale: 1.5 },
-        { pos: [sideSign * 16, -14, -6], mat: purpleCrystalMat, scale: 1.4 },
-        { pos: [sideSign * 8, -16, 10], mat: purpleCrystalMat, scale: 1.3 },
-      ];
-
-      crystalPlacements.forEach((cp) => {
-        const xtalGeo = new THREE.ConeGeometry(0.8 * cp.scale, 3.2 * cp.scale, 5);
-        const xtalMesh = new THREE.Mesh(xtalGeo, cp.mat);
-        xtalMesh.position.set(cp.pos[0], cp.pos[1], cp.pos[2]);
-        xtalMesh.rotation.set((Math.random() - 0.5) * 0.6, Math.random() * Math.PI, (Math.random() - 0.5) * 0.6);
-        eventGroup.add(xtalMesh);
-      });
+      // A single non-conical, reference-inspired mineral branch cluster for Coding.
+      // Flat-capped five-sided prisms preserve the faceted look without cone silhouettes.
+      if (node.id === "event-1") {
+        const mineralCluster = new THREE.Group();
+        mineralCluster.position.set(-17, 2.35, 5);
+        const branchSpecs = [
+          { pos: [0, 2.1, 0], height: 4.2, bottom: 0.48, top: 0.28, rot: [0.08, 0.22, -0.08], mat: cyanCrystalMat },
+          { pos: [-1.25, 1.55, 0.25], height: 3.1, bottom: 0.42, top: 0.23, rot: [-0.24, 0.44, 0.52], mat: cyanCrystalMat },
+          { pos: [1.15, 1.4, -0.15], height: 2.8, bottom: 0.38, top: 0.22, rot: [0.28, -0.38, -0.58], mat: mineralAccentMat },
+          { pos: [0.48, 2.65, -0.45], height: 5.1, bottom: 0.39, top: 0.2, rot: [0.22, 0.6, -0.28], mat: cyanCrystalMat },
+          { pos: [-0.55, 1.25, -0.9], height: 2.5, bottom: 0.34, top: 0.19, rot: [-0.4, -0.35, 0.7], mat: mineralAccentMat },
+          { pos: [1.7, 1.0, 0.55], height: 2.0, bottom: 0.3, top: 0.17, rot: [0.12, 0.2, -0.9], mat: cyanCrystalMat },
+        ];
+        branchSpecs.forEach((branch) => {
+          const stem = new THREE.Mesh(
+            new THREE.CylinderGeometry(branch.top, branch.bottom, branch.height, 5, 1),
+            branch.mat
+          );
+          stem.position.set(...branch.pos);
+          stem.rotation.set(...branch.rot);
+          mineralCluster.add(stem);
+        });
+        const clusterLight = new THREE.PointLight(0x5df1f0, 1.7, 15);
+        clusterLight.position.set(0, 2.2, 0);
+        mineralCluster.add(clusterLight);
+        eventGroup.add(mineralCluster);
+      }
 
       // 7. Floating 3D Code Symbol Glyphs (Positioned behind shrine away from camera line of sight)
       const codeGlyphsCanvas = document.createElement("canvas");
@@ -1523,8 +1583,7 @@ export default function Scene() {
 
       // 8. Futuristic Holographic Event Title Plaque (Centered directly over crystal shrine)
       const bannerGroup = new THREE.Group();
-      const isEv1 = node.id === "event-1";
-      bannerGroup.position.set(x, isEv1 ? y + 16.5 : y + 14.0, isEv1 ? z - 1.2 : z);
+      bannerGroup.position.set(x, y + posterAnchorY, z);
       bannerGroup.rotation.y = 0;
 
       const bannerTexture = createEventBannerTexture(node);
@@ -1547,9 +1606,77 @@ export default function Scene() {
       bannerGroup.add(bannerMesh);
       bannerMeshes.push(bannerMesh);
 
+      // Poster-linked data network: secondary, behind the plaque, and clear of its title area.
+      const networkGroup = new THREE.Group();
+      networkGroup.position.z = -1.4;
+      const nodePositions = [new THREE.Vector3(-13, 0.3, -0.8), new THREE.Vector3(13, -0.5, -0.8)];
+      nodePositions.forEach((position, networkIndex) => {
+        const dataPanel = new THREE.Mesh(
+          new THREE.PlaneGeometry(4.4, 2.45),
+          new THREE.MeshBasicMaterial({
+            map: createHologramTexture(`NODE ${node.num}.${networkIndex + 1}`, networkIndex ? "SYNCED" : "ACTIVE"),
+            transparent: true,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          })
+        );
+        dataPanel.position.copy(position);
+        networkGroup.add(dataPanel);
+
+        const nodeMarker = new THREE.Mesh(
+          new THREE.OctahedronGeometry(0.18, 0),
+          new THREE.MeshBasicMaterial({ color: networkIndex ? 0xc77dff : 0x61eff3, transparent: true, opacity: 0.9 })
+        );
+        nodeMarker.position.copy(position).add(new THREE.Vector3(0, -1.45, 0.04));
+        networkGroup.add(nodeMarker);
+
+        const linkGeo = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(networkIndex ? 9.45 : -9.45, -0.65, -0.45),
+          nodeMarker.position.clone(),
+        ]);
+        const link = new THREE.Line(linkGeo, new THREE.LineBasicMaterial({ color: 0x43e5ef, transparent: true, opacity: 0.48 }));
+        networkGroup.add(link);
+      });
+      bannerGroup.add(networkGroup);
+      postPortalHologramGroups.push(networkGroup);
+
+      if (["event-2", "event-5", "event-8", "event-10"].includes(node.id)) {
+        const depthPanel = new THREE.Mesh(
+          new THREE.PlaneGeometry(8.2, 5.2),
+          new THREE.MeshBasicMaterial({
+            map: createHologramTexture(`depth.map ${node.num}`, `-${Math.abs(y)}m`),
+            transparent: true,
+            opacity: 0.62,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          })
+        );
+        depthPanel.position.set(sideSign * 29, -10.5, -9);
+        bannerGroup.add(depthPanel);
+      }
+
+      if (["event-1", "event-4", "event-7", "event-10"].includes(node.id)) {
+        const terminalGroup = new THREE.Group();
+        terminalGroup.position.set(-sideSign * 31, -2.5, -12);
+        const terminal = new THREE.Mesh(
+          new THREE.PlaneGeometry(7.8, 4.8),
+          new THREE.MeshBasicMaterial({
+            map: createHologramTexture("<terminal_02>", "CAUSTIC ON"),
+            transparent: true,
+            opacity: 0.5,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          })
+        );
+        terminalGroup.add(terminal);
+        eventGroup.add(terminalGroup);
+        postPortalHologramGroups.push(terminalGroup);
+      }
+
+
+
       // Glowing Vertical Energy Tether Beam connecting plaque base to crystal shrine
-      const tetherHeight = isEv1 ? 6.8 : 5.2;
-      const tetherGeo = new THREE.CylinderGeometry(0.04, 0.04, tetherHeight, 8);
+      const tetherGeo = new THREE.CylinderGeometry(0.04, 0.04, 2.2, 8);
       const tetherMat = new THREE.MeshStandardMaterial({
         color: 0x00f0ff,
         emissive: 0x00f0ff,
@@ -1558,19 +1685,19 @@ export default function Scene() {
         opacity: 0.65,
       });
       const tetherMesh = new THREE.Mesh(tetherGeo, tetherMat);
-      tetherMesh.position.set(0, isEv1 ? -6.2 : -5.5, 0);
+      tetherMesh.position.set(0, -4.8, 0);
       bannerGroup.add(tetherMesh);
 
       // Top Floating Holographic Diamond Marker above plaque
       const topDiamondGeo = new THREE.OctahedronGeometry(0.42, 0);
       const topDiamondMesh = new THREE.Mesh(topDiamondGeo, cyanCrystalMat);
-      topDiamondMesh.position.set(0, 4.4, 0);
+      topDiamondMesh.position.set(0, 4.35, 0);
       bannerGroup.add(topDiamondMesh);
 
       // Bottom Floating Holographic Diamond Marker under tether beam
       const botDiamondGeo = new THREE.OctahedronGeometry(0.35, 0);
       const botDiamondMesh = new THREE.Mesh(botDiamondGeo, cyanCrystalMat);
-      botDiamondMesh.position.set(0, isEv1 ? -9.4 : -8.2, 0);
+      botDiamondMesh.position.set(0, -6.6, 0);
       bannerGroup.add(botDiamondMesh);
 
       const posterLight = new THREE.PointLight(0x00f0ff, 3.5, 30);
@@ -1584,6 +1711,44 @@ export default function Scene() {
     eventNodes.forEach((node) => {
       createEventPlatformAndBanner(node);
     });
+
+    // Distant, post-portal atmosphere only. These occupy open background space
+    // and stay outside all event poster/shrine composition envelopes.
+    const lightShaftGroup = new THREE.Group();
+    [
+      [-82, -72, -350, -0.16], [78, -118, -470, 0.12], [-86, -185, -650, -0.1],
+      [86, -250, -790, 0.14], [-90, -330, -960, -0.12], [82, -400, -1110, 0.1],
+    ].forEach(([shaftX, shaftY, shaftZ, rotation]) => {
+      const shaft = new THREE.Mesh(new THREE.PlaneGeometry(10, 88), lightShaftMat);
+      shaft.position.set(shaftX, shaftY, shaftZ);
+      shaft.rotation.z = rotation;
+      lightShaftGroup.add(shaft);
+    });
+    newWorldGroup.add(lightShaftGroup);
+
+    const vortexGroup = new THREE.Group();
+    vortexGroup.position.set(104, -270, -885);
+    [
+      { color: 0x36e7f2, offset: 0, scale: 1 },
+      { color: 0xc77dff, offset: Math.PI, scale: 0.78 },
+      { color: 0x3298ff, offset: Math.PI * 0.5, scale: 1.18 },
+    ].forEach((spiral) => {
+      const points = [];
+      for (let pointIndex = 0; pointIndex < 88; pointIndex++) {
+        const progress = pointIndex / 87;
+        const angle = spiral.offset + progress * Math.PI * 6.2;
+        const radius = (1.5 + progress * 13) * spiral.scale;
+        points.push(new THREE.Vector3(Math.cos(angle) * radius, Math.sin(angle) * radius, progress * 0.3));
+      }
+      const spiralLine = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(points),
+        new THREE.LineBasicMaterial({ color: spiral.color, transparent: true, opacity: 0.28 })
+      );
+      vortexGroup.add(spiralLine);
+    });
+    vortexGroup.add(new THREE.PointLight(0x5169ff, 1.2, 48));
+    newWorldGroup.add(vortexGroup);
+    postPortalMineralGroups.push(vortexGroup);
 
     // --- DARK TEAL SEA GRASS / KELP FRONDS ---
     const kelpGroup = new THREE.Group();
@@ -1864,6 +2029,8 @@ export default function Scene() {
     const blendedTarget = new THREE.Vector3(0, 2, -50);
     const smoothCamPos = new THREE.Vector3(0, 2, 0);
     const lastCamPos = new THREE.Vector3(0, 2, 0);
+    const safetyOffset = new THREE.Vector3();
+    const safeCameraPosition = new THREE.Vector3();
     let currentBank = 0;
 
     const mouse = { x: 0, y: 0 };
@@ -2055,9 +2222,9 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -32,
+        x: -48,
         y: -100,
-        z: -283,
+        z: -273,
         targetX: -32,
         targetY: -103,
         targetZ: -308,
@@ -2185,7 +2352,7 @@ export default function Scene() {
       {
         x: -32,
         y: -174,
-        z: -484,
+        z: -473,
         targetX: -32,
         targetY: -183,
         targetZ: -508,
@@ -2567,9 +2734,9 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -42,
+        x: -52,
         y: -418,
-        z: -1103,
+        z: -1073,
         targetX: -32,
         targetY: -423,
         targetZ: -1108,
@@ -2762,6 +2929,8 @@ export default function Scene() {
       bubbleMat.uniforms.uTime.value = t;
       dustMat.uniforms.uTime.value = t;
       ballMat.uniforms.uTime.value = t;
+      causticUniforms.uTime.value = t;
+      shaftUniforms.uTime.value = t;
 
       // Pulse Portal Ring Backlight
       portalBackLight.intensity = 8.0 + Math.sin(t * 2.5) * 3.0;
@@ -2771,6 +2940,13 @@ export default function Scene() {
         xtal.rotation.y = t * 0.8;
       }
 
+      postPortalHologramGroups.forEach((group, index) => {
+        group.rotation.z = Math.sin(t * 0.35 + index * 1.7) * 0.006;
+      });
+      postPortalMineralGroups.forEach((group, index) => {
+        group.rotation.z = t * (0.025 + index * 0.004);
+      });
+
       for (let b = 0; b < bannerMeshes.length; b++) {
         const bMesh = bannerMeshes[b];
         const node = eventNodes[b];
@@ -2779,7 +2955,7 @@ export default function Scene() {
 
         // Subtle gentle floating movement
         if (bGroup) {
-          bGroup.position.y = node.pos.y + 14.0 + Math.sin(t * 0.9 + b) * 0.22;
+          bGroup.position.y = node.pos.y + posterAnchorY + Math.sin(t * 0.9 + b) * 0.16;
         }
         bMesh.rotation.z = Math.sin(t * 1.1 + b) * 0.025;
         bMesh.rotation.y = baseRot + Math.cos(t * 0.7 + b) * 0.02;
@@ -2859,8 +3035,23 @@ export default function Scene() {
       // Position spring lerp for smooth, liquid camera movement
       smoothCamPos.lerp(new THREE.Vector3(camState.x, camState.y, camState.z), isMobile ? 0.10 : 0.07);
 
-      // Direct, synchronized look-at target interpolation (no velocity-dependent wobbling)
-      desiredLookAt.set(camState.targetX, camState.targetY, camState.targetZ);
+      // Post-portal landmark focus: the authored keyframes keep their distinct motion,
+      // while their target is recentered on the actual poster/shrine composition.
+      // The condition keeps the complete surface-to-stargate camera path untouched.
+      if (camState.z < -185) {
+        let focusedNode = eventNodes[0];
+        let targetDistance = Infinity;
+        for (const node of eventNodes) {
+          const zDistance = Math.abs(camState.targetZ - node.pos.z);
+          if (zDistance < targetDistance) {
+            targetDistance = zDistance;
+            focusedNode = node;
+          }
+        }
+        desiredLookAt.set(focusedNode.pos.x, focusedNode.pos.y + 11.5, focusedNode.pos.z);
+      } else {
+        desiredLookAt.set(camState.targetX, camState.targetY, camState.targetZ);
+      }
       currentLookAt.lerp(desiredLookAt, isMobile ? 0.10 : 0.07);
 
       camera.position.set(
@@ -2868,6 +3059,28 @@ export default function Scene() {
         smoothCamPos.y + mouse.y * parallaxStrength + floatY,
         smoothCamPos.z
       );
+
+      // A soft, inactive-in-normal-travel guard keeps the post-portal camera
+      // outside shrine and platform envelopes if a future keyframe is tightened.
+      if (camState.z < -185) {
+        for (const node of eventNodes) {
+          safetyOffset.set(
+            camera.position.x - node.pos.x,
+            camera.position.y - (node.pos.y + 7.2),
+            camera.position.z - node.pos.z
+          );
+          const shrineDistance = safetyOffset.length();
+          if (shrineDistance < 11.5) {
+            safetyOffset.multiplyScalar(1 / Math.max(shrineDistance, 0.001));
+            safeCameraPosition.set(
+              node.pos.x + safetyOffset.x * 11.5,
+              node.pos.y + 7.2 + safetyOffset.y * 11.5,
+              node.pos.z + safetyOffset.z * 11.5
+            );
+            camera.position.lerp(safeCameraPosition, 0.18);
+          }
+        }
+      }
 
       if (camState.z > -185) {
         // Surface and dive sequence before entering stargate
@@ -2963,8 +3176,9 @@ export default function Scene() {
       cliffRockMat.dispose();
       stairStoneMat.dispose();
       cyanCrystalMat.dispose();
-      purpleCrystalMat.dispose();
-      amberCrystalMat.dispose();
+      mineralAccentMat.dispose();
+      causticMat.dispose();
+      lightShaftMat.dispose();
       for (const c of cliffMeshes) c.geometry.dispose();
       for (const b of bannerMeshes) {
         b.geometry.dispose();
