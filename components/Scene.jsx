@@ -37,9 +37,9 @@ const eventNodes = [
     venue: "MCA Lab 1",
     prize: "₹ 12,000",
     rules: ["Individual participation", "Languages allowed: C, C++, Java, Python", "Time-bound algorithmic problems"],
-    pos: { x: -42, y: -110, z: -300 },
-    bannerPos: { x: -26, y: -103, z: -295, rotY: 0.35 },
-    portalPos: { x: -50, y: -105, z: -308 },
+    pos: { x: -22, y: -110, z: -318 },
+    bannerPos: { x: -16, y: -103, z: -313, rotY: 0.35 },
+    portalPos: { x: -40, y: -105, z: -326 },
     minScroll: 42,
   },
   {
@@ -53,9 +53,9 @@ const eventNodes = [
     venue: "Web Lab 2",
     prize: "₹ 12,000",
     rules: ["Individual or teams of 2", "HTML5, CSS3, JavaScript allowed", "Live prototype evaluation"],
-    pos: { x: 42, y: -150, z: -400 },
-    bannerPos: { x: 26, y: -143, z: -395, rotY: -0.35 },
-    portalPos: { x: 50, y: -145, z: -408 },
+    pos: { x: 22, y: -150, z: -418 },
+    bannerPos: { x: 16, y: -143, z: -413, rotY: -0.35 },
+    portalPos: { x: 40, y: -145, z: -426 },
     minScroll: 48,
   },
   {
@@ -69,9 +69,9 @@ const eventNodes = [
     venue: "Main Auditorium",
     prize: "₹ 10,000",
     rules: ["Teams of 2 members", "Preliminary written round followed by live stage quiz"],
-    pos: { x: -42, y: -190, z: -500 },
-    bannerPos: { x: -26, y: -183, z: -495, rotY: 0.35 },
-    portalPos: { x: -50, y: -185, z: -508 },
+    pos: { x: -32, y: -190, z: -518 },
+    bannerPos: { x: -26, y: -183, z: -513, rotY: 0.35 },
+    portalPos: { x: -50, y: -185, z: -526 },
     minScroll: 54,
   },
   {
@@ -85,9 +85,9 @@ const eventNodes = [
     venue: "E-Sports Arena",
     prize: "₹ 20,000",
     rules: ["Squads of 4 members", "Time-bound physical & digital clues"],
-    pos: { x: 42, y: -230, z: -600 },
-    bannerPos: { x: 26, y: -223, z: -595, rotY: -0.35 },
-    portalPos: { x: 50, y: -225, z: -608 },
+    pos: { x: 32, y: -230, z: -618 },
+    bannerPos: { x: 26, y: -223, z: -613, rotY: -0.35 },
+    portalPos: { x: 50, y: -225, z: -626 },
     minScroll: 60,
   },
   {
@@ -101,9 +101,9 @@ const eventNodes = [
     venue: "Seminar Hall 1",
     prize: "₹ 10,000",
     rules: ["Open to all registered delegates", "Q&A session with keynote speakers"],
-    pos: { x: -42, y: -230, z: -700 },
-    bannerPos: { x: -42, y: -218, z: -695, rotY: 0 },
-    portalPos: { x: -50, y: -225, z: -708 },
+    pos: { x: -32, y: -230, z: -718 },
+    bannerPos: { x: -32, y: -218, z: -713, rotY: 0 },
+    portalPos: { x: -50, y: -225, z: -726 },
     minScroll: 66,
   },
   {
@@ -117,9 +117,9 @@ const eventNodes = [
     venue: "Open Arena",
     prize: "₹ 10,000",
     rules: ["Rules announced on spot", "Teams of 2 members"],
-    pos: { x: 42, y: -310, z: -800 },
-    bannerPos: { x: 26, y: -303, z: -795, rotY: -0.35 },
-    portalPos: { x: 50, y: -305, z: -808 },
+    pos: { x: 32, y: -310, z: -818 },
+    bannerPos: { x: 26, y: -303, z: -813, rotY: -0.35 },
+    portalPos: { x: 50, y: -305, z: -826 },
     minScroll: 72,
   },
   {
@@ -133,9 +133,9 @@ const eventNodes = [
     venue: "MCA Seminar Hall",
     prize: "₹ 15,000",
     rules: ["Individual participation", "Multiple stress rounds & mock press conference"],
-    pos: { x: -42, y: -310, z: -900 },
-    bannerPos: { x: -26, y: -303, z: -895, rotY: 0.35 },
-    portalPos: { x: -50, y: -305, z: -908 },
+    pos: { x: -32, y: -310, z: -918 },
+    bannerPos: { x: -26, y: -303, z: -913, rotY: 0.35 },
+    portalPos: { x: -50, y: -305, z: -926 },
     minScroll: 78,
   },
   {
@@ -149,9 +149,9 @@ const eventNodes = [
     venue: "Incubation Center",
     prize: "₹ 15,000",
     rules: ["Teams of up to 3 members", "5-minute pitch + 3-minute Q&A with judges"],
-    pos: { x: 42, y: -390, z: -1000 },
-    bannerPos: { x: 26, y: -383, z: -995, rotY: -0.35 },
-    portalPos: { x: 50, y: -385, z: -1008 },
+    pos: { x: 32, y: -390, z: -1018 },
+    bannerPos: { x: 26, y: -383, z: -1013, rotY: -0.35 },
+    portalPos: { x: 50, y: -385, z: -1026 },
     minScroll: 84,
   },
   {
@@ -165,9 +165,9 @@ const eventNodes = [
     venue: "Open Air Theater",
     prize: "₹ 18,000",
     rules: ["Group performance", "Time limit: 6 to 8 minutes", "Props permitted"],
-    pos: { x: -42, y: -430, z: -1100 },
-    bannerPos: { x: -26, y: -423, z: -1095, rotY: 0.35 },
-    portalPos: { x: -50, y: -425, z: -1108 },
+    pos: { x: -32, y: -430, z: -1118 },
+    bannerPos: { x: -26, y: -423, z: -1113, rotY: 0.35 },
+    portalPos: { x: -50, y: -425, z: -1126 },
     minScroll: 90,
   },
   {
@@ -181,9 +181,9 @@ const eventNodes = [
     venue: "Campus Grounds",
     prize: "₹ 12,000",
     rules: ["Individual participation", "Original unedited RAW & edited submission", "Theme provided on spot"],
-    pos: { x: 0, y: -470, z: -1200 },
-    bannerPos: { x: 16, y: -463, z: -1195, rotY: -0.2 },
-    portalPos: { x: -18, y: -465, z: -1208 },
+    pos: { x: 0, y: -470, z: -1218 },
+    bannerPos: { x: 16, y: -463, z: -1213, rotY: -0.2 },
+    portalPos: { x: -18, y: -465, z: -1226 },
     minScroll: 96,
   },
 ];
@@ -1312,23 +1312,30 @@ export default function Scene() {
       const bVec = new THREE.Vector3();
 
       // 2. Main Terraced Low-Poly Faceted Rock Formation (Centered at eventGroup origin)
-      const rockHeight = node.id === "event-5" ? 16 : (node.id === "event-7" ? 28 : 20);
-      const lowerRockGeo = new THREE.CylinderGeometry(18 * altarScale, 24 * altarScale, rockHeight, 12, 3);
+      const isEvent1 = node.id === "event-1";
+      const rockHeight = isEvent1 ? 120 : (node.id === "event-5" ? 16 : (node.id === "event-7" ? 28 : 20));
+      const rockBotRad = isEvent1 ? 34 * altarScale : 24 * altarScale;
+      const lowerRockGeo = new THREE.CylinderGeometry(18 * altarScale, rockBotRad, rockHeight, 12, isEvent1 ? 12 : 4);
       const lrPos = lowerRockGeo.attributes.position;
       for (let i = 0; i < lrPos.count; i++) {
         bVec.fromBufferAttribute(lowerRockGeo.attributes.position, i);
-        const facetNoise = Math.sin(bVec.y * 0.16 + bVec.x * 0.22) * 3.2 + Math.cos(bVec.z * 0.25) * 2.5;
+        const angle = Math.atan2(bVec.z, bVec.x);
         const rad = Math.sqrt(bVec.x * bVec.x + bVec.z * bVec.z);
         if (rad > 0.1) {
-          bVec.x += (bVec.x / rad) * facetNoise;
-          bVec.z += (bVec.z / rad) * facetNoise;
+          // Asymmetric angular noise + sedimentary strata layering for realistic underwater cliff faces & rock ledges
+          const ridgeNoise = Math.sin(angle * 3.0) * 8.5 + Math.cos(angle * 5.0 + bVec.y * 0.08) * 5.5;
+          const strataTerracing = isEvent1 ? Math.floor(bVec.y / 14.0) * 2.2 + Math.sin(bVec.y * 0.18) * 3.0 : 0;
+          const heightNoise = Math.sin(bVec.y * 0.12 + angle * 2.0) * 4.5 + strataTerracing;
+          const totalDisplacement = ridgeNoise + heightNoise;
+          bVec.x += (bVec.x / rad) * totalDisplacement;
+          bVec.z += (bVec.z / rad) * totalDisplacement;
         }
         lrPos.setXYZ(i, bVec.x, bVec.y, bVec.z);
       }
       lowerRockGeo.computeVertexNormals();
 
       const lowerRockMesh = new THREE.Mesh(lowerRockGeo, cliffRockMat);
-      lowerRockMesh.position.set(0, -8, 0);
+      lowerRockMesh.position.set(0, isEvent1 ? -58 : -8, 0);
       eventGroup.add(lowerRockMesh);
       cliffMeshes.push(lowerRockMesh);
 
@@ -1516,7 +1523,8 @@ export default function Scene() {
 
       // 8. Futuristic Holographic Event Title Plaque (Centered directly over crystal shrine)
       const bannerGroup = new THREE.Group();
-      bannerGroup.position.set(x, y + 14.0, z);
+      const isEv1 = node.id === "event-1";
+      bannerGroup.position.set(x, isEv1 ? y + 16.5 : y + 14.0, isEv1 ? z - 1.2 : z);
       bannerGroup.rotation.y = 0;
 
       const bannerTexture = createEventBannerTexture(node);
@@ -1539,10 +1547,9 @@ export default function Scene() {
       bannerGroup.add(bannerMesh);
       bannerMeshes.push(bannerMesh);
 
-
-
       // Glowing Vertical Energy Tether Beam connecting plaque base to crystal shrine
-      const tetherGeo = new THREE.CylinderGeometry(0.04, 0.04, 5.2, 8);
+      const tetherHeight = isEv1 ? 6.8 : 5.2;
+      const tetherGeo = new THREE.CylinderGeometry(0.04, 0.04, tetherHeight, 8);
       const tetherMat = new THREE.MeshStandardMaterial({
         color: 0x00f0ff,
         emissive: 0x00f0ff,
@@ -1551,19 +1558,19 @@ export default function Scene() {
         opacity: 0.65,
       });
       const tetherMesh = new THREE.Mesh(tetherGeo, tetherMat);
-      tetherMesh.position.set(0, -5.5, 0);
+      tetherMesh.position.set(0, isEv1 ? -6.2 : -5.5, 0);
       bannerGroup.add(tetherMesh);
 
       // Top Floating Holographic Diamond Marker above plaque
       const topDiamondGeo = new THREE.OctahedronGeometry(0.42, 0);
       const topDiamondMesh = new THREE.Mesh(topDiamondGeo, cyanCrystalMat);
-      topDiamondMesh.position.set(0, 4.2, 0);
+      topDiamondMesh.position.set(0, 4.4, 0);
       bannerGroup.add(topDiamondMesh);
 
       // Bottom Floating Holographic Diamond Marker under tether beam
       const botDiamondGeo = new THREE.OctahedronGeometry(0.35, 0);
       const botDiamondMesh = new THREE.Mesh(botDiamondGeo, cyanCrystalMat);
-      botDiamondMesh.position.set(0, -8.2, 0);
+      botDiamondMesh.position.set(0, isEv1 ? -9.4 : -8.2, 0);
       bannerGroup.add(botDiamondMesh);
 
       const posterLight = new THREE.PointLight(0x00f0ff, 3.5, 30);
@@ -2017,12 +2024,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -42,
+        x: -32,
         y: -101,
-        z: -245,
-        targetX: -42,
+        z: -251,
+        targetX: -32,
         targetY: -103,
-        targetZ: -300,
+        targetZ: -308,
         fov: 62,
         fogDensity: 0.015,
         duration: 1.2,
@@ -2033,12 +2040,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -42,
+        x: -32,
         y: -101,
-        z: -262,
-        targetX: -42,
+        z: -270,
+        targetX: -32,
         targetY: -103,
-        targetZ: -300,
+        targetZ: -308,
         fov: 50,
         duration: 1.0,
         ease: "power1.inOut",
@@ -2048,12 +2055,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -42,
+        x: -32,
         y: -100,
-        z: -275,
-        targetX: -42,
+        z: -283,
+        targetX: -32,
         targetY: -103,
-        targetZ: -300,
+        targetZ: -308,
         fov: 52,
         duration: 0.6,
         ease: "sine.inOut",
@@ -2066,9 +2073,9 @@ export default function Scene() {
         x: 20,
         y: -120,
         z: -325,
-        targetX: -42,
+        targetX: -32,
         targetY: -103,
-        targetZ: -300,
+        targetZ: -308,
         fov: 64,
         fogDensity: 0.016,
         duration: 0.8,
@@ -2083,10 +2090,10 @@ export default function Scene() {
       {
         x: 35,
         y: -130,
-        z: -320,
-        targetX: 34,
-        targetY: -146,
-        targetZ: -400,
+        z: -328,
+        targetX: 32,
+        targetY: -143,
+        targetZ: -408,
         fov: 70,
         fogDensity: 0.017,
         duration: 1.2,
@@ -2097,12 +2104,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 55,
+        x: 45,
         y: -140,
-        z: -360,
-        targetX: 42,
-        targetY: -136,
-        targetZ: -400,
+        z: -368,
+        targetX: 32,
+        targetY: -143,
+        targetZ: -408,
         fov: 62,
         duration: 1.0,
         ease: "power1.inOut",
@@ -2112,12 +2119,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 42,
+        x: 32,
         y: -136,
-        z: -368,
-        targetX: 42,
-        targetY: -136,
-        targetZ: -400,
+        z: -370,
+        targetX: 32,
+        targetY: -143,
+        targetZ: -408,
         fov: 50,
         duration: 0.6,
         ease: "sine.inOut",
@@ -2129,10 +2136,10 @@ export default function Scene() {
       {
         x: -20,
         y: -160,
-        z: -425,
-        targetX: 42,
-        targetY: -136,
-        targetZ: -400,
+        z: -433,
+        targetX: 32,
+        targetY: -143,
+        targetZ: -408,
         fov: 66,
         fogDensity: 0.018,
         duration: 0.8,
@@ -2147,10 +2154,10 @@ export default function Scene() {
       {
         x: -15,
         y: -160,
-        z: -430,
-        targetX: -34,
-        targetY: -186,
-        targetZ: -500,
+        z: -438,
+        targetX: -32,
+        targetY: -183,
+        targetZ: -508,
         fov: 72,
         fogDensity: 0.019,
         duration: 1.2,
@@ -2161,12 +2168,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -42,
+        x: -32,
         y: -176,
-        z: -468,
-        targetX: -42,
-        targetY: -176,
-        targetZ: -500,
+        z: -470,
+        targetX: -32,
+        targetY: -183,
+        targetZ: -508,
         fov: 52,
         duration: 1.0,
         ease: "power1.inOut",
@@ -2176,12 +2183,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -38,
+        x: -32,
         y: -174,
-        z: -482,
-        targetX: -42,
-        targetY: -176,
-        targetZ: -500,
+        z: -484,
+        targetX: -32,
+        targetY: -183,
+        targetZ: -508,
         fov: 54,
         duration: 0.6,
         ease: "sine.inOut",
@@ -2193,10 +2200,10 @@ export default function Scene() {
       {
         x: 22,
         y: -200,
-        z: -525,
-        targetX: -42,
-        targetY: -176,
-        targetZ: -500,
+        z: -533,
+        targetX: -32,
+        targetY: -183,
+        targetZ: -508,
         fov: 64,
         fogDensity: 0.020,
         duration: 0.8,
@@ -2211,10 +2218,10 @@ export default function Scene() {
       {
         x: 18,
         y: -200,
-        z: -520,
-        targetX: 34,
-        targetY: -226,
-        targetZ: -600,
+        z: -528,
+        targetX: 32,
+        targetY: -223,
+        targetZ: -608,
         fov: 72,
         fogDensity: 0.021,
         duration: 1.2,
@@ -2225,12 +2232,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 50,
+        x: 42,
         y: -218,
-        z: -560,
-        targetX: 42,
-        targetY: -216,
-        targetZ: -600,
+        z: -568,
+        targetX: 32,
+        targetY: -223,
+        targetZ: -608,
         fov: 60,
         duration: 1.0,
         ease: "power1.inOut",
@@ -2240,12 +2247,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 42,
+        x: 32,
         y: -216,
-        z: -568,
-        targetX: 42,
-        targetY: -216,
-        targetZ: -600,
+        z: -570,
+        targetX: 32,
+        targetY: -223,
+        targetZ: -608,
         fov: 48,
         duration: 0.6,
         ease: "sine.inOut",
@@ -2257,10 +2264,10 @@ export default function Scene() {
       {
         x: -25,
         y: -216,
-        z: -625,
-        targetX: 42,
-        targetY: -216,
-        targetZ: -600,
+        z: -633,
+        targetX: 32,
+        targetY: -223,
+        targetZ: -608,
         fov: 70,
         fogDensity: 0.0215,
         duration: 0.8,
@@ -2275,10 +2282,10 @@ export default function Scene() {
       {
         x: -15,
         y: -210,
-        z: -620,
-        targetX: -42,
-        targetY: -222,
-        targetZ: -700,
+        z: -628,
+        targetX: -32,
+        targetY: -223,
+        targetZ: -708,
         fov: 64,
         fogDensity: 0.022,
         duration: 1.2,
@@ -2291,10 +2298,10 @@ export default function Scene() {
       {
         x: -30,
         y: -222,
-        z: -645,
-        targetX: -42,
-        targetY: -220,
-        targetZ: -700,
+        z: -653,
+        targetX: -32,
+        targetY: -223,
+        targetZ: -708,
         fov: 58,
         duration: 1.0,
         ease: "power1.inOut",
@@ -2304,12 +2311,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -42,
+        x: -32,
         y: -220,
-        z: -665,
-        targetX: -42,
-        targetY: -220,
-        targetZ: -700,
+        z: -670,
+        targetX: -32,
+        targetY: -223,
+        targetZ: -708,
         fov: 48,
         duration: 0.6,
         ease: "sine.inOut",
@@ -2321,10 +2328,10 @@ export default function Scene() {
       {
         x: 20,
         y: -260,
-        z: -730,
-        targetX: -42,
-        targetY: -220,
-        targetZ: -700,
+        z: -738,
+        targetX: -32,
+        targetY: -223,
+        targetZ: -708,
         fov: 62,
         fogDensity: 0.023,
         duration: 0.8,
@@ -2339,10 +2346,10 @@ export default function Scene() {
       {
         x: 10,
         y: -280,
-        z: -730,
-        targetX: 34,
-        targetY: -306,
-        targetZ: -800,
+        z: -738,
+        targetX: 32,
+        targetY: -303,
+        targetZ: -808,
         fov: 64,
         fogDensity: 0.024,
         duration: 1.2,
@@ -2355,10 +2362,10 @@ export default function Scene() {
       {
         x: 28,
         y: -305,
-        z: -755,
-        targetX: 42,
-        targetY: -296,
-        targetZ: -800,
+        z: -763,
+        targetX: 32,
+        targetY: -303,
+        targetZ: -808,
         fov: 68,
         duration: 1.0,
         ease: "power2.inOut",
@@ -2368,12 +2375,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 42,
+        x: 32,
         y: -296,
-        z: -768,
-        targetX: 42,
-        targetY: -296,
-        targetZ: -800,
+        z: -770,
+        targetX: 32,
+        targetY: -303,
+        targetZ: -808,
         fov: 50,
         duration: 0.6,
         ease: "sine.inOut",
@@ -2385,10 +2392,10 @@ export default function Scene() {
       {
         x: -22,
         y: -300,
-        z: -825,
-        targetX: 42,
-        targetY: -296,
-        targetZ: -800,
+        z: -833,
+        targetX: 32,
+        targetY: -303,
+        targetZ: -808,
         fov: 66,
         fogDensity: 0.0245,
         duration: 0.8,
@@ -2403,10 +2410,10 @@ export default function Scene() {
       {
         x: -15,
         y: -325,
-        z: -830,
-        targetX: -34,
-        targetY: -306,
-        targetZ: -900,
+        z: -838,
+        targetX: -32,
+        targetY: -303,
+        targetZ: -908,
         fov: 62,
         fogDensity: 0.025,
         duration: 1.2,
@@ -2419,10 +2426,10 @@ export default function Scene() {
       {
         x: -30,
         y: -290,
-        z: -855,
-        targetX: -42,
-        targetY: -296,
-        targetZ: -900,
+        z: -863,
+        targetX: -32,
+        targetY: -303,
+        targetZ: -908,
         fov: 56,
         duration: 1.0,
         ease: "power2.inOut",
@@ -2432,12 +2439,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -42,
+        x: -32,
         y: -296,
-        z: -868,
-        targetX: -42,
-        targetY: -296,
-        targetZ: -900,
+        z: -870,
+        targetX: -32,
+        targetY: -303,
+        targetZ: -908,
         fov: 50,
         duration: 0.6,
         ease: "sine.inOut",
@@ -2449,10 +2456,10 @@ export default function Scene() {
       {
         x: 22,
         y: -340,
-        z: -925,
-        targetX: -42,
-        targetY: -296,
-        targetZ: -900,
+        z: -933,
+        targetX: -32,
+        targetY: -303,
+        targetZ: -908,
         fov: 64,
         fogDensity: 0.0255,
         duration: 0.8,
@@ -2467,10 +2474,10 @@ export default function Scene() {
       {
         x: 15,
         y: -350,
-        z: -925,
-        targetX: 34,
-        targetY: -386,
-        targetZ: -1000,
+        z: -933,
+        targetX: 32,
+        targetY: -383,
+        targetZ: -1008,
         fov: 68,
         fogDensity: 0.026,
         duration: 1.2,
@@ -2483,10 +2490,10 @@ export default function Scene() {
       {
         x: 28,
         y: -370,
-        z: -950,
-        targetX: 42,
-        targetY: -376,
-        targetZ: -1000,
+        z: -958,
+        targetX: 32,
+        targetY: -383,
+        targetZ: -1008,
         fov: 72,
         duration: 1.0,
         ease: "power2.inOut",
@@ -2496,12 +2503,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 42,
+        x: 32,
         y: -376,
-        z: -968,
-        targetX: 42,
-        targetY: -376,
-        targetZ: -1000,
+        z: -970,
+        targetX: 32,
+        targetY: -383,
+        targetZ: -1008,
         fov: 50,
         duration: 0.6,
         ease: "sine.inOut",
@@ -2513,10 +2520,10 @@ export default function Scene() {
       {
         x: -22,
         y: -400,
-        z: -1025,
-        targetX: 42,
-        targetY: -376,
-        targetZ: -1000,
+        z: -1033,
+        targetX: 32,
+        targetY: -383,
+        targetZ: -1008,
         fov: 68,
         fogDensity: 0.0265,
         duration: 0.8,
@@ -2531,10 +2538,10 @@ export default function Scene() {
       {
         x: -20,
         y: -410,
-        z: -1030,
-        targetX: -34,
-        targetY: -426,
-        targetZ: -1100,
+        z: -1038,
+        targetX: -32,
+        targetY: -423,
+        targetZ: -1108,
         fov: 64,
         fogDensity: 0.027,
         duration: 1.2,
@@ -2545,12 +2552,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -42,
+        x: -32,
         y: -416,
-        z: -1068,
-        targetX: -42,
-        targetY: -416,
-        targetZ: -1100,
+        z: -1070,
+        targetX: -32,
+        targetY: -423,
+        targetZ: -1108,
         fov: 52,
         duration: 1.0,
         ease: "power1.inOut",
@@ -2560,12 +2567,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -54,
+        x: -42,
         y: -418,
-        z: -1095,
-        targetX: -42,
-        targetY: -416,
-        targetZ: -1100,
+        z: -1103,
+        targetX: -32,
+        targetY: -423,
+        targetZ: -1108,
         fov: 54,
         duration: 0.6,
         ease: "sine.inOut",
@@ -2577,10 +2584,10 @@ export default function Scene() {
       {
         x: 15,
         y: -445,
-        z: -1125,
-        targetX: -42,
-        targetY: -416,
-        targetZ: -1100,
+        z: -1133,
+        targetX: -32,
+        targetY: -423,
+        targetZ: -1108,
         fov: 62,
         fogDensity: 0.0275,
         duration: 0.8,
@@ -2595,10 +2602,10 @@ export default function Scene() {
       {
         x: 0,
         y: -462,
-        z: -1135,
+        z: -1143,
         targetX: 0,
-        targetY: -466,
-        targetZ: -1200,
+        targetY: -463,
+        targetZ: -1208,
         fov: 64,
         fogDensity: 0.028,
         duration: 1.2,
@@ -2611,10 +2618,10 @@ export default function Scene() {
       {
         x: 0,
         y: -456,
-        z: -1168,
+        z: -1170,
         targetX: 0,
-        targetY: -456,
-        targetZ: -1200,
+        targetY: -463,
+        targetZ: -1208,
         fov: 50,
         duration: 1.0,
         ease: "power1.inOut",
@@ -2626,10 +2633,10 @@ export default function Scene() {
       {
         x: 0,
         y: -456,
-        z: -1168,
+        z: -1170,
         targetX: 0,
-        targetY: -456,
-        targetZ: -1200,
+        targetY: -463,
+        targetZ: -1208,
         fov: 48,
         duration: 0.8,
         ease: "sine.out",
