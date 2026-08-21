@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '168801764074-kcn9c9to0daenc3o5pn9nfutgho8pcin.apps.googleusercontent.com';
@@ -23,6 +23,7 @@ export default function UserRegisterPage() {
   const [scriptReady, setScriptReady] = useState(false);
   const gisBtnRef = useRef(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const finalCollegeName = isCustom ? customCollege.trim() : collegeName;
 
@@ -43,7 +44,9 @@ export default function UserRegisterPage() {
       if (!response.ok) throw new Error(data.message || 'Authentication failed');
 
       if (data.token) localStorage.setItem('token', data.token);
-      router.push('/user/account');
+      
+      const redirectUrl = searchParams.get('redirect');
+      router.push(redirectUrl ? decodeURIComponent(redirectUrl) : '/');
     } catch (err) {
       setError(err.message);
     } finally {

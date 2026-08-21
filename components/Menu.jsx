@@ -21,6 +21,7 @@ import {
   CircleDollarSign,
   Contact,
   Code,
+  Calendar,
   Menu as MenuIcon
 } from "lucide-react"
 
@@ -30,6 +31,7 @@ const menuItems = [
   { label: 'Brochure', icon: BookOpen, href: '#' },
   { label: 'Developers', icon: Code, href: '/developer' },
   { label: 'Contact', icon: Contact, href: '#infos' },
+  { label: 'Events', icon: Calendar, href: '/events/register' },
   { label: 'Profile', icon: User, href: '/user/account' },
 ]
 
