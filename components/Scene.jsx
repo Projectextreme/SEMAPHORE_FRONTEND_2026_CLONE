@@ -23,6 +23,157 @@ import {
   waterCausticsFragment,
 } from "../src/Shaders/index";
 
+const dolphinVertexShader = `
+  varying vec2 vUv;
+  varying vec3 vNormal;
+  varying vec3 vPosition;
+
+  #include <skinning_pars_vertex>
+
+  void main() {
+    #include <skinbase_vertex>
+    #include <begin_vertex>
+    #include <skinning_vertex>
+    #include <project_vertex>
+
+    vec4 modelPosition = modelMatrix * vec4(transformed, 1.0);
+    vec4 viewPosition = viewMatrix * modelPosition;
+    vec4 projectedPosition = projectionMatrix * viewPosition;
+
+    gl_Position = projectedPosition;
+
+    vUv = uv;
+    vec4 modelNormal = modelMatrix * vec4(normal, 0.0);
+    vNormal = modelNormal.xyz;
+    vPosition = modelPosition.xyz;
+  }
+`;
+
+const dolphinFragmentShader = `
+  uniform float uTime;
+  uniform vec3 uBaseColor;
+  uniform float uVelocity;
+
+  varying vec2 vUv;
+  varying vec3 vNormal;
+  varying vec3 vPosition;
+
+  void main() {
+    vec3 normal = normalize(vNormal);
+    if (!gl_FrontFacing) {
+      normal *= -1.0;
+    }
+
+    vec3 viewDirection = normalize(vPosition - cameraPosition);
+    float fresnel = dot(viewDirection, normal) + 1.0;
+    fresnel = pow(fresnel, 2.5);
+
+    vec3 deepBlue = vec3(0.008, 0.045, 0.10);
+    vec3 glowColor = uBaseColor * (1.35 + uVelocity * 1.5);
+    vec3 color = mix(deepBlue, glowColor, 0.18 + fresnel * 0.82);
+    gl_FragColor = vec4(color, 0.28 + fresnel * 0.72);
+  }
+`;
+
+const dolphinSparkleVertexShader = `
+  uniform float uTime;
+  uniform float uSize;
+  uniform float uPixelRatio;
+  uniform float uVelocity;
+
+  attribute float aRandom;
+  attribute float aSize;
+
+  varying float vRandom;
+
+  void main() {
+    vec4 modelPosition = modelMatrix * vec4(position, 1.0);
+    vec4 viewPosition = viewMatrix * modelPosition;
+    vec4 projectedPosition = projectionMatrix * viewPosition;
+
+    gl_Position = projectedPosition;
+
+    float sizeVariation = aSize * (0.5 + 0.5 * sin(uTime * 2.0 + aRandom * 6.28));
+    sizeVariation *= (1.0 + uVelocity * 0.45);
+    
+    gl_PointSize = uSize * sizeVariation * uPixelRatio;
+    gl_PointSize *= (2.0 / -viewPosition.z);
+    gl_PointSize = max(gl_PointSize, 2.0);
+
+    vRandom = aRandom;
+  }
+`;
+
+const dolphinSparkleFragmentShader = `
+  uniform float uTime;
+  uniform vec3 uColor1;
+  uniform vec3 uColor2;
+  uniform float uVelocity;
+
+  varying float vRandom;
+
+  void main() {
+    float distanceToCenter = length(gl_PointCoord - vec2(0.5));
+
+    float strength = 0.05 / distanceToCenter - 0.1;
+    strength = clamp(strength, 0.0, 1.0);
+
+    float colorMix = sin(vRandom * 6.28 + uTime) * 0.5 + 0.5;
+    vec3 color = mix(uColor1, uColor2, colorMix);
+
+    float twinkle = sin(uTime * 3.0 + vRandom * 20.0) * 0.3 + 0.7;
+    twinkle *= (1.0 + uVelocity * 0.5);
+
+    gl_FragColor = vec4(color, strength * twinkle * (0.6 + uVelocity * 0.8));
+  }
+`;
+
+const shimmerVertex = `
+  attribute float aSize;
+  attribute float aPhase;
+  attribute float aSpeed;
+  uniform float uTime;
+  varying float vTwinkle;
+
+  void main() {
+    vec3 pos = position;
+
+    // Gentle upward drift + slow horizontal sway
+    pos.y += mod(uTime * aSpeed * 0.6 + aPhase * 10.0, 60.0);
+    pos.x += sin(uTime * 0.3 + aPhase * 6.28) * 1.2;
+    pos.z += cos(uTime * 0.25 + aPhase * 6.28) * 1.2;
+
+    // Twinkle intensity: fast sparkle flicker layered on a slow shimmer wave
+    float sparkle = sin(uTime * (3.0 + aPhase * 4.0) + aPhase * 50.0) * 0.5 + 0.5;
+    float shimmer = sin(uTime * 0.8 + aPhase * 12.0) * 0.5 + 0.5;
+    vTwinkle = pow(sparkle, 3.0) * 0.7 + shimmer * 0.3;
+
+    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+    gl_PointSize = aSize * (300.0 / -mvPosition.z) * (0.4 + vTwinkle * 1.1);
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`;
+
+const shimmerFragment = `
+  uniform vec3 uColor;
+  varying float vTwinkle;
+
+  void main() {
+    vec2 center = gl_PointCoord - vec2(0.5);
+    float dist = length(center);
+
+    // Crisp bright core + soft glow falloff = "shine" rather than flat dot
+    float core = smoothstep(0.06, 0.0, dist);
+    float glow = smoothstep(0.5, 0.0, dist);
+    float alpha = (core * 1.0 + glow * 0.35) * (0.25 + vTwinkle * 0.9);
+
+    if (alpha < 0.02) discard;
+
+    vec3 finalColor = mix(uColor, vec3(1.0), core * vTwinkle);
+    gl_FragColor = vec4(finalColor, alpha);
+  }
+`;
+
 gsap.registerPlugin(ScrollTrigger);
 
 const eventNodes = [
@@ -405,6 +556,8 @@ function createEventBannerTexture(node) {
   return texture;
 }
 
+
+
 export default function Scene() {
   const containerRef = useRef(null);
   const wrapperRef = useRef(null);
@@ -686,28 +839,28 @@ export default function Scene() {
     }
 
     // --- DEEP UNDERGROUND OCEAN LIGHTING ---
-    const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    const sunLight = new THREE.DirectionalLight(0xffffff, 2.8);
     sunLight.position.set(0, 10, 5);
     scene.add(sunLight);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
     scene.add(ambientLight);
 
-    const tealUnderwaterLight = new THREE.DirectionalLight(0x00d5e8, 3.5);
+    const tealUnderwaterLight = new THREE.DirectionalLight(0x00a8e8, 5.5);
     tealUnderwaterLight.position.set(0, 50, -100);
     scene.add(tealUnderwaterLight);
 
     // Glowing Portal Backlight (Positioned deep underwater at y: -110, z: -192)
-    const portalBackLight = new THREE.PointLight(0x00f0ff, 8.0, 200);
+    const portalBackLight = new THREE.PointLight(0x00f0ff, 10.0, 200);
     portalBackLight.position.set(0, -110, -192);
     scene.add(portalBackLight);
 
     // Dedicated Left & Right Side Cliff Accent Lights for High Visibility
-    const leftSideLight = new THREE.PointLight(0x00d5e8, 6.0, 160);
+    const leftSideLight = new THREE.PointLight(0x00a8e8, 8.5, 180);
     leftSideLight.position.set(-50, -90, -170);
     scene.add(leftSideLight);
 
-    const rightSideLight = new THREE.PointLight(0x00d5e8, 6.0, 160);
+    const rightSideLight = new THREE.PointLight(0x00a8e8, 8.5, 180);
     rightSideLight.position.set(50, -90, -170);
     scene.add(rightSideLight);
 
@@ -716,9 +869,9 @@ export default function Scene() {
     sideCliffGroup.visible = false;
 
     const cliffWallMat = new THREE.MeshStandardMaterial({
-      color: 0x0d4361,
-      emissive: 0x021927,
-      emissiveIntensity: 0.5,
+      color: 0x051d2c,
+      emissive: 0x010b14,
+      emissiveIntensity: 0.2,
       roughness: 0.75,
       metalness: 0.25,
       flatShading: true,
@@ -794,7 +947,7 @@ export default function Scene() {
     caveGeometry.computeVertexNormals();
 
     const caveMaterial = new THREE.MeshStandardMaterial({
-      color: 0x021627,
+      color: 0x031420,
       roughness: 0.85,
       metalness: 0.15,
       side: THREE.BackSide,
@@ -810,7 +963,7 @@ export default function Scene() {
     bgMountainsGroup.visible = false;
 
     const mountainMaterial = new THREE.MeshStandardMaterial({
-      color: 0x011322,
+      color: 0x031420,
       roughness: 0.9,
       metalness: 0.1,
       flatShading: true,
@@ -850,7 +1003,7 @@ export default function Scene() {
 
     // --- CENTRAL ANCIENT CIRCULAR PORTAL RING (MAIN ENTRANCE STARGATE AT y: -110, z: -160) ---
     const ruinStoneMat = new THREE.MeshStandardMaterial({
-      color: 0x0b2d42,
+      color: 0x07283c,
       roughness: 0.4,
       metalness: 0.6,
       flatShading: true,
@@ -868,7 +1021,9 @@ export default function Scene() {
     portalGroup.position.set(0, -110, -190);
 
     const archRockMat = new THREE.MeshStandardMaterial({
-      color: 0x06283d,
+      color: 0x051d2c,
+      emissive: 0x010b14,
+      emissiveIntensity: 0.15,
       roughness: 0.85,
       metalness: 0.15,
       flatShading: true,
@@ -1108,7 +1263,7 @@ export default function Scene() {
     // Occlusion Backdrop Disc inside Portal Ring (Blocks background rock geometry shadows from showing inside portal circle)
     const portalBackdropGeo = new THREE.CircleGeometry(11.7, 48);
     const portalBackdropMat = new THREE.MeshBasicMaterial({
-      color: 0x031e30,
+      color: 0x0e5a8a,
       side: THREE.DoubleSide,
     });
     const portalBackdropMesh = new THREE.Mesh(portalBackdropGeo, portalBackdropMat);
@@ -1193,6 +1348,123 @@ export default function Scene() {
 
     scene.add(portalGroup);
 
+    let dolphinMixer = null;
+    let dolphinMesh = null;
+    let dolphinSparkles = null;
+    let dolphinLines = null;
+    let dolphinSparkleData = [];
+    let dolphinPositionsPool = [];
+    let dolphinSparklesGeo = null;
+    let dolphinSparklesMat = null;
+    let dolphinLinesGeo = null;
+    let dolphinLinesMat = null;
+    let dolphinLinePositions = null;
+    let dolphinLineColors = null;
+
+    const dolphinMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x102232,
+      emissive: 0x020a12,
+      emissiveIntensity: 0.2,
+      roughness: 0.22,
+      metalness: 0.15,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.08,
+      ior: 1.33,
+    });
+
+    let GLTFLoaderClass = null;
+    let DRACOLoaderClass = null;
+    try {
+      GLTFLoaderClass = require("three/examples/jsm/loaders/GLTFLoader.js").GLTFLoader;
+      DRACOLoaderClass = require("three/examples/jsm/loaders/DRACOLoader.js").DRACOLoader;
+    } catch (e) {
+      try {
+        GLTFLoaderClass = require("three/addons/loaders/GLTFLoader.js").GLTFLoader;
+        DRACOLoaderClass = require("three/addons/loaders/DRACOLoader.js").DRACOLoader;
+      } catch (err) {}
+    }
+
+    let cloneSkeleton = null;
+    try {
+      const skMod = require("three/examples/jsm/utils/SkeletonUtils.js");
+      cloneSkeleton = skMod.clone || (skMod.SkeletonUtils && skMod.SkeletonUtils.clone);
+    } catch (e) {
+      try {
+        const skMod = require("three/addons/utils/SkeletonUtils.js");
+        cloneSkeleton = skMod.clone || (skMod.SkeletonUtils && skMod.SkeletonUtils.clone);
+      } catch (err) {}
+    }
+
+    const allDolphins = [];
+
+    function setupDolphinInstance(parentGroup, gltf, scale = 1.8, phaseOffset = 0, isPortal = false) {
+      const dGroup = new THREE.Group();
+      parentGroup.add(dGroup);
+
+      let dModel;
+      if (cloneSkeleton) {
+        dModel = cloneSkeleton(gltf.scene);
+      } else {
+        dModel = gltf.scene.clone(true);
+      }
+      dModel.scale.setScalar(scale);
+      dGroup.add(dModel);
+
+      let dMesh = null;
+      dModel.traverse((child) => {
+        if (child.isMesh) {
+          const origMat = child.material;
+          const origMap = origMat ? origMat.map : null;
+          child.material = new THREE.MeshPhysicalMaterial({
+            color: origMap ? 0x999999 : 0x102232,
+            map: origMap,
+            emissive: 0x020d18,
+            emissiveIntensity: 0.2,
+            roughness: 0.22,
+            metalness: 0.15,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.08,
+          });
+        }
+        if (child.isSkinnedMesh) {
+          dMesh = child;
+        }
+      });
+
+      let dMixer = null;
+      if (gltf.animations && gltf.animations.length > 0) {
+        dMixer = new THREE.AnimationMixer(dModel);
+        const action = dMixer.clipAction(gltf.animations[0]);
+        action.time = phaseOffset * 2.5;
+        action.play();
+      }
+
+      const dolphinObj = {
+        group: dGroup,
+        mesh: dMesh,
+        mixer: dMixer,
+        phaseOffset,
+        isPortal,
+      };
+      allDolphins.push(dolphinObj);
+      return dolphinObj;
+    }
+
+    if (GLTFLoaderClass) {
+      const gltfLoader = new GLTFLoaderClass(manager);
+      if (DRACOLoaderClass) {
+        const dracoLoader = new DRACOLoaderClass();
+        dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
+        gltfLoader.setDRACOLoader(dracoLoader);
+      }
+      gltfLoader.load("/assets/models/dolphin_anim.glb", (gltf) => {
+        // 3D Animated Dolphin Pod swimming in open ocean canyon between Event 2 (Web Design) and Event 3 (IT Quiz)
+        setupDolphinInstance(newWorldGroup, gltf, 4.5, 0.0, false);
+        setupDolphinInstance(newWorldGroup, gltf, 3.8, 0.33, false);
+        setupDolphinInstance(newWorldGroup, gltf, 3.2, 0.66, false);
+      });
+    }
+
     // --- FLOW FIELD WATER PARTICLES ---
     const flowFieldCount = isMobile ? 1800 : 4200;
     const flowFieldPositions = new Float32Array(flowFieldCount * 3);
@@ -1245,18 +1517,18 @@ export default function Scene() {
     scene.add(newWorldGroup);
 
     const cliffRockMat = new THREE.MeshStandardMaterial({
-      color: 0x061d32,
-      emissive: 0x001425,
-      emissiveIntensity: 0.18,
+      color: 0x051d2c,
+      emissive: 0x010b14,
+      emissiveIntensity: 0.15,
       roughness: 0.74,
       metalness: 0.24,
       flatShading: true,
     });
 
     const stairStoneMat = new THREE.MeshStandardMaterial({
-      color: 0x0a3048,
-      emissive: 0x00101c,
-      emissiveIntensity: 0.12,
+      color: 0x041926,
+      emissive: 0x010b14,
+      emissiveIntensity: 0.1,
       roughness: 0.7,
       metalness: 0.28,
       flatShading: true,
@@ -1264,7 +1536,7 @@ export default function Scene() {
 
     // Multi-tone glowing crystal materials (cyan, purple/pink, warm amber) matching reference image
     const cyanCrystalMat = new THREE.MeshStandardMaterial({
-      color: 0x022538,
+      color: 0x003b64,
       emissive: 0x00f0ff,
       emissiveIntensity: 2.2,
       roughness: 0.15,
@@ -1802,6 +2074,44 @@ export default function Scene() {
     bubblePoints.frustumCulled = false;
     scene.add(bubblePoints);
 
+    // --- SHINING WATER PARTICLES (twinkling light-catching motes) ---
+    const shimmerCount = isMobile ? 900 : 2200;
+    const shimmerGeo = new THREE.BufferGeometry();
+    const shimmerPositions = new Float32Array(shimmerCount * 3);
+    const shimmerSizes = new Float32Array(shimmerCount);
+    const shimmerPhases = new Float32Array(shimmerCount);
+    const shimmerSpeeds = new Float32Array(shimmerCount);
+
+    for (let i = 0; i < shimmerCount; i++) {
+      shimmerPositions[i * 3] = (Math.random() - 0.5) * 420;
+      shimmerPositions[i * 3 + 1] = -520 + Math.random() * 560;
+      shimmerPositions[i * 3 + 2] = -20 - Math.random() * 980;
+
+      shimmerSizes[i] = 1.5 + Math.random() * 4.0;
+      shimmerPhases[i] = Math.random();
+      shimmerSpeeds[i] = 0.5 + Math.random() * 1.2;
+    }
+
+    shimmerGeo.setAttribute("position", new THREE.BufferAttribute(shimmerPositions, 3));
+    shimmerGeo.setAttribute("aSize", new THREE.BufferAttribute(shimmerSizes, 1));
+    shimmerGeo.setAttribute("aPhase", new THREE.BufferAttribute(shimmerPhases, 1));
+    shimmerGeo.setAttribute("aSpeed", new THREE.BufferAttribute(shimmerSpeeds, 1));
+
+    const shimmerMat = new THREE.ShaderMaterial({
+      vertexShader: shimmerVertex,
+      fragmentShader: shimmerFragment,
+      uniforms: {
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color(0x9beeff) },
+      },
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const shimmerMesh = new THREE.Points(shimmerGeo, shimmerMat);
+    scene.add(shimmerMesh);
+
     // --- FLOATING UNDERWATER DUST & PLANKTON ---
     const dustCount = isMobile ? 1600 : 4000;
     const dustGeo = new THREE.BufferGeometry();
@@ -1977,21 +2287,16 @@ export default function Scene() {
         dummyObj.updateMatrix();
         swarm.setMatrixAt(i, dummyObj.matrix);
 
-        fishData.push({
-          swarmIndex: tIndex,
-          localIndex: i,
-          speed: 0.5 + Math.random() * 1.0,
-          phaseX: Math.random() * Math.PI * 2,
-          phaseY: Math.random() * Math.PI * 2,
-          phaseZ: Math.random() * Math.PI * 2,
-          baseY: dummyObj.position.y,
-          scale: s,
-        });
-      }
-      swarm.frustumCulled = false;
-      fishSwarms.push(swarm);
-      scene.add(swarm);
-    });
+      fishData.push({
+        speed: 0.5 + Math.random() * 1.0,
+        phaseX: Math.random() * Math.PI * 2,
+        phaseY: Math.random() * Math.PI * 2,
+        phaseZ: Math.random() * Math.PI * 2,
+        baseY: dummyObj.position.y,
+        scale: s,
+      });
+    }
+    scene.add(fishSwarm);
 
     // --- RAYCASTER FOR PORTAL RING, PIN MARKER & 3D BANNER INTERACTIVITY ---
     const raycaster = new THREE.Raycaster();
@@ -3053,17 +3358,17 @@ export default function Scene() {
         sideCliffGroup.visible = false;
         bgMountainsGroup.visible = false;
       } else {
-        // Deepening Fog & Dynamic Dark-Ocean Lighting Transition with Depth (y: -4 down to y: -470)
+        // Deepening Fog & Dynamic Rich Dark-Ocean Lighting Transition with Depth (y: -4 down to y: -470)
         const depthFactor = Math.min(1.0, Math.abs(camState.y) / 470);
-        const caveFogColor = new THREE.Color(0x031e30).lerp(new THREE.Color(0x000612), depthFactor);
+        const caveFogColor = new THREE.Color(0x052a42).lerp(new THREE.Color(0x011728), depthFactor);
         scene.background = caveFogColor;
 
-        const dynamicFogDensity = camState.fogDensity * (1.0 + depthFactor * 0.4);
+        const dynamicFogDensity = camState.fogDensity * 0.5;
         scene.fog = new THREE.FogExp2(caveFogColor, dynamicFogDensity);
 
-        sunLight.intensity = Math.max(0.05, 2.5 * (1.0 - depthFactor * 0.95));
-        ambientLight.color.setHex(0x0a4b66).lerp(new THREE.Color(0x011220), depthFactor);
-        ambientLight.intensity = 1.2 * (1.0 - depthFactor * 0.3);
+        sunLight.intensity = Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6));
+        ambientLight.color.setHex(0x006699).lerp(new THREE.Color(0x002e4d), depthFactor);
+        ambientLight.intensity = 1.6 * (1.0 - depthFactor * 0.2);
         waterCeilingMesh.visible = true;
         caveMesh.visible = false;
         sideCliffGroup.visible = true;
@@ -3102,7 +3407,68 @@ export default function Scene() {
           ffPositions[i3 + 1] = -520;
         }
       }
+
+
       flowFieldGeo.attributes.position.needsUpdate = true;
+
+      // --- POD FORMATION DOLPHIN SWIMMING IN OPEN VIEWABLE CANYON ---
+      const podSpeed = 0.45;
+      const podTime = t * podSpeed;
+
+      // Master Pod Center trajectory traversing open viewable ocean canyon
+      const masterX = Math.sin(podTime * 0.85) * 12.0 + Math.cos(podTime * 1.6) * 5.0;
+      const masterY = -175.0 + Math.sin(podTime * 1.3) * 8.0;
+      const masterZ = -475.0 + Math.cos(podTime) * 75.0;
+
+      const nextPodTime = (t + 0.05) * podSpeed;
+      const nextX = Math.sin(nextPodTime * 0.85) * 12.0 + Math.cos(nextPodTime * 1.6) * 5.0;
+      const nextY = -175.0 + Math.sin(nextPodTime * 1.3) * 8.0;
+      const nextZ = -475.0 + Math.cos(nextPodTime) * 75.0;
+
+      const podForward = new THREE.Vector3(nextX - masterX, nextY - masterY, nextZ - masterZ).normalize();
+      const podRight = new THREE.Vector3().crossVectors(podForward, new THREE.Vector3(0, 1, 0)).normalize();
+      const podUp = new THREE.Vector3().crossVectors(podRight, podForward).normalize();
+
+      allDolphins.forEach((dolphin, idx) => {
+        if (dolphin.mixer) {
+          dolphin.mixer.update(delta);
+        }
+
+        // Pod offset formation vectors (Leader + Left Wing + Right Wing)
+        let offFwd = 0;
+        let offRight = 0;
+        let offUp = 0;
+
+        if (idx === 0) {
+          offFwd = 0;
+          offRight = 0;
+          offUp = 0;
+        } else if (idx === 1) {
+          offFwd = -6.5 + Math.sin(t * 1.5) * 1.2;
+          offRight = -7.0 + Math.cos(t * 1.2) * 1.5;
+          offUp = 2.8 + Math.sin(t * 1.8) * 1.0;
+        } else {
+          offFwd = -8.0 + Math.cos(t * 1.4) * 1.2;
+          offRight = 7.0 + Math.sin(t * 1.1) * 1.5;
+          offUp = -2.2 + Math.cos(t * 1.6) * 1.0;
+        }
+
+        const dPos = new THREE.Vector3(masterX, masterY, masterZ)
+          .addScaledVector(podForward, offFwd)
+          .addScaledVector(podRight, offRight)
+          .addScaledVector(podUp, offUp);
+
+        dolphin.group.position.copy(dPos);
+
+        const targetQuat = new THREE.Quaternion().setFromUnitVectors(
+          new THREE.Vector3(0, 0, 1),
+          podForward
+        );
+        const rollAngle = Math.sin(podTime * 1.8 + idx * 0.8) * 0.38;
+        targetQuat.multiply(new THREE.Quaternion().setFromAxisAngle(podForward, rollAngle));
+        dolphin.group.quaternion.slerp(targetQuat, 0.15);
+
+      });
 
       // Update Orbiting Energy Particles around Portal Ring
       const pPositions = portalParticleGeo.attributes.position.array;
@@ -3118,6 +3484,7 @@ export default function Scene() {
 
       // Update Rising Bubbles & Floating Water Balls
       bubbleMat.uniforms.uTime.value = t;
+      shimmerMat.uniforms.uTime.value = t;
       dustMat.uniforms.uTime.value = t;
       ballMat.uniforms.uTime.value = t;
       causticUniforms.uTime.value = t;
@@ -3583,6 +3950,8 @@ export default function Scene() {
       terrainMat.dispose();
       bubbleGeo.dispose();
       bubbleMat.dispose();
+      shimmerGeo.dispose();
+      shimmerMat.dispose();
       dustGeo.dispose();
       dustMat.dispose();
       ballGeo.dispose();
@@ -3590,7 +3959,7 @@ export default function Scene() {
       kelpGeo.dispose();
       kelpMat.dispose();
       fishGeo.dispose();
-      // Fish materials are handled inside the loop
+      fishMat.dispose();
     };
   }, []);
 
@@ -3599,7 +3968,7 @@ export default function Scene() {
   const isInsideNewWorld = scrollProgress > 42;
 
   return (
-    <div ref={wrapperRef} style={{ height: "1600vh", position: "relative", backgroundColor: "#000" }}>
+    <div ref={wrapperRef} style={{ height: "1600vh", position: "relative", backgroundColor: "#011728" }}>
       {/* Custom Loader */}
       <Loader loading={loading} progress={progress} />
 
@@ -3645,10 +4014,7 @@ export default function Scene() {
           <div className="grid-overlay" />
           <div className="vignette" />
 
-          {/* Top Bar */}
-          <div className="top-bar">
-            <div className="logo">{isInsideNewWorld ? "NEW WORLD // DESCENDING EVENTS REALM" : "CYBER OCEAN"}</div>
-          </div>
+
 
           {/* Animated Scroll Down Mouse Logo (Visible only at beginning surface view, scrollProgress < 10) */}
           <div
