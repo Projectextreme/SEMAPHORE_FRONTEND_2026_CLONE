@@ -2,10 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
+import WaterWave from "../WaterWaveWrapper";
 import { developmentTeam, staffCoordinators, studentCoordinators } from "./developersData";
-
-const WaterWave = dynamic(() => import("react-water-wave"), { ssr: false });
 
 
 const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, hideSocials }) => (

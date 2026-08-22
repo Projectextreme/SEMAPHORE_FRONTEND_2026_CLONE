@@ -4,9 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
-
-const WaterWave = dynamic(() => import('react-water-wave'), { ssr: false });
+import WaterWave from '@/components/WaterWaveWrapper';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '168801764074-kcn9c9to0daenc3o5pn9nfutgho8pcin.apps.googleusercontent.com';
@@ -19,7 +17,9 @@ const COLLEGES = [
   'MS Ramaiah Institute of Technology',
 ];
 
-export default function UserRegisterPage() {
+import { Suspense } from 'react';
+
+function UserRegisterContent() {
   const [collegeName, setCollegeName] = useState(COLLEGES[0]);
   const [isCustom, setIsCustom] = useState(false);
   const [customCollege, setCustomCollege] = useState('');
@@ -227,5 +227,13 @@ export default function UserRegisterPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function UserRegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#020714] text-cyan-300 flex items-center justify-center font-mono">Loading...</div>}>
+      <UserRegisterContent />
+    </Suspense>
   );
 }
