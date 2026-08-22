@@ -3179,7 +3179,7 @@ export default function Scene() {
           eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
           event1RightArcOffset *= (1.0 - exitFactor);
         }
-      } 
+      }
       // Event 02 (Web Design) Slowdown Zone
       else if (camState.z <= -350 && camState.z > -470) {
         const event2ShrinePos = new THREE.Vector3(22, -186, -430);
@@ -3540,27 +3540,7 @@ export default function Scene() {
           className={`pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-12 text-white transition-opacity duration-700 ${heroVisible ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
         >
-          <header className="flex justify-between items-center w-full">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full border border-cyan-400/80 flex items-center justify-center bg-cyan-950/40 backdrop-blur-md shadow-[0_0_15px_rgba(0,255,255,0.3)]">
-                <div className="w-3 h-3 rounded-full border border-cyan-300 flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-mono text-xs font-bold tracking-[0.2em] text-white">SEMAPHORE</span>
-                <span className="font-mono text-[9px] tracking-[0.3em] text-cyan-300/70">FOUNDATION</span>
-              </div>
-            </div>
-            {/* <nav className="hidden md:flex items-center gap-8 font-mono text-xs tracking-[0.25em] text-cyan-100/80">
-              <span className="hover:text-cyan-300 cursor-pointer transition-colors">JOURNEYS</span>
-              <span className="hover:text-cyan-300 cursor-pointer transition-colors">ABOUT</span>
-              <span className="hover:text-cyan-300 cursor-pointer transition-colors">GET INVOLVED</span>
-              <span className="hover:text-cyan-300 cursor-pointer transition-colors">EDUCATION</span>
-              <span className="hover:text-cyan-300 cursor-pointer transition-colors">SHARE +</span>
-              <span className="text-cyan-400 font-bold">EN v</span>
-            </nav> */}
-          </header>
+          
 
           <main className="flex flex-col items-center justify-center text-center my-auto">
             <h2 className="font-mono text-4xl md:text-8xl font-extrabold tracking-[0.35em] text-transparent bg-clip-text bg-gradient-to-b from-white to-white/40 drop-shadow-[0_4px_30px_rgba(0,0,0,0.5)] select-none">
@@ -3575,22 +3555,6 @@ export default function Scene() {
           </main>
 
           <footer className="flex justify-between items-end w-full">
-            <div className="flex items-center gap-4">
-              <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full border border-cyan-400/40 flex items-center justify-center bg-cyan-950/30 backdrop-blur-md">
-                <div className="w-0.5 h-6 bg-cyan-400 origin-bottom transform -rotate-45" />
-              </div>
-              <div className="flex flex-col font-mono text-[10px] md:text-xs">
-                <span className="font-bold text-cyan-300 tracking-[0.2em]">DEEP TRENCH</span>
-                <span className="text-cyan-100/70 tracking-widest">DISCOVERY PROGRESS: {scrollProgress}%</span>
-                <span className="text-cyan-400/60 text-[9px] tracking-wider mt-0.5">DEPTH: {stats.depth}M | TEMP: 28.0°C</span>
-              </div>
-            </div>
-
-            <div className="hidden lg:flex flex-col text-right font-mono text-[9px] text-cyan-200/60 tracking-widest leading-relaxed">
-              <span>9-10 OCTOBER 2026</span>
-              <span>NMAM INSTITUTE OF TECHNOLOGY</span>
-              <span>ALL RIGHTS RESERVED</span>
-            </div>
           </footer>
         </div>
 
@@ -3598,12 +3562,6 @@ export default function Scene() {
         <div className={`ui-layer ${hudVisible ? "visible" : ""}`} id="ui-layer">
           <div className="grid-overlay" />
           <div className="vignette" />
-          <div className="hud-frame" />
-
-          <div className="corner tl" />
-          <div className="corner tr" />
-          <div className="corner bl" />
-          <div className="corner br" />
 
           {/* Top Bar */}
           <div className="top-bar">
@@ -3625,7 +3583,7 @@ export default function Scene() {
           </div>
 
           {/* Right-Side Down Telemetry HUD Readout (Clean Panel-less design) */}
-          <div className="fixed bottom-20 right-6 md:right-10 z-50 flex flex-col items-end gap-1.5 font-mono text-right select-none pointer-events-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+          <div className="fixed bottom-6 md:bottom-8 right-6 md:right-10 z-50 flex flex-col items-end gap-1.5 font-mono text-right select-none pointer-events-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
 
             <div className="flex items-baseline gap-2 text-cyan-100 font-bold text-sm tracking-wider">
               <span className="text-[10px] text-cyan-400/70 font-semibold uppercase">DEPTH:</span>
@@ -3643,10 +3601,10 @@ export default function Scene() {
         </div>
       </div>
 
-      {/* Minimal Top-Right Speaker Audio Toggle Icon (Panel-less bare icon design) */}
+      {/* Minimal Top-Left Speaker Audio Toggle Icon */}
       <button
         onClick={toggleAudio}
-        className={`fixed top-6 right-6 md:top-8 md:right-10 z-[80] p-1 text-cyan-300 hover:text-white transition-all duration-500 cursor-pointer pointer-events-auto hover:scale-110 active:scale-95 drop-shadow-[0_0_15px_rgba(0,255,255,0.8)] ${scrollProgress >= 4 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+        className={`fixed top-6 left-6 md:top-8 md:left-10 z-[80] p-1 text-cyan-300 hover:text-white transition-all duration-500 cursor-pointer pointer-events-auto hover:scale-110 active:scale-95 drop-shadow-[0_0_15px_rgba(0,255,255,0.8)] ${scrollProgress >= 4 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
           }`}
         aria-label="Toggle Audio"
         title={isAudioPlaying ? "Mute Audio" : "Play Audio"}
