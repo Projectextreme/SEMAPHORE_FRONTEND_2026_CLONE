@@ -19,10 +19,10 @@ export default function PaymentSubmission() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const amountParam = params.get('amount');
-      if (amountParam) {
-        setAmount(amountParam);
+      const storedAmount = sessionStorage.getItem('pendingPaymentAmount');
+      if (storedAmount) {
+        setAmount(storedAmount);
+        sessionStorage.removeItem('pendingPaymentAmount'); // Clear it after reading
       }
     }
   }, []);
