@@ -18,6 +18,16 @@ export default function PaymentSubmission() {
   // const router = useRouter(); 
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const amountParam = params.get('amount');
+      if (amountParam) {
+        setAmount(amountParam);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     return () => {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);

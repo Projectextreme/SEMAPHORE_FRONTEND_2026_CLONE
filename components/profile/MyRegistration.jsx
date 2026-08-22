@@ -22,9 +22,9 @@ export default function MyRegistration() {
             Authorization: `Bearer ${token}`
           }
         });
-        
+
         const data = await response.json();
-        
+
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch registrations");
         }
@@ -124,7 +124,7 @@ export default function MyRegistration() {
             const ev = eventItem.eventId || {};
             const dateStr = new Date(eventItem.addedAt).toLocaleDateString('en-US', {
               year: 'numeric', month: 'long', day: 'numeric',
-              hour: '2-digit', minute:'2-digit'
+              hour: '2-digit', minute: '2-digit'
             });
 
             return (
@@ -156,7 +156,7 @@ export default function MyRegistration() {
             Total: ₹{totalAmount}
           </span>
         </div>
-        <button 
+        <button
           className={`w-full py-3.5 rounded-xl border mb-5 uppercase tracking-widest text-sm shadow-inner transition-all ${statusInfo.btnColor}`}
           disabled={paymentStatus !== 'pending' || events.length === 0}
           onClick={() => {
@@ -181,16 +181,16 @@ export default function MyRegistration() {
             <p className="text-sm text-cyan-800 mb-6 text-center font-medium">
               Scan the QR code below to make a payment of <span className="font-bold text-teal-700">₹{totalAmount}</span> using any UPI app.
             </p>
-            
+
             <div className="bg-white p-3 rounded-2xl shadow-sm border border-cyan-100 mb-6">
-              <img 
-                src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=semaphore@upi&pn=Semaphore&cu=INR" 
-                alt="Payment QR Code" 
+              <img
+                src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=semaphore@upi&pn=Semaphore&cu=INR"
+                alt="Payment QR Code"
                 className="w-48 h-48 object-contain"
               />
             </div>
 
-            <button 
+            <button
               onClick={() => {
                 setShowQRModal(false);
                 window.location.href = '/user/account/payment';
@@ -199,7 +199,7 @@ export default function MyRegistration() {
             >
               Done
             </button>
-            <button 
+            <button
               onClick={() => setShowQRModal(false)}
               className="mt-4 text-sm font-bold text-cyan-700/70 hover:text-cyan-900 transition-all uppercase tracking-wider"
             >
