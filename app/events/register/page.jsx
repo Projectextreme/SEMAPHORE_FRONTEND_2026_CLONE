@@ -13,6 +13,8 @@ export default function EventsPage() {
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [registeredEventIds, setRegisteredEventIds] = useState([]);
+  const [globalPaymentStatus, setGlobalPaymentStatus] = useState(null);
+  const [globalPendingAmount, setGlobalPendingAmount] = useState(0);
 
   // Track which event has its registration form open
   const [expandedEventId, setExpandedEventId] = useState(null);
@@ -71,6 +73,16 @@ export default function EventsPage() {
             if (regData.registration && regData.registration.events) {
               const ids = regData.registration.events.map(e => e.eventId._id || e.eventId);
               setRegisteredEventIds(ids);
+              setGlobalPaymentStatus(regData.registration.paymentStatus);
+              
+              if (regData.registration.paymentStatus === 'pending') {
+                // Try to sum registrationFee from populated events if available
+                const total = regData.registration.events.reduce((sum, e) => {
+                  if (e.paymentId) return sum; // Skip if already paid
+                  return sum + (e.eventId.registrationFee || 0);
+                }, 0);
+                setGlobalPendingAmount(total);
+              }
             }
           }
         } catch (err) {
@@ -240,7 +252,8 @@ export default function EventsPage() {
       setGlobalSuccess(`Successfully registered for ${validForms.length} event(s)! Redirecting to payment...`);
       localStorage.removeItem('event_cart_draft'); // Clear global draft
       setTimeout(() => {
-        router.push('/user/account/payment?amount=' + calculateTotal());
+        sessionStorage.setItem('pendingPaymentAmount', calculateTotal());
+        router.push('/user/account/payment');
       }, 1500);
 
     } catch (err) {
@@ -310,12 +323,27 @@ export default function EventsPage() {
                     {isValid && !isRegistered && <span style={{ ...styles.detailTag, backgroundColor: 'rgba(175, 247, 223, 0.89)', color: '#067651ff' }}>✓ Ready to Checkout</span>}
                   </div>
 
-                  {isRegistered ? (
+                  {isRegistered && globalPaymentStatus !== 'pending' ? (
                     <button
                       disabled
                       style={{ ...styles.actionBtn, backgroundColor: '#024c33ff', opacity: 0.8, cursor: 'not-allowed' }}
                     >
                       Already Registered
+                    </button>
+                  ) : isRegistered && globalPaymentStatus === 'pending' ? (
+                    <button
+                      onClick={() => {
+                        // Use calculated pending amount, or fallback to the event list's fee if we couldn't calculate it properly
+                        let amountToPay = globalPendingAmount;
+                        if (amountToPay === 0) {
+                          amountToPay = events.filter(e => registeredEventIds.includes(e._id)).reduce((sum, e) => sum + (e.registrationFee || 0), 0);
+                        }
+                        sessionStorage.setItem('pendingPaymentAmount', amountToPay);
+                        router.push('/user/account/payment');
+                      }}
+                      style={{ ...styles.actionBtn, backgroundColor: '#b45309', opacity: 1, cursor: 'pointer' }}
+                    >
+                      Complete Payment
                     </button>
                   ) : !isExpanded ? (
                     <button
