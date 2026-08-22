@@ -1755,7 +1755,7 @@ export default function Scene() {
 
 
     // --- RISING BUBBLES PARTICLE STREAM ---
-    const bubbleCount = isMobile ? 3000 : 7500;
+    const bubbleCount = isMobile ? 6000 : 15000;
     const bubbleGeo = new THREE.BufferGeometry();
     const bubbleInitialPos = new Float32Array(bubbleCount * 3);
     const bubbleSizes = new Float32Array(bubbleCount);
@@ -1763,9 +1763,12 @@ export default function Scene() {
     const bubbleOffsets = new Float32Array(bubbleCount);
 
     for (let i = 0; i < bubbleCount; i++) {
+      const zPos = -20 - Math.random() * 1350;
+      const expectedY = (zPos / -1218) * -470;
       bubbleInitialPos[i * 3] = (Math.random() - 0.5) * 450;
-      bubbleInitialPos[i * 3 + 1] = -385 + Math.random() * 20;
-      bubbleInitialPos[i * 3 + 2] = -20 - Math.random() * 650;
+      // Clamp to -85 to ensure that even as bubbles rise 80 units in the shader, they stay below water (Y=-2)
+      bubbleInitialPos[i * 3 + 1] = Math.min(-85.0, expectedY + (Math.random() - 0.5) * 200);
+      bubbleInitialPos[i * 3 + 2] = zPos;
 
       bubbleSizes[i] = 3.0 + Math.random() * 10.0;
       bubbleSpeeds[i] = 0.4 + Math.random() * 1.4;
@@ -1781,21 +1784,26 @@ export default function Scene() {
     const bubbleMat = new THREE.ShaderMaterial({
       vertexShader: bubbleVertex,
       fragmentShader: bubbleFragment,
-      uniforms: {
-        uTime: { value: 0 },
-        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
-        uColor: { value: new THREE.Color(0x67e8f9) },
-      },
+      uniforms: THREE.UniformsUtils.merge([
+        THREE.UniformsLib["fog"],
+        {
+          uTime: { value: 0 },
+          uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+          uColor: { value: new THREE.Color(0x67e8f9) },
+        }
+      ]),
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
+      fog: true
     });
-
+    
     const bubblePoints = new THREE.Points(bubbleGeo, bubbleMat);
+    bubblePoints.frustumCulled = false;
     scene.add(bubblePoints);
 
     // --- FLOATING UNDERWATER DUST & PLANKTON ---
-    const dustCount = isMobile ? 800 : 2000;
+    const dustCount = isMobile ? 1600 : 4000;
     const dustGeo = new THREE.BufferGeometry();
     const dustPositions = new Float32Array(dustCount * 3);
     const dustVelocities = new Float32Array(dustCount * 3);
@@ -1804,9 +1812,11 @@ export default function Scene() {
     const dustTypes = new Float32Array(dustCount);
 
     for (let i = 0; i < dustCount; i++) {
+      const zPos = -30 - Math.random() * 1350;
+      const expectedY = (zPos / -1218) * -470;
       dustPositions[i * 3] = (Math.random() - 0.5) * 320;
-      dustPositions[i * 3 + 1] = -385 + Math.random() * 360;
-      dustPositions[i * 3 + 2] = -30 - Math.random() * 620;
+      dustPositions[i * 3 + 1] = Math.min(-5.0, expectedY + (Math.random() - 0.5) * 200);
+      dustPositions[i * 3 + 2] = zPos;
       dustVelocities[i * 3] = 0;
       dustVelocities[i * 3 + 1] = 0;
       dustVelocities[i * 3 + 2] = 0;
@@ -1824,17 +1834,22 @@ export default function Scene() {
     const dustMat = new THREE.ShaderMaterial({
       vertexShader: flowFieldVertex,
       fragmentShader: flowFieldFragment,
-      uniforms: {
-        uColor: { value: new THREE.Color(0x22d3ee) },
-        uTime: { value: 0 },
-      },
+      uniforms: THREE.UniformsUtils.merge([
+        THREE.UniformsLib["fog"],
+        {
+          uColor: { value: new THREE.Color(0x22d3ee) },
+          uTime: { value: 0 },
+        }
+      ]),
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
+      fog: true
     });
 
-    const dustMesh = new THREE.Points(dustGeo, dustMat);
-    scene.add(dustMesh);
+    const dustPoints = new THREE.Points(dustGeo, dustMat);
+    dustPoints.frustumCulled = false;
+    scene.add(dustPoints);
 
     // --- FLOATING AQUATIC SMALL WATER BALLS ---
     const ballCount = isMobile ? 3000 : 7000;
@@ -1862,58 +1877,121 @@ export default function Scene() {
     const ballMat = new THREE.ShaderMaterial({
       vertexShader: flowFieldVertex,
       fragmentShader: flowFieldFragment,
-      uniforms: {
-        uColor: { value: new THREE.Color(0x38bdf8) },
-        uTime: { value: 0 },
-      },
+      uniforms: THREE.UniformsUtils.merge([
+        THREE.UniformsLib["fog"],
+        {
+          uColor: { value: new THREE.Color(0x38bdf8) },
+          uTime: { value: 0 },
+        }
+      ]),
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
+      fog: true
     });
 
     const ballMesh = new THREE.Points(ballGeo, ballMat);
     scene.add(ballMesh);
 
     // --- DISTANT SMALL FISH SCHOOLS ---
-    const fishCount = isMobile ? 35 : 75;
-    const fishGeo = new THREE.ConeGeometry(0.3, 1.4, 5);
-    fishGeo.rotateX(Math.PI / 2);
-
-    const fishMat = new THREE.MeshStandardMaterial({
-      color: 0x0284c7,
-      emissive: 0x00f0ff,
-      emissiveIntensity: 0.5,
-      roughness: 0.3,
-      metalness: 0.6,
-    });
-
-    const dummyObj = new THREE.Object3D();
-    const fishSwarm = new THREE.InstancedMesh(fishGeo, fishMat, fishCount);
+    const fishCount = isMobile ? 70 : 150;
+    
+    const fishSwarms = [];
     const fishData = [];
-    for (let i = 0; i < fishCount; i++) {
-      const s = 0.4 + Math.random() * 0.5;
-      dummyObj.scale.set(s, s, s * 1.3);
-      const isLeft = i < fishCount / 2;
-      const baseX = isLeft ? -40 + (Math.random() - 0.5) * 20 : 40 + (Math.random() - 0.5) * 20;
+    const dummyObj = new THREE.Object3D();
+    
+    const textureLoader = new THREE.TextureLoader(manager);
+    const fishTextures = [
+      textureLoader.load('/fishes/fish_orange.png'),
+      textureLoader.load('/fishes/fish_blue.png'),
+      textureLoader.load('/fishes/fish_yellow.png')
+    ];
+    
+    const fishGeo = new THREE.PlaneGeometry(3.0, 3.0);
+    fishGeo.rotateY(-Math.PI / 2);
 
-      dummyObj.position.set(
-        baseX,
-        -30 - Math.random() * 300,
-        -60 - Math.random() * 550
-      );
-      dummyObj.updateMatrix();
-      fishSwarm.setMatrixAt(i, dummyObj.matrix);
-
-      fishData.push({
-        speed: 0.5 + Math.random() * 1.0,
-        phaseX: Math.random() * Math.PI * 2,
-        phaseY: Math.random() * Math.PI * 2,
-        phaseZ: Math.random() * Math.PI * 2,
-        baseY: dummyObj.position.y,
-        scale: s,
+    fishTextures.forEach((tex, tIndex) => {
+      const fishMat = new THREE.ShaderMaterial({
+        uniforms: THREE.UniformsUtils.merge([
+          THREE.UniformsLib["fog"],
+          {
+            tDiffuse: { value: tex },
+            uTime: { value: 0 }
+          }
+        ]),
+        vertexShader: `
+          #include <fog_pars_vertex>
+          varying vec2 vUv;
+          uniform float uTime;
+          void main() {
+            vUv = uv;
+            vec3 transformed = vec3(position);
+            // Realistic fish swimming wobble (stronger at the tail)
+            // Since lookAt is reversed, +Z points to the tail.
+            float tailFactor = max(0.0, (transformed.z + 1.5) / 3.0);
+            transformed.x += sin(transformed.z * 6.0 - uTime * 15.0) * 0.2 * tailFactor;
+            vec4 mvPosition = viewMatrix * modelMatrix * instanceMatrix * vec4(transformed, 1.0);
+            gl_Position = projectionMatrix * mvPosition;
+            #include <fog_vertex>
+          }
+        `,
+        fragmentShader: `
+          #include <fog_pars_fragment>
+          uniform sampler2D tDiffuse;
+          varying vec2 vUv;
+          void main() {
+            vec4 color = texture2D(tDiffuse, vUv);
+            // Calculate luminance to create an alpha mask from the black background
+            float lum = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+            float mask = smoothstep(0.02, 0.15, lum);
+            if (mask < 0.05) discard; // discard transparent pixels
+            
+            gl_FragColor = vec4(color.rgb, mask);
+            #include <fog_fragment>
+          }
+        `,
+        transparent: true,
+        blending: THREE.NormalBlending,
+        depthWrite: true, // Allow fish to occlude each other realistically
+        side: THREE.DoubleSide,
+        fog: true
       });
-    }
-    scene.add(fishSwarm);
+      
+      const swarmCount = Math.floor(fishCount / 3);
+      const swarm = new THREE.InstancedMesh(fishGeo, fishMat, swarmCount);
+      
+      for (let i = 0; i < swarmCount; i++) {
+        const s = 1.0 + Math.random() * 0.8;
+        dummyObj.scale.set(s, s, s);
+        
+        const isLeft = Math.random() > 0.5;
+        const baseX = isLeft ? -40 + (Math.random() - 0.5) * 40 : 40 + (Math.random() - 0.5) * 40;
+
+        const zPos = -60 - Math.random() * 1350;
+        const expectedY = (zPos / -1218) * -470;
+        dummyObj.position.set(
+          baseX,
+          Math.min(-10.0, expectedY + (Math.random() - 0.5) * 120),
+          zPos
+        );
+        dummyObj.updateMatrix();
+        swarm.setMatrixAt(i, dummyObj.matrix);
+
+        fishData.push({
+          swarmIndex: tIndex,
+          localIndex: i,
+          speed: 0.5 + Math.random() * 1.0,
+          phaseX: Math.random() * Math.PI * 2,
+          phaseY: Math.random() * Math.PI * 2,
+          phaseZ: Math.random() * Math.PI * 2,
+          baseY: dummyObj.position.y,
+          scale: s,
+        });
+      }
+      swarm.frustumCulled = false;
+      fishSwarms.push(swarm);
+      scene.add(swarm);
+    });
 
     // --- RAYCASTER FOR PORTAL RING, PIN MARKER & 3D BANNER INTERACTIVITY ---
     const raycaster = new THREE.Raycaster();
@@ -3094,24 +3172,28 @@ export default function Scene() {
       }
 
       // Animate Distant Fish Schools
-      for (let i = 0; i < fishCount; i++) {
-        fishSwarm.getMatrixAt(i, dummyObj.matrix);
+      for (let data of fishData) {
+        const swarm = fishSwarms[data.swarmIndex];
+        swarm.getMatrixAt(data.localIndex, dummyObj.matrix);
         dummyObj.position.setFromMatrixPosition(dummyObj.matrix);
-        const data = fishData[i];
 
         dummyObj.position.x += Math.sin(t * data.speed * 0.6 + data.phaseX) * 0.08;
         dummyObj.position.y = data.baseY + Math.sin(t * data.speed * 0.4 + data.phaseY) * 1.0;
         dummyObj.position.z += Math.cos(t * data.speed * 0.6 + data.phaseZ) * 0.08;
 
-        const lookX = dummyObj.position.x + Math.sin(t * data.speed * 0.6 + data.phaseX) * 0.4;
-        const lookZ = dummyObj.position.z + Math.cos(t * data.speed * 0.6 + data.phaseZ) * 0.4;
+        // Subtract velocity to make the +Z axis point backward, making the fish face forward
+        const lookX = dummyObj.position.x - Math.sin(t * data.speed * 0.6 + data.phaseX) * 0.4;
+        const lookZ = dummyObj.position.z - Math.cos(t * data.speed * 0.6 + data.phaseZ) * 0.4;
         dummyObj.lookAt(lookX, dummyObj.position.y, lookZ);
 
-        dummyObj.scale.set(data.scale, data.scale, data.scale * 1.3);
+        dummyObj.scale.set(data.scale, data.scale, data.scale);
         dummyObj.updateMatrix();
-        fishSwarm.setMatrixAt(i, dummyObj.matrix);
+        swarm.setMatrixAt(data.localIndex, dummyObj.matrix);
       }
-      fishSwarm.instanceMatrix.needsUpdate = true;
+      fishSwarms.forEach(swarm => {
+        swarm.material.uniforms.uTime.value = t;
+        swarm.instanceMatrix.needsUpdate = true;
+      });
 
       // Natural Subtle Underwater Floating Buoyancy Effect
       const floatY = Math.sin(t * 0.4) * 0.35;
@@ -3508,7 +3590,7 @@ export default function Scene() {
       kelpGeo.dispose();
       kelpMat.dispose();
       fishGeo.dispose();
-      fishMat.dispose();
+      // Fish materials are handled inside the loop
     };
   }, []);
 

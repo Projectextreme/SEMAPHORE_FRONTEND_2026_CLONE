@@ -329,6 +329,7 @@ void main() {
 `;
 
 export const flowFieldVertex = `
+#include <fog_pars_vertex>
 attribute vec3 velocity;
 attribute float size;
 attribute float alpha;
@@ -344,10 +345,12 @@ void main() {
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
   gl_PointSize = size * (90.0 / -mvPosition.z);
   gl_Position = projectionMatrix * mvPosition;
+  #include <fog_vertex>
 }
 `;
 
 export const flowFieldFragment = `
+#include <fog_pars_fragment>
 uniform vec3 uColor;
 uniform float uTime;
 
@@ -369,6 +372,7 @@ void main() {
   alpha *= shimmer;
 
   gl_FragColor = vec4(uColor, alpha);
+  #include <fog_fragment>
 }
 `;
 
@@ -529,6 +533,7 @@ void main() {
 `;
 
 export const bubbleVertex = `
+#include <fog_pars_vertex>
 uniform float uTime;
 uniform float uPixelRatio;
 
@@ -556,10 +561,12 @@ void main() {
   gl_PointSize = clamp(gl_PointSize, 2.0, 28.0);
 
   gl_Position = projectionMatrix * mvPosition;
+  #include <fog_vertex>
 }
 `;
 
 export const bubbleFragment = `
+#include <fog_pars_fragment>
 uniform vec3 uColor;
 
 varying float vLife;
@@ -578,6 +585,7 @@ void main() {
   float alpha = (ring * 0.85 + highlight * 0.95 + core) * fade;
 
   gl_FragColor = vec4(uColor + vec3(highlight * 0.4), alpha * 0.75);
+  #include <fog_fragment>
 }
 `;
 
