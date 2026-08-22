@@ -2758,7 +2758,7 @@ export default function Scene() {
             </button>
 
             <span className="inline-block px-3 py-1 rounded-full bg-cyan-950 border border-cyan-400/40 text-cyan-300 text-xs font-mono font-bold tracking-wider mb-4">
-              EVENT {selectedEvent.num} // {selectedEvent.category}
+              EVENT {selectedEvent.num} {"//"} {selectedEvent.category}
             </span>
 
             <h3 className="text-3xl font-black font-mono text-white mb-2">{selectedEvent.name}</h3>
