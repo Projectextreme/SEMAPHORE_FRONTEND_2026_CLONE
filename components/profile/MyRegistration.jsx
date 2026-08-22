@@ -112,13 +112,6 @@ export default function MyRegistration() {
         <h1 className="text-2xl md:text-3xl font-extrabold text-cyan-950 tracking-wide">
           Events Registered ({events.length})
         </h1>
-        <div className="hidden sm:block">
-          <input 
-            type="text" 
-            placeholder="Search" 
-            className="px-4 py-2 bg-white/40 backdrop-blur-sm border border-white/60 rounded-xl focus:outline-none focus:border-cyan-400 text-cyan-900 placeholder-cyan-800/40 text-sm font-medium shadow-sm transition-all"
-          />
-        </div>
       </div>
 
       <div className="flex flex-col gap-5">
