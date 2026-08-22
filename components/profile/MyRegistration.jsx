@@ -69,7 +69,7 @@ export default function MyRegistration() {
         return {
           title: amount > 0 ? `Payment Required: ₹${amount}` : "Payment Required",
           desc: "Please complete your payment to finalize registration.",
-          btnText: "Proceed to Payment",
+          btnText: "Pay to Confirm Registration",
           btnColor: "bg-gradient-to-r from-cyan-500 to-blue-500 text-white cursor-pointer hover:shadow-md border-transparent hover:from-cyan-400 hover:to-blue-400"
         };
     }
@@ -112,19 +112,12 @@ export default function MyRegistration() {
         <h1 className="text-2xl md:text-3xl font-extrabold text-cyan-950 tracking-wide">
           Events Registered ({events.length})
         </h1>
-        <div className="hidden sm:block">
-          <input 
-            type="text" 
-            placeholder="Search" 
-            className="px-4 py-2 bg-white/40 backdrop-blur-sm border border-white/60 rounded-xl focus:outline-none focus:border-cyan-400 text-cyan-900 placeholder-cyan-800/40 text-sm font-medium shadow-sm transition-all"
-          />
-        </div>
       </div>
 
       <div className="flex flex-col gap-5">
         {events.length === 0 ? (
           <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl p-10 text-center text-cyan-800 font-medium">
-            You haven't registered for any events yet.
+            You haven&apos;t registered for any events yet.
           </div>
         ) : (
           events.map((eventItem, index) => {

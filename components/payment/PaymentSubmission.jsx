@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 // import { useRouter } from 'next/navigation';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
+
 export default function PaymentSubmission() {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -55,7 +57,7 @@ export default function PaymentSubmission() {
 
       const token = localStorage.getItem("token") || "your_jwt_token_here";
 
-      const response = await fetch("/api/registrations/payment", {
+      const response = await fetch(`${API_BASE_URL}/api/registrations/payment`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -86,7 +88,7 @@ export default function PaymentSubmission() {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-8 bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl shadow-[0_8px_32px_rgba(0,100,150,0.15)] relative">
+    <div className="w-full h-full p-8 bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl shadow-[0_8px_32px_rgba(0,100,150,0.15)] relative flex flex-col">
       <h2 className="text-2xl md:text-3xl font-extrabold text-cyan-950 mb-8 tracking-wide text-center uppercase">
         Payment Submission
       </h2>

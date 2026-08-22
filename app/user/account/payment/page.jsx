@@ -63,8 +63,32 @@ export default function PaymentPage() {
       {/* Decorative noise/texture overlay for the background */}
       <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
       
-      <div className="w-full max-w-2xl relative z-10">
-        <PaymentSubmission />
+      <div className="w-full max-w-6xl relative z-10 flex flex-col lg:flex-row items-stretch justify-center gap-8 lg:gap-12">
+        {/* Left side: QR Code */}
+        <div className="flex-1 flex flex-col items-center justify-center bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl p-8 shadow-[0_8px_32px_rgba(0,100,150,0.15)]">
+          <h2 className="text-2xl font-extrabold text-cyan-950 mb-6 tracking-wide uppercase text-center">Scan to Pay</h2>
+          
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-cyan-100 mb-6">
+            <img 
+              src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=semaphore@upi&pn=Semaphore&cu=INR" 
+              alt="Payment QR Code" 
+              className="w-56 h-56 object-contain"
+            />
+          </div>
+          
+          <div className="w-full bg-cyan-50/50 p-4 rounded-xl border border-cyan-200/50 text-center">
+              <p className="text-sm font-semibold text-cyan-900 uppercase tracking-wider mb-1">UPI ID</p>
+              <p className="text-lg font-bold text-teal-700 tracking-wider">semaphore@upi</p>
+          </div>
+          <p className="text-sm text-cyan-800 font-medium text-center mt-6">
+            Scan the QR code using any UPI app to pay for your registered events. After successful payment, enter the exact amount and the UTR transaction number in the form.
+          </p>
+        </div>
+
+        {/* Right side: Payment Form */}
+        <div className="flex-1">
+          <PaymentSubmission />
+        </div>
       </div>
     </main>
   );
