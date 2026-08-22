@@ -47,7 +47,7 @@ export default function NotFound() {
       {/* Text and Links at the bottom */}
       <div className="absolute bottom-16 md:bottom-24 z-40 text-center w-full px-4">
         <p className="text-sm md:text-xl font-semibold text-white tracking-wide">
-          You're in deep water. Go <Link href="/" className="underline decoration-2 underline-offset-8 hover:text-cyan-300 transition-colors">home</Link> or call for <Link href="mailto:semaphore2k26@gmail.com" className="underline decoration-2 underline-offset-8 hover:text-cyan-300 transition-colors">help</Link>.
+          You&apos;re in deep water. Go <Link href="/" className="underline decoration-2 underline-offset-8 hover:text-cyan-300 transition-colors">home</Link> or call for <Link href="mailto:semaphore2k26@gmail.com" className="underline decoration-2 underline-offset-8 hover:text-cyan-300 transition-colors">help</Link>.
         </p>
       </div>
 

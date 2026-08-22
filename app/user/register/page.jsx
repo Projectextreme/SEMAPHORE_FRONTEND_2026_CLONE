@@ -61,6 +61,7 @@ function UserRegisterContent() {
 
   useEffect(() => {
     if (window.google?.accounts?.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setScriptReady(true);
       return;
     }

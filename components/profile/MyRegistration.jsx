@@ -124,7 +124,7 @@ export default function MyRegistration() {
       <div className="flex flex-col gap-5">
         {events.length === 0 ? (
           <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl p-10 text-center text-cyan-800 font-medium">
-            You haven't registered for any events yet.
+            You haven&apos;t registered for any events yet.
           </div>
         ) : (
           events.map((eventItem, index) => {
