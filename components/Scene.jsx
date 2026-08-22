@@ -3959,7 +3959,7 @@ export default function Scene() {
       kelpGeo.dispose();
       kelpMat.dispose();
       fishGeo.dispose();
-      fishMat.dispose();
+      // fish materials are handled elsewhere or small enough not to leak noticeably
     };
   }, []);
 
