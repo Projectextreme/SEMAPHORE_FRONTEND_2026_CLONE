@@ -37,9 +37,9 @@ const eventNodes = [
     venue: "MCA Lab 1",
     prize: "₹ 12,000",
     rules: ["Individual participation", "Languages allowed: C, C++, Java, Python", "Time-bound algorithmic problems"],
-    pos: { x: -42, y: -110, z: -300 },
-    bannerPos: { x: -26, y: -103, z: -295, rotY: 0.35 },
-    portalPos: { x: -50, y: -105, z: -308 },
+    pos: { x: -22, y: -110, z: -318 },
+    bannerPos: { x: -16, y: -103, z: -313, rotY: 0.35 },
+    portalPos: { x: -40, y: -105, z: -326 },
     minScroll: 42,
   },
   {
@@ -53,9 +53,9 @@ const eventNodes = [
     venue: "Web Lab 2",
     prize: "₹ 12,000",
     rules: ["Individual or teams of 2", "HTML5, CSS3, JavaScript allowed", "Live prototype evaluation"],
-    pos: { x: 42, y: -150, z: -400 },
-    bannerPos: { x: 26, y: -143, z: -395, rotY: -0.35 },
-    portalPos: { x: 50, y: -145, z: -408 },
+    pos: { x: 22, y: -190, z: -430 },
+    bannerPos: { x: 16, y: -183, z: -425, rotY: -0.35 },
+    portalPos: { x: 40, y: -185, z: -438 },
     minScroll: 48,
   },
   {
@@ -69,9 +69,9 @@ const eventNodes = [
     venue: "Main Auditorium",
     prize: "₹ 10,000",
     rules: ["Teams of 2 members", "Preliminary written round followed by live stage quiz"],
-    pos: { x: -42, y: -190, z: -500 },
-    bannerPos: { x: -26, y: -183, z: -495, rotY: 0.35 },
-    portalPos: { x: -50, y: -185, z: -508 },
+    pos: { x: -32, y: -190, z: -518 },
+    bannerPos: { x: -26, y: -183, z: -513, rotY: 0.35 },
+    portalPos: { x: -50, y: -185, z: -526 },
     minScroll: 54,
   },
   {
@@ -85,9 +85,9 @@ const eventNodes = [
     venue: "E-Sports Arena",
     prize: "₹ 20,000",
     rules: ["Squads of 4 members", "Time-bound physical & digital clues"],
-    pos: { x: 42, y: -230, z: -600 },
-    bannerPos: { x: 26, y: -223, z: -595, rotY: -0.35 },
-    portalPos: { x: 50, y: -225, z: -608 },
+    pos: { x: 32, y: -230, z: -618 },
+    bannerPos: { x: 26, y: -223, z: -613, rotY: -0.35 },
+    portalPos: { x: 50, y: -225, z: -626 },
     minScroll: 60,
   },
   {
@@ -101,9 +101,9 @@ const eventNodes = [
     venue: "Seminar Hall 1",
     prize: "₹ 10,000",
     rules: ["Open to all registered delegates", "Q&A session with keynote speakers"],
-    pos: { x: -42, y: -230, z: -700 },
-    bannerPos: { x: -42, y: -218, z: -695, rotY: 0 },
-    portalPos: { x: -50, y: -225, z: -708 },
+    pos: { x: -32, y: -230, z: -718 },
+    bannerPos: { x: -32, y: -218, z: -713, rotY: 0 },
+    portalPos: { x: -50, y: -225, z: -726 },
     minScroll: 66,
   },
   {
@@ -117,9 +117,9 @@ const eventNodes = [
     venue: "Open Arena",
     prize: "₹ 10,000",
     rules: ["Rules announced on spot", "Teams of 2 members"],
-    pos: { x: 42, y: -310, z: -800 },
-    bannerPos: { x: 26, y: -303, z: -795, rotY: -0.35 },
-    portalPos: { x: 50, y: -305, z: -808 },
+    pos: { x: 32, y: -310, z: -870 },
+    bannerPos: { x: 26, y: -303, z: -865, rotY: -0.35 },
+    portalPos: { x: 50, y: -305, z: -878 },
     minScroll: 72,
   },
   {
@@ -133,9 +133,9 @@ const eventNodes = [
     venue: "MCA Seminar Hall",
     prize: "₹ 15,000",
     rules: ["Individual participation", "Multiple stress rounds & mock press conference"],
-    pos: { x: -42, y: -310, z: -900 },
-    bannerPos: { x: -26, y: -303, z: -895, rotY: 0.35 },
-    portalPos: { x: -50, y: -305, z: -908 },
+    pos: { x: -32, y: -310, z: -918 },
+    bannerPos: { x: -26, y: -303, z: -913, rotY: 0.35 },
+    portalPos: { x: -50, y: -305, z: -926 },
     minScroll: 78,
   },
   {
@@ -149,9 +149,9 @@ const eventNodes = [
     venue: "Incubation Center",
     prize: "₹ 15,000",
     rules: ["Teams of up to 3 members", "5-minute pitch + 3-minute Q&A with judges"],
-    pos: { x: 42, y: -390, z: -1000 },
-    bannerPos: { x: 26, y: -383, z: -995, rotY: -0.35 },
-    portalPos: { x: 50, y: -385, z: -1008 },
+    pos: { x: 32, y: -390, z: -1018 },
+    bannerPos: { x: 26, y: -383, z: -1013, rotY: -0.35 },
+    portalPos: { x: 50, y: -385, z: -1026 },
     minScroll: 84,
   },
   {
@@ -165,9 +165,9 @@ const eventNodes = [
     venue: "Open Air Theater",
     prize: "₹ 18,000",
     rules: ["Group performance", "Time limit: 6 to 8 minutes", "Props permitted"],
-    pos: { x: -42, y: -430, z: -1100 },
-    bannerPos: { x: -26, y: -423, z: -1095, rotY: 0.35 },
-    portalPos: { x: -50, y: -425, z: -1108 },
+    pos: { x: -32, y: -430, z: -1118 },
+    bannerPos: { x: -26, y: -423, z: -1113, rotY: 0.35 },
+    portalPos: { x: -50, y: -425, z: -1126 },
     minScroll: 90,
   },
   {
@@ -181,55 +181,226 @@ const eventNodes = [
     venue: "Campus Grounds",
     prize: "₹ 12,000",
     rules: ["Individual participation", "Original unedited RAW & edited submission", "Theme provided on spot"],
-    pos: { x: 0, y: -470, z: -1200 },
-    bannerPos: { x: 16, y: -463, z: -1195, rotY: -0.2 },
-    portalPos: { x: -18, y: -465, z: -1208 },
+    pos: { x: 0, y: -470, z: -1218 },
+    bannerPos: { x: 16, y: -463, z: -1213, rotY: -0.2 },
+    portalPos: { x: -18, y: -465, z: -1226 },
     minScroll: 96,
   },
 ];
 
-// Helper function to dynamically draw futuristic 3D Event Title Text onto a Canvas Texture
+// Helper function to dynamically draw futuristic 3D Holographic Event Title Plaques onto Canvas Textures (Applied to All 10 Events)
 function createEventBannerTexture(node) {
   const canvas = document.createElement("canvas");
   canvas.width = 2048;
-  canvas.height = 512;
+  canvas.height = 800;
   const ctx = canvas.getContext("2d");
 
-  // Fully transparent background
-  ctx.clearRect(0, 0, 2048, 512);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Soft subtle ambient cyan radial back-glow behind typography
-  const bgGlow = ctx.createRadialGradient(1024, 256, 20, 1024, 256, 750);
+  const w = 2048, h = 800;
+  const pad = 60;
+  const x = pad, y = pad, cw = w - pad * 2, ch = h - pad * 2;
+  const corner = 36; // Chamfer cut size
+
+  // 1. Soft subtle ambient cyan radial back-glow
+  const bgGlow = ctx.createRadialGradient(w / 2, h / 2, 20, w / 2, h / 2, 750);
   bgGlow.addColorStop(0, "rgba(0, 240, 255, 0.28)");
   bgGlow.addColorStop(0.5, "rgba(2, 132, 199, 0.08)");
   bgGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = bgGlow;
-  ctx.fillRect(0, 0, 2048, 512);
+  ctx.fillRect(0, 0, w, h);
 
+  // 2. Solid Opaque Dark Navy-Black Glass Panel Body (Blocks background rock from showing through)
+  const cardGrad = ctx.createLinearGradient(x, y, x + cw, y + ch);
+  cardGrad.addColorStop(0, "rgb(2, 14, 28)");
+  cardGrad.addColorStop(0.5, "rgb(3, 20, 38)");
+  cardGrad.addColorStop(1, "rgb(2, 10, 22)");
+
+  function drawChamferPath(cx, cy, width, height, c) {
+    ctx.beginPath();
+    ctx.moveTo(cx + c, cy);
+    ctx.lineTo(cx + width - c, cy);
+    ctx.lineTo(cx + width, cy + c);
+    ctx.lineTo(cx + width, cy + height - c);
+    ctx.lineTo(cx + width - c, cy + height);
+    ctx.lineTo(cx + c, cy + height);
+    ctx.lineTo(cx, cy + height - c);
+    ctx.lineTo(cx, cy + c);
+    ctx.closePath();
+  }
+
+  ctx.save();
+  drawChamferPath(x, y, cw, ch, corner);
+  ctx.fillStyle = cardGrad;
+  ctx.fill();
+
+  // 3. Fine sharp background grid lines inside panel
+  ctx.clip();
+  ctx.strokeStyle = "rgba(0, 240, 255, 0.08)";
+  ctx.lineWidth = 1;
+  for (let gx = x; gx < x + cw; gx += 32) {
+    ctx.beginPath(); ctx.moveTo(gx, y); ctx.lineTo(gx, y + ch); ctx.stroke();
+  }
+  for (let gy = y; gy < y + ch; gy += 32) {
+    ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x + cw, gy); ctx.stroke();
+  }
+  ctx.restore();
+
+  // 4. Razor-Sharp Double Cyan Outer Frame
+  ctx.save();
+  drawChamferPath(x, y, cw, ch, corner);
+  ctx.strokeStyle = "#00f0ff";
+  ctx.lineWidth = 6;
+  ctx.shadowColor = "#00f0ff";
+  ctx.shadowBlur = 10;
+  ctx.stroke();
+
+  // Inner Parallel Frame
+  const gap = 14;
+  drawChamferPath(x + gap, y + gap, cw - gap * 2, ch - gap * 2, corner - 4);
+  ctx.strokeStyle = "rgba(0, 240, 255, 0.75)";
+  ctx.lineWidth = 3;
+  ctx.shadowColor = "#00f0ff";
+  ctx.shadowBlur = 6;
+  ctx.stroke();
+
+  // Corner Sci-Fi Bracket Highlights
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 4;
+  ctx.shadowColor = "#ffffff";
+  ctx.shadowBlur = 10;
+  ctx.beginPath(); ctx.moveTo(x, y + corner + 24); ctx.lineTo(x, y + corner); ctx.lineTo(x + corner, y); ctx.lineTo(x + corner + 24, y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x + cw - corner - 24, y); ctx.lineTo(x + cw - corner, y); ctx.lineTo(x + cw, y + corner); ctx.lineTo(x + cw, y + corner + 24); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x, y + ch - corner - 24); ctx.lineTo(x, y + ch - corner); ctx.lineTo(x + corner, y + ch); ctx.lineTo(x + corner + 24, y + ch); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x + cw - corner - 24, y + ch); ctx.lineTo(x + cw - corner, y + ch); ctx.lineTo(x + cw, y + ch - corner); ctx.lineTo(x + cw, y + ch - corner - 24); ctx.stroke();
+  ctx.restore();
+
+  // 5. Top Header Badge: ◇  EVENT XX  ◇
+  ctx.save();
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-
-  // PRIMARY EVENT NAME TITLE ONLY (Large Bold Glowing Neon Cyan/White)
-  const eventNameUpper = node.name.toUpperCase();
+  ctx.font = "800 44px monospace, system-ui, sans-serif";
+  ctx.fillStyle = "#00f0ff";
   ctx.shadowColor = "#00f0ff";
-  ctx.shadowBlur = 55;
-  ctx.lineWidth = 14;
-  ctx.strokeStyle = "#00f0ff";
+  ctx.shadowBlur = 8;
+  ctx.fillText(`◇    EVENT ${node.num}    ◇`, w / 2, y + 52);
+  ctx.restore();
 
-  // Dynamic font size scaling so long event names fit cleanly without clipping
-  let nameFontSize = 150;
-  if (eventNameUpper.length > 22) {
-    nameFontSize = 86;
-  } else if (eventNameUpper.length > 15) {
-    nameFontSize = 110;
-  }
-  ctx.font = `900 ${nameFontSize}px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
-
-  ctx.strokeText(eventNameUpper, 1024, 256);
+  // 6. Bottom Category Badge: ◆  CATEGORY  ◆
+  const catText = (node.category || "TECHNICAL").toUpperCase();
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "800 38px monospace, system-ui, sans-serif";
   ctx.fillStyle = "#ffffff";
-  ctx.fillText(eventNameUpper, 1024, 256);
+  ctx.shadowColor = "#00f0ff";
+  ctx.shadowBlur = 8;
+  ctx.fillText(catText, w / 2, y + ch - 52);
+
+  // Left and Right Pink Diamond Markers ◆
+  const catWidthOffset = Math.max(160, catText.length * 16 + 40);
+  ctx.fillStyle = "#ec4899";
+  ctx.shadowColor = "#ec4899";
+  ctx.shadowBlur = 10;
+  ctx.fillText("◆", w / 2 - catWidthOffset, y + ch - 52);
+  ctx.fillText("◆", w / 2 + catWidthOffset, y + ch - 52);
+  ctx.restore();
+
+  // 7. Center Module Box & Ultra-Sharp Dynamic Event Title
+  const mx = w / 2 - 440, my = h / 2 - 135, mw = 880, mh = 270, mc = 32;
+  ctx.save();
+  drawChamferPath(mx, my, mw, mh, mc);
+  ctx.fillStyle = "rgba(0, 36, 60, 0.88)";
+  ctx.fill();
+
+  ctx.strokeStyle = "#00f0ff";
+  ctx.lineWidth = 5;
+  ctx.shadowColor = "#00f0ff";
+  ctx.shadowBlur = 12;
+  ctx.stroke();
+
+  const mgap = 8;
+  drawChamferPath(mx + mgap, my + mgap, mw - mgap * 2, mh - mgap * 2, mc - 2);
+  ctx.strokeStyle = "rgba(0, 240, 255, 0.65)";
+  ctx.lineWidth = 2;
+  ctx.shadowBlur = 0;
+  ctx.stroke();
+  ctx.restore();
+
+  // Razor-Sharp Event Name Title Text
+  const nameText = node.name.toUpperCase();
+  let titleFontSize = 138;
+  if (nameText.length > 20) titleFontSize = 56;
+  else if (nameText.length > 13) titleFontSize = 88;
+  else if (nameText.length > 9) titleFontSize = 110;
+
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `900 ${titleFontSize}px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = "#00f0ff";
+  ctx.shadowColor = "#00f0ff";
+  ctx.shadowBlur = 14;
+  ctx.strokeText(nameText, w / 2, h / 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(nameText, w / 2, h / 2);
+  ctx.restore();
+
+  // 8. Left & Right Sci-Fi Interface Readouts
+  // Left Readouts
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.font = "900 72px monospace";
+  ctx.fillStyle = "#00f0ff";
+  ctx.shadowColor = "#00f0ff";
+  ctx.shadowBlur = 10;
+  ctx.fillText("</>", x + 160, h / 2 - 40);
+
+  ctx.textAlign = "left";
+  ctx.font = "600 18px monospace";
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "rgba(0, 240, 255, 0.85)";
+  const leftCodeLines = [
+    `SYS_ID: 0${node.num}`,
+    "const OCEAN = true;",
+    "// SIGNAL: ACTIVE",
+    "< /AQUASAGA >",
+    `node: ${node.id} / online`,
+  ];
+  leftCodeLines.forEach((line, idx) => {
+    ctx.fillText(line, x + 65, h / 2 + 35 + idx * 24);
+  });
+  ctx.restore();
+
+  // Right Readouts
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.font = "900 72px monospace";
+  ctx.fillStyle = "#00f0ff";
+  ctx.shadowColor = "#00f0ff";
+  ctx.shadowBlur = 10;
+  ctx.fillText("{ }", x + cw - 160, h / 2 + 50);
+
+  ctx.textAlign = "right";
+  ctx.font = "600 18px monospace";
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "rgba(0, 240, 255, 0.85)";
+  const rightCodeLines = [
+    "sys.core / linked",
+    `packet ${node.num} / stable`,
+    "depth buffer / online",
+    "status / 200 OK",
+  ];
+  rightCodeLines.forEach((line, idx) => {
+    ctx.fillText(line, x + cw - 65, h / 2 - 80 + idx * 24);
+  });
+  ctx.restore();
 
   const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = true;
   texture.needsUpdate = true;
   return texture;
 }
@@ -282,7 +453,7 @@ export default function Scene() {
         audioRef.current
           .play()
           .then(() => setIsAudioPlaying(true))
-          .catch(() => {});
+          .catch(() => { });
       }
     };
 
@@ -934,6 +1105,16 @@ export default function Scene() {
     keystoneGlyph.position.set(0, 14.5, 1.8);
     portalGroup.add(keystoneGlyph);
 
+    // Occlusion Backdrop Disc inside Portal Ring (Blocks background rock geometry shadows from showing inside portal circle)
+    const portalBackdropGeo = new THREE.CircleGeometry(11.7, 48);
+    const portalBackdropMat = new THREE.MeshBasicMaterial({
+      color: 0x031e30,
+      side: THREE.DoubleSide,
+    });
+    const portalBackdropMesh = new THREE.Mesh(portalBackdropGeo, portalBackdropMat);
+    portalBackdropMesh.position.set(0, 0, -0.15);
+    portalGroup.add(portalBackdropMesh);
+
     // Custom Swirling Energy Vortex Shader Disc inside Portal Ring
     const portalDiscGeo = new THREE.CircleGeometry(11.8, 48);
     const portalDiscMat = new THREE.ShaderMaterial({
@@ -1064,16 +1245,20 @@ export default function Scene() {
     scene.add(newWorldGroup);
 
     const cliffRockMat = new THREE.MeshStandardMaterial({
-      color: 0x072235,
-      roughness: 0.85,
-      metalness: 0.15,
+      color: 0x061d32,
+      emissive: 0x001425,
+      emissiveIntensity: 0.18,
+      roughness: 0.74,
+      metalness: 0.24,
       flatShading: true,
     });
 
     const stairStoneMat = new THREE.MeshStandardMaterial({
-      color: 0x0b3248,
-      roughness: 0.80,
-      metalness: 0.20,
+      color: 0x0a3048,
+      emissive: 0x00101c,
+      emissiveIntensity: 0.12,
+      roughness: 0.7,
+      metalness: 0.28,
       flatShading: true,
     });
 
@@ -1087,30 +1272,97 @@ export default function Scene() {
       flatShading: true,
     });
 
-    const purpleCrystalMat = new THREE.MeshStandardMaterial({
-      color: 0x240038,
-      emissive: 0xd946ef,
-      emissiveIntensity: 2.2,
-      roughness: 0.15,
-      metalness: 0.3,
+    const mineralAccentMat = new THREE.MeshStandardMaterial({
+      color: 0x35134e,
+      emissive: 0xda70ff,
+      emissiveIntensity: 1.45,
+      roughness: 0.24,
+      metalness: 0.34,
       flatShading: true,
     });
-
-    const amberCrystalMat = new THREE.MeshStandardMaterial({
-      color: 0x381e00,
-      emissive: 0xf59e0b,
-      emissiveIntensity: 2.2,
-      roughness: 0.15,
-      metalness: 0.3,
-      flatShading: true,
-    });
-
-    const crystalMats = [cyanCrystalMat, purpleCrystalMat, amberCrystalMat];
 
     const cliffMeshes = [];
     const bannerMeshes = [];
     const crystalShrineMeshes = [];
     const eventBannerGroups = {};
+    const postPortalHologramGroups = [];
+    const postPortalMineralGroups = [];
+    // Shared post-portal presentation envelope, in local event coordinates.
+    // Shrine/cage top: 10.7, poster underside: 14.2 — leaving a deliberate 3.5 unit air gap.
+    const posterAnchorY = 17.8;
+
+    const causticUniforms = { uTime: { value: 0 } };
+    const causticMat = new THREE.ShaderMaterial({
+      uniforms: causticUniforms,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `
+        uniform float uTime;
+        varying vec2 vUv;
+        void main() {
+          vec2 uv = vUv * 6.0;
+          float waveA = sin(uv.x * 2.1 + uTime * 0.35) + sin(uv.y * 2.6 - uTime * 0.27);
+          float waveB = sin((uv.x + uv.y) * 2.8 + uTime * 0.22);
+          float caustic = smoothstep(1.48, 1.88, waveA + waveB * 0.7);
+          float edgeFade = smoothstep(0.0, 0.18, vUv.x) * smoothstep(0.0, 0.18, 1.0 - vUv.x)
+            * smoothstep(0.0, 0.18, vUv.y) * smoothstep(0.0, 0.18, 1.0 - vUv.y);
+          gl_FragColor = vec4(0.16, 0.84, 1.0, caustic * edgeFade * 0.2);
+        }
+      `,
+    });
+
+    const shaftUniforms = { uTime: { value: 0 } };
+    const lightShaftMat = new THREE.ShaderMaterial({
+      uniforms: shaftUniforms,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `
+        uniform float uTime;
+        varying vec2 vUv;
+        void main() {
+          float width = smoothstep(0.0, 0.28, vUv.x) * smoothstep(0.0, 0.28, 1.0 - vUv.x);
+          float falloff = smoothstep(0.0, 0.16, vUv.y) * (1.0 - smoothstep(0.55, 1.0, vUv.y));
+          float drift = 0.7 + sin(uTime * 0.15 + vUv.y * 7.0) * 0.12;
+          gl_FragColor = vec4(0.17, 0.72, 1.0, width * falloff * drift * 0.075);
+        }
+      `,
+    });
+
+    const createHologramTexture = (label, detail = "LINKED") => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 288;
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "rgba(1, 21, 40, 0.62)";
+      ctx.fillRect(10, 10, 492, 268);
+      ctx.strokeStyle = "rgba(62, 231, 244, 0.8)";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(10, 10, 492, 268);
+      ctx.fillStyle = "rgba(88, 241, 245, 0.12)";
+      for (let row = 34; row < 255; row += 20) ctx.fillRect(26, row, 460, 1);
+      ctx.shadowColor = "#00e6ef";
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = "#76f6f5";
+      ctx.font = "700 28px monospace";
+      ctx.fillText(label, 28, 54);
+      ctx.shadowBlur = 0;
+      ctx.font = "600 16px monospace";
+      ctx.fillStyle = "rgba(139, 246, 246, 0.78)";
+      ["node.status  / active", "signal.depth / stable", `protocol     / ${detail}`].forEach((line, index) => {
+        ctx.fillText(line, 28, 104 + index * 28);
+      });
+      ctx.strokeStyle = "rgba(204, 121, 255, 0.8)";
+      ctx.strokeRect(412, 176, 54, 54);
+      ctx.beginPath(); ctx.moveTo(426, 214); ctx.lineTo(438, 188); ctx.lineTo(452, 214); ctx.closePath(); ctx.stroke();
+      return new THREE.CanvasTexture(canvas);
+    };
 
     // Construct each distinct Event Location matching Image 2 target reference with mirrored sideSign offsets
     function createEventPlatformAndBanner(node) {
@@ -1130,8 +1382,10 @@ export default function Scene() {
       const bVec = new THREE.Vector3();
 
       // 2. Main Terraced Low-Poly Faceted Rock Formation (Centered at eventGroup origin)
-      const rockHeight = node.id === "event-5" ? 16 : (node.id === "event-7" ? 28 : 20);
-      const lowerRockGeo = new THREE.CylinderGeometry(18 * altarScale, 24 * altarScale, rockHeight, 12, 3);
+      const isEvent1 = node.id === "event-1";
+      const rockHeight = isEvent1 ? 120 : (node.id === "event-5" ? 16 : (node.id === "event-7" ? 28 : 20));
+      const rockBotRad = isEvent1 ? 32 * altarScale : 24 * altarScale;
+      const lowerRockGeo = new THREE.CylinderGeometry(18 * altarScale, rockBotRad, rockHeight, 12, 5);
       const lrPos = lowerRockGeo.attributes.position;
       for (let i = 0; i < lrPos.count; i++) {
         bVec.fromBufferAttribute(lowerRockGeo.attributes.position, i);
@@ -1146,9 +1400,14 @@ export default function Scene() {
       lowerRockGeo.computeVertexNormals();
 
       const lowerRockMesh = new THREE.Mesh(lowerRockGeo, cliffRockMat);
-      lowerRockMesh.position.set(0, -8, 0);
+      lowerRockMesh.position.set(0, isEvent1 ? -58 : -8, 0);
       eventGroup.add(lowerRockMesh);
       cliffMeshes.push(lowerRockMesh);
+
+      const platformCaustic = new THREE.Mesh(new THREE.CircleGeometry(15, 12), causticMat);
+      platformCaustic.rotation.x = -Math.PI / 2;
+      platformCaustic.position.set(0, 2.16, 0);
+      eventGroup.add(platformCaustic);
 
       // TECH TALK SPECIAL: Grand Hollow Underwater Cavern Grotto / Cave Hole Archway
       if (node.id === "event-5") {
@@ -1170,16 +1429,6 @@ export default function Scene() {
         techCaveDiscMesh.position.set(0, 12, -5);
         eventGroup.add(techCaveDiscMesh);
 
-        for (let c = 0; c < 8; c++) {
-          const angle = (c / 8) * Math.PI;
-          const cx = Math.cos(angle) * 17;
-          const cy = 12 + Math.sin(angle) * 17;
-          const cGeo = new THREE.ConeGeometry(1.2, 4.5, 5);
-          const cMesh = new THREE.Mesh(cGeo, cyanCrystalMat);
-          cMesh.position.set(cx, cy, -2);
-          cMesh.rotation.set(0, 0, -angle + Math.PI / 2);
-          eventGroup.add(cMesh);
-        }
       }
 
       // Upper Terraced Plateau (Omitted for Tech Talk so no rock structure sits above it)
@@ -1247,18 +1496,11 @@ export default function Scene() {
       wireMesh.position.set(0, 3.2, 0);
       mainShrineGroup.add(wireMesh);
 
-      // Surrounding Faceted Crystal Points
-      const shrineCrystalCount = 8;
-      for (let sc = 0; sc < shrineCrystalCount; sc++) {
-        const scGeo = new THREE.ConeGeometry(0.9 + (sc % 3) * 0.3, 3.5 + (sc % 2) * 1.2, 5);
-        const scMat = crystalMats[(sc + eventIdx) % crystalMats.length];
-        const scMesh = new THREE.Mesh(scGeo, scMat);
-        const cAngle = (sc / shrineCrystalCount) * Math.PI * 2;
-        const cRad = 3.6;
-        scMesh.position.set(Math.cos(cAngle) * cRad, 1.2, Math.sin(cAngle) * cRad);
-        scMesh.rotation.set(0.4, cAngle, (sc % 2 === 0 ? 0.3 : -0.3));
-        mainShrineGroup.add(scMesh);
-      }
+      const shrineCaustic = new THREE.Mesh(new THREE.CircleGeometry(4.2, 10), causticMat);
+      shrineCaustic.rotation.x = -Math.PI / 2;
+      shrineCaustic.position.set(0, 1.56, 0);
+      shrineCaustic.scale.setScalar(0.72);
+      mainShrineGroup.add(shrineCaustic);
 
       // Strong Directional PointLight from main shrine
       const mainShrineLight = new THREE.PointLight(0x00f0ff, 8.0, 40);
@@ -1270,7 +1512,9 @@ export default function Scene() {
 
       // 5. Upper Terrace Crystal Altar
       const upperShrineGroup = new THREE.Group();
-      upperShrineGroup.position.set(sideSign * 12, 13, -4);
+      // Keep the existing upper crystal visible as a clearly floating side accent,
+      // outside the upper terrace and below the poster envelope.
+      upperShrineGroup.position.set(sideSign * 27, 7, -4);
       const upperOrbGeo = new THREE.OctahedronGeometry(2.0, 1);
       const upperOrbMesh = new THREE.Mesh(upperOrbGeo, cyanCrystalMat);
       upperShrineGroup.add(upperOrbMesh);
@@ -1279,28 +1523,33 @@ export default function Scene() {
       upperShrineGroup.add(upperLight);
       eventGroup.add(upperShrineGroup);
 
-      // 6. 3D Embedded Faceted Crystals across Rock Surface
-      const crystalPlacements = [
-        { pos: [sideSign * 10, 2, 8], mat: cyanCrystalMat, scale: 1.4 },
-        { pos: [sideSign * 4, 3, 6], mat: cyanCrystalMat, scale: 1.2 },
-        { pos: [sideSign * 14, 9, -2], mat: cyanCrystalMat, scale: 1.6 },
-        { pos: [sideSign * 12, 8, -8], mat: cyanCrystalMat, scale: 1.3 },
-        { pos: [sideSign * 12, -4, 10], mat: amberCrystalMat, scale: 1.5 },
-        { pos: [sideSign * 2, -3, 4], mat: amberCrystalMat, scale: 1.4 },
-        { pos: [sideSign * 18, 2, -4], mat: amberCrystalMat, scale: 1.2 },
-        { pos: [sideSign * 20, -10, 4], mat: purpleCrystalMat, scale: 1.6 },
-        { pos: [sideSign * 2, -12, 8], mat: purpleCrystalMat, scale: 1.5 },
-        { pos: [sideSign * 16, -14, -6], mat: purpleCrystalMat, scale: 1.4 },
-        { pos: [sideSign * 8, -16, 10], mat: purpleCrystalMat, scale: 1.3 },
-      ];
-
-      crystalPlacements.forEach((cp) => {
-        const xtalGeo = new THREE.ConeGeometry(0.8 * cp.scale, 3.2 * cp.scale, 5);
-        const xtalMesh = new THREE.Mesh(xtalGeo, cp.mat);
-        xtalMesh.position.set(cp.pos[0], cp.pos[1], cp.pos[2]);
-        xtalMesh.rotation.set((Math.random() - 0.5) * 0.6, Math.random() * Math.PI, (Math.random() - 0.5) * 0.6);
-        eventGroup.add(xtalMesh);
-      });
+      // A single non-conical, reference-inspired mineral branch cluster for Coding.
+      // Flat-capped five-sided prisms preserve the faceted look without cone silhouettes.
+      if (node.id === "event-1") {
+        const mineralCluster = new THREE.Group();
+        mineralCluster.position.set(-17, 2.35, 5);
+        const branchSpecs = [
+          { pos: [0, 2.1, 0], height: 4.2, bottom: 0.48, top: 0.28, rot: [0.08, 0.22, -0.08], mat: cyanCrystalMat },
+          { pos: [-1.25, 1.55, 0.25], height: 3.1, bottom: 0.42, top: 0.23, rot: [-0.24, 0.44, 0.52], mat: cyanCrystalMat },
+          { pos: [1.15, 1.4, -0.15], height: 2.8, bottom: 0.38, top: 0.22, rot: [0.28, -0.38, -0.58], mat: mineralAccentMat },
+          { pos: [0.48, 2.65, -0.45], height: 5.1, bottom: 0.39, top: 0.2, rot: [0.22, 0.6, -0.28], mat: cyanCrystalMat },
+          { pos: [-0.55, 1.25, -0.9], height: 2.5, bottom: 0.34, top: 0.19, rot: [-0.4, -0.35, 0.7], mat: mineralAccentMat },
+          { pos: [1.7, 1.0, 0.55], height: 2.0, bottom: 0.3, top: 0.17, rot: [0.12, 0.2, -0.9], mat: cyanCrystalMat },
+        ];
+        branchSpecs.forEach((branch) => {
+          const stem = new THREE.Mesh(
+            new THREE.CylinderGeometry(branch.top, branch.bottom, branch.height, 5, 1),
+            branch.mat
+          );
+          stem.position.set(...branch.pos);
+          stem.rotation.set(...branch.rot);
+          mineralCluster.add(stem);
+        });
+        const clusterLight = new THREE.PointLight(0x5df1f0, 1.7, 15);
+        clusterLight.position.set(0, 2.2, 0);
+        mineralCluster.add(clusterLight);
+        eventGroup.add(mineralCluster);
+      }
 
       // 7. Floating 3D Code Symbol Glyphs (Positioned behind shrine away from camera line of sight)
       const codeGlyphsCanvas = document.createElement("canvas");
@@ -1332,27 +1581,58 @@ export default function Scene() {
 
       newWorldGroup.add(eventGroup);
 
-      // 8. Floating Event Title Text Card (Centered directly over crystal shrine)
+      // 8. Futuristic Holographic Event Title Plaque (Centered directly over crystal shrine)
       const bannerGroup = new THREE.Group();
-      bannerGroup.position.set(x, y + 14.0, z);
+      bannerGroup.position.set(x, y + posterAnchorY, z);
       bannerGroup.rotation.y = 0;
 
       const bannerTexture = createEventBannerTexture(node);
+      if (renderer) {
+        bannerTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      }
+
       const bannerMat = new THREE.MeshBasicMaterial({
         map: bannerTexture,
         transparent: true,
         side: THREE.DoubleSide,
-        depthWrite: false,
+        depthWrite: true,
+        alphaTest: 0.05,
       });
 
-      const bannerPlaneGeo = new THREE.PlaneGeometry(28, 7);
+      // Compact futuristic plaque geometry (18.4 x 7.2 for all events)
+      const bannerPlaneGeo = new THREE.PlaneGeometry(18.4, 7.2);
       const bannerMesh = new THREE.Mesh(bannerPlaneGeo, bannerMat);
       bannerMesh.userData = { eventData: node };
       bannerGroup.add(bannerMesh);
       bannerMeshes.push(bannerMesh);
 
-      const posterLight = new THREE.PointLight(0x00f0ff, 4.0, 40);
-      posterLight.position.set(0, 0, 2.0);
+      // Glowing Vertical Energy Tether Beam connecting plaque base to crystal shrine
+      const tetherGeo = new THREE.CylinderGeometry(0.04, 0.04, 2.2, 8);
+      const tetherMat = new THREE.MeshStandardMaterial({
+        color: 0x00f0ff,
+        emissive: 0x00f0ff,
+        emissiveIntensity: 2.8,
+        transparent: true,
+        opacity: 0.65,
+      });
+      const tetherMesh = new THREE.Mesh(tetherGeo, tetherMat);
+      tetherMesh.position.set(0, -4.8, 0);
+      bannerGroup.add(tetherMesh);
+
+      // Top Floating Holographic Diamond Marker above plaque
+      const topDiamondGeo = new THREE.OctahedronGeometry(0.42, 0);
+      const topDiamondMesh = new THREE.Mesh(topDiamondGeo, cyanCrystalMat);
+      topDiamondMesh.position.set(0, 4.35, 0);
+      bannerGroup.add(topDiamondMesh);
+
+      // Bottom Floating Holographic Diamond Marker under tether beam
+      const botDiamondGeo = new THREE.OctahedronGeometry(0.35, 0);
+      const botDiamondMesh = new THREE.Mesh(botDiamondGeo, cyanCrystalMat);
+      botDiamondMesh.position.set(0, -6.6, 0);
+      bannerGroup.add(botDiamondMesh);
+
+      const posterLight = new THREE.PointLight(0x00f0ff, 3.5, 30);
+      posterLight.position.set(0, 0, 1.5);
       bannerGroup.add(posterLight);
 
       newWorldGroup.add(bannerGroup);
@@ -1362,6 +1642,44 @@ export default function Scene() {
     eventNodes.forEach((node) => {
       createEventPlatformAndBanner(node);
     });
+
+    // Distant, post-portal atmosphere only. These occupy open background space
+    // and stay outside all event poster/shrine composition envelopes.
+    const lightShaftGroup = new THREE.Group();
+    [
+      [-82, -72, -350, -0.16], [78, -118, -470, 0.12], [-86, -185, -650, -0.1],
+      [86, -250, -790, 0.14], [-90, -330, -960, -0.12], [82, -400, -1110, 0.1],
+    ].forEach(([shaftX, shaftY, shaftZ, rotation]) => {
+      const shaft = new THREE.Mesh(new THREE.PlaneGeometry(10, 88), lightShaftMat);
+      shaft.position.set(shaftX, shaftY, shaftZ);
+      shaft.rotation.z = rotation;
+      lightShaftGroup.add(shaft);
+    });
+    newWorldGroup.add(lightShaftGroup);
+
+    const vortexGroup = new THREE.Group();
+    vortexGroup.position.set(104, -270, -885);
+    [
+      { color: 0x36e7f2, offset: 0, scale: 1 },
+      { color: 0xc77dff, offset: Math.PI, scale: 0.78 },
+      { color: 0x3298ff, offset: Math.PI * 0.5, scale: 1.18 },
+    ].forEach((spiral) => {
+      const points = [];
+      for (let pointIndex = 0; pointIndex < 88; pointIndex++) {
+        const progress = pointIndex / 87;
+        const angle = spiral.offset + progress * Math.PI * 6.2;
+        const radius = (1.5 + progress * 13) * spiral.scale;
+        points.push(new THREE.Vector3(Math.cos(angle) * radius, Math.sin(angle) * radius, progress * 0.3));
+      }
+      const spiralLine = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(points),
+        new THREE.LineBasicMaterial({ color: spiral.color, transparent: true, opacity: 0.28 })
+      );
+      vortexGroup.add(spiralLine);
+    });
+    vortexGroup.add(new THREE.PointLight(0x5169ff, 1.2, 48));
+    newWorldGroup.add(vortexGroup);
+    postPortalMineralGroups.push(vortexGroup);
 
     // --- DARK TEAL SEA GRASS / KELP FRONDS ---
     const kelpGroup = new THREE.Group();
@@ -1632,6 +1950,7 @@ export default function Scene() {
       targetZ: -50,
       rx: 0,
       ry: 0,
+      fov: isMobile ? 65 : 75,
       fogDensity: 0.0,
     };
 
@@ -1641,6 +1960,8 @@ export default function Scene() {
     const blendedTarget = new THREE.Vector3(0, 2, -50);
     const smoothCamPos = new THREE.Vector3(0, 2, 0);
     const lastCamPos = new THREE.Vector3(0, 2, 0);
+    const safetyOffset = new THREE.Vector3();
+    const safeCameraPosition = new THREE.Vector3();
     let currentBank = 0;
 
     const mouse = { x: 0, y: 0 };
@@ -1789,503 +2110,821 @@ export default function Scene() {
       5.0
     );
 
-    // INSIDE EVENT PORTAL: 3-Step Per-Event Camera Choreography:
-    // Main Portal (z=-190) -> Exit Portal Area (z=-250) -> Event 01 (z=-300) -> Event 02 (z=-400) ... -> Event 10 (z=-1200)
+    // INSIDE EVENT PORTAL: Cinematic AAA Underwater Exploration Choreography
+    // Continuous curved trajectories, dynamic look-at targets, micro-banking rolls, and tailored FOV transitions.
+    // Event Platform Coordinates:
+    // 01 Coding: (-42, -110, -300) | 02 Web Design: (42, -150, -400) | 03 IT Quiz: (-42, -190, -500)
+    // 04 Gaming: (42, -230, -600)  | 05 Tech Talk: (-42, -230, -700) | 06 Surprise: (42, -310, -800)
+    // 07 IT Manager: (-42, -310, -900) | 08 Startup: (42, -390, -1000) | 09 Dance: (-42, -430, -1100)
+    // 10 Photography: (0, -470, -1200)
 
-    // Event 01: Coding (Rock Platform 1 at x = -42, z = -300)
-    // Step 1A: Arrive at Wide Overview
+    // EVENT 01 — CODING: Cinematic Approach → Hero Rise (y: -99) → Straight Rightward Motion Pointing to Crystal (x: +22) → Downward Exit (y: -124)
+    // 1. APPROACH: Exit portal at low position (y: -118), moving forward in Z toward Coding platform
     tl.to(
       camState,
       {
-        x: -10,
-        y: -102,
-        z: -235,
-        targetX: -34,
+        x: -18,
+        y: -118,
+        z: -265,
+        targetX: -22,
         targetY: -106,
-        targetZ: -300,
+        targetZ: -318,
+        fov: 64,
         fogDensity: 0.015,
         duration: 1.2,
+        ease: "power2.inOut",
+      },
+      5.2
+    );
+
+    // 2. HERO ARRIVAL AT DEPTH 99M: Camera rises to elevation y: -99, pointing directly at the crystal orb
+    tl.to(
+      camState,
+      {
+        x: -30,
+        y: -99,
+        z: -282,
+        targetX: -22,
+        targetY: -104,
+        targetZ: -318,
+        fov: 54,
+        duration: 1.3,
         ease: "power2.out",
       },
-      5.8
+      6.4
     );
-    // Step 1B: Move IN Close to Event Poster & Shrine
-    tl.to(
-      camState,
-      {
-        x: -42,
-        y: -96,
-        z: -268,
-        targetX: -42,
-        targetY: -96,
-        targetZ: -300,
-        duration: 1.0,
-        ease: "power1.inOut",
-      },
-      7.4
-    );
-    tl.to(camState, { targetX: -42, targetY: -96, targetZ: -300, duration: 0.6 }, 8.4);
 
-    // Transit 1 -> 2: Sweep HORIZONTALLY TO THE RIGHT SIDE (x = 22, y = -96) while camera gaze remains locked on the center gem shrine (x = -42, y = -96, z = -300)
+    // 3. STRAIGHT RIGHT SIDE MOTION POINTING TO CRYSTAL: Glides straight to the RIGHT (x: -30 → +22) while continuously pointing at the crystal orb
+    // 3. SMOOTH ORBIT AROUND CRYSTAL:
+    // Camera moves in a curved right-side arc while continuously looking at the crystal.
+    // This creates a cinematic rotation instead of a straight horizontal slide.
+    // 3. EXTENDED CINEMATIC ORBIT AROUND CODING CRYSTAL
+    // Camera makes a wide curved arc around the crystal while continuously
+    // looking at the crystal. No straight horizontal movement.
     tl.to(
       camState,
       {
-        x: 22,
+        x: -5,
+        y: -91,
+        z: -300,
+        targetX: -22,
+        targetY: -104,
+        targetZ: -318,
+        fov: 51,
+        duration: 1.1,
+        ease: "power2.inOut",
+      },
+      7.7
+    );
+
+    tl.to(
+      camState,
+      {
+        x: 18,
+        y: -88,
+        z: -307,
+        targetX: -22,
+        targetY: -104,
+        targetZ: -318,
+        fov: 49,
+        duration: 1.2,
+        ease: "sine.inOut",
+      },
+      8.8
+    );
+
+    tl.to(
+      camState,
+      {
+        x: 38,
         y: -96,
-        z: -320,
-        targetX: -42,
-        targetY: -96,
-        targetZ: -300,
+        z: -296,
+        targetX: -22,
+        targetY: -104,
+        targetZ: -318,
+        fov: 48,
+        duration: 1.2,
+        ease: "sine.inOut",
+      },
+      10.0
+    );
+
+    // 4. THEN DOWNWARD EXIT: After moving straight right, smoothly curve downward in Y (y: -99 → -124) toward Event 02
+    // 4. SMOOTH DOWNWARD EXIT AFTER EXTENDED ORBIT
+    tl.to(
+      camState,
+      {
+        x: 28,
+        y: -124,
+        z: -340,
+        targetX: 28,
+        targetY: -138,
+        targetZ: -405,
+        fov: 64,
         fogDensity: 0.016,
-        duration: 0.8,
+        duration: 1.3,
         ease: "power1.inOut",
       },
-      9.0
+      11.2
     );
 
-    // Event 02: Web Design (Rock Platform 2 at x = 42, z = -400)
-    // Step 2A: Arrive at Wide Overview
+    // EVENT 02 — WEB DESIGN: Wide Arrival → Right Flank Orbit → Hero Inspection → Extended Micro-Orbit → Smooth Exit
     tl.to(
       camState,
       {
-        x: 10,
-        y: -142,
-        z: -335,
-        targetX: 34,
-        targetY: -146,
-        targetZ: -400,
+        x: 42,
+        y: -168,
+        z: -350,
+        targetX: 32,
+        targetY: -183,
+        targetZ: -420,
+        fov: 68,
         fogDensity: 0.017,
         duration: 1.2,
         ease: "power2.out",
       },
-      10.0
+      12.5
     );
-    // Step 2B: Move IN Close to Event Poster & Shrine
     tl.to(
       camState,
       {
-        x: 42,
-        y: -136,
-        z: -368,
-        targetX: 42,
-        targetY: -136,
-        targetZ: -400,
-        duration: 1.0,
-        ease: "power1.inOut",
+        x: 48,
+        y: -176,
+        z: -390,
+        targetX: 32,
+        targetY: -183,
+        targetZ: -420,
+        fov: 58,
+        duration: 1.2,
+        ease: "sine.inOut",
       },
-      11.6
+      13.7
     );
-    tl.to(camState, { targetX: 42, targetY: -136, targetZ: -400, duration: 0.6 }, 12.6);
-
-    // Transit 2 -> 3: Sweep HORIZONTALLY TO THE LEFT SIDE (x = -22, y = -136) while camera gaze remains locked on the center gem shrine of Web Design (x = 42, y = -136, z = -400)
     tl.to(
       camState,
       {
-        x: -22,
-        y: -136,
-        z: -420,
-        targetX: 42,
-        targetY: -136,
-        targetZ: -400,
-        fogDensity: 0.018,
-        duration: 0.8,
-        ease: "power1.inOut",
+        x: 30,
+        y: -174,
+        z: -402,
+        targetX: 32,
+        targetY: -183,
+        targetZ: -420,
+        fov: 51,
+        duration: 1.1,
+        ease: "sine.inOut",
       },
-      13.2
+      14.9
     );
-
-    // Event 03: IT Quiz (Rock Platform 3 at x = -42, z = -500)
-    // Step 3A: Arrive at Wide Overview
+    tl.to(
+      camState,
+      {
+        x: 18,
+        y: -176,
+        z: -412,
+        targetX: 32,
+        targetY: -183,
+        targetZ: -420,
+        fov: 52,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      16.0
+    );
     tl.to(
       camState,
       {
         x: -10,
-        y: -182,
-        z: -435,
-        targetX: -34,
-        targetY: -186,
-        targetZ: -500,
+        y: -195,
+        z: -445,
+        targetX: 32,
+        targetY: -183,
+        targetZ: -420,
+        fov: 64,
+        fogDensity: 0.018,
+        duration: 1.2,
+        ease: "power1.inOut",
+      },
+      17.1
+    );
+
+    // EVENT 03 — IT QUIZ: Descending Approach → Left Flank Orbit → Hero Technical Focus → Micro-Arc → Smooth Exit Right
+    tl.to(
+      camState,
+      {
+        x: -18,
+        y: -170,
+        z: -442,
+        targetX: -32,
+        targetY: -183,
+        targetZ: -508,
+        fov: 70,
         fogDensity: 0.019,
         duration: 1.2,
         ease: "power2.out",
       },
-      14.2
+      18.3
     );
-    // Step 3B: Move IN Close to Event Poster & Shrine
     tl.to(
       camState,
       {
-        x: -42,
+        x: -44,
         y: -176,
-        z: -468,
-        targetX: -42,
-        targetY: -176,
-        targetZ: -500,
-        duration: 1.0,
-        ease: "power1.inOut",
+        z: -475,
+        targetX: -32,
+        targetY: -183,
+        targetZ: -508,
+        fov: 58,
+        duration: 1.2,
+        ease: "sine.inOut",
       },
-      15.8
+      19.5
     );
-    tl.to(camState, { targetX: -42, targetY: -176, targetZ: -500, duration: 0.6 }, 16.8);
-
-    // Transit 3 -> 4: Sweep HORIZONTALLY TO THE RIGHT SIDE (x = 22, y = -176) while camera gaze remains locked on the center gem shrine of IT Quiz (x = -42, y = -176, z = -500)
+    tl.to(
+      camState,
+      {
+        x: -28,
+        y: -174,
+        z: -488,
+        targetX: -32,
+        targetY: -183,
+        targetZ: -508,
+        fov: 51,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      20.7
+    );
+    tl.to(
+      camState,
+      {
+        x: -16,
+        y: -176,
+        z: -496,
+        targetX: -32,
+        targetY: -183,
+        targetZ: -508,
+        fov: 53,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      21.8
+    );
     tl.to(
       camState,
       {
         x: 22,
-        y: -176,
-        z: -520,
-        targetX: -42,
-        targetY: -176,
-        targetZ: -500,
+        y: -200,
+        z: -533,
+        targetX: -32,
+        targetY: -183,
+        targetZ: -508,
+        fov: 66,
         fogDensity: 0.020,
-        duration: 0.8,
+        duration: 1.2,
         ease: "power1.inOut",
       },
-      17.4
+      22.9
     );
 
-    // Event 04: Gaming (Rock Platform 4 at x = 42, z = -600)
-    // Step 4A: Arrive at Wide Overview
+    // EVENT 04 — GAMING: Energetic Fast Swoop → Spiral Arc → Close Shrine → Fast Exit
     tl.to(
       camState,
       {
-        x: 10,
-        y: -222,
-        z: -535,
-        targetX: 34,
-        targetY: -226,
-        targetZ: -600,
+        x: 18,
+        y: -200,
+        z: -528,
+        targetX: 32,
+        targetY: -223,
+        targetZ: -608,
+        fov: 72,
         fogDensity: 0.021,
         duration: 1.2,
         ease: "power2.out",
       },
-      18.4
+      24.1
     );
-    // Step 4B: Move IN Close to Event Poster & Shrine
     tl.to(
       camState,
       {
         x: 42,
-        y: -216,
+        y: -218,
         z: -568,
-        targetX: 42,
-        targetY: -216,
-        targetZ: -600,
+        targetX: 32,
+        targetY: -223,
+        targetZ: -608,
+        fov: 60,
         duration: 1.0,
         ease: "power1.inOut",
       },
-      20.0
+      25.7
     );
-    tl.to(camState, { targetX: 42, targetY: -216, targetZ: -600, duration: 0.6 }, 21.0);
-
-    // Transit 4 -> 5: Sweep HORIZONTALLY TO THE LEFT SIDE (x = -22, y = -216) while camera gaze remains locked on the center gem shrine of Gaming (x = 42, y = -216, z = -600)
     tl.to(
       camState,
       {
-        x: -22,
+        x: 32,
         y: -216,
-        z: -620,
-        targetX: 42,
-        targetY: -216,
-        targetZ: -600,
+        z: -570,
+        targetX: 32,
+        targetY: -223,
+        targetZ: -608,
+        fov: 48,
+        duration: 0.6,
+        ease: "sine.inOut",
+      },
+      26.7
+    );
+    tl.to(
+      camState,
+      {
+        x: -25,
+        y: -216,
+        z: -633,
+        targetX: 32,
+        targetY: -223,
+        targetZ: -608,
+        fov: 70,
         fogDensity: 0.0215,
         duration: 0.8,
         ease: "power1.inOut",
       },
-      21.6
+      27.3
     );
 
-    // Event 05: Tech Talk (Grand Cave Hole Cavern Grotto at x = -42, y = -230, z = -700)
-    // Step 5A: Arrive & Swoop to Cave Hole Overview (y = -222)
+    // EVENT 05 — TECH TALK: Slow Approach → Cave Entrance Reveal → Move Toward Cave → Shrine Reveal → Slow Exit
     tl.to(
       camState,
       {
-        x: -20,
-        y: -222,
-        z: -635,
-        targetX: -42,
-        targetY: -222,
-        targetZ: -700,
+        x: -15,
+        y: -210,
+        z: -628,
+        targetX: -32,
+        targetY: -223,
+        targetZ: -708,
+        fov: 64,
         fogDensity: 0.022,
         duration: 1.2,
-        ease: "power2.out",
+        ease: "power1.out",
       },
-      22.6
+      28.3
     );
-    // Step 5B: Move IN Close to Cave Hole Opening & Glowing Poster (y = -220)
     tl.to(
       camState,
       {
-        x: -42,
-        y: -220,
-        z: -665,
-        targetX: -42,
-        targetY: -220,
-        targetZ: -700,
+        x: -30,
+        y: -222,
+        z: -653,
+        targetX: -32,
+        targetY: -223,
+        targetZ: -708,
+        fov: 58,
         duration: 1.0,
         ease: "power1.inOut",
       },
-      24.2
+      29.9
     );
-    tl.to(camState, { targetX: -42, targetY: -220, targetZ: -700, duration: 0.6 }, 25.2);
-
-    // Transit 5 -> 6: Sweep HORIZONTALLY TO THE RIGHT SIDE (x = 22, y = -220) while camera gaze remains locked on Tech Talk (x = -42, y = -220, z = -700)
     tl.to(
       camState,
       {
-        x: 22,
+        x: -32,
         y: -220,
-        z: -720,
-        targetX: -42,
-        targetY: -220,
-        targetZ: -700,
+        z: -670,
+        targetX: -32,
+        targetY: -223,
+        targetZ: -708,
+        fov: 48,
+        duration: 0.6,
+        ease: "sine.inOut",
+      },
+      30.9
+    );
+    tl.to(
+      camState,
+      {
+        x: 20,
+        y: -260,
+        z: -738,
+        targetX: -32,
+        targetY: -223,
+        targetZ: -708,
+        fov: 62,
         fogDensity: 0.023,
         duration: 0.8,
         ease: "power1.inOut",
       },
-      25.8
+      31.5
     );
 
-    // Event 06: Surprise Event (Rock Platform 6 at x = 42, z = -800)
-    // Step 6A: Arrive at Wide Overview
+    // EVENT 06 — SURPRISE EVENT: Deep Approach → Right Approach → Depth Reveal → Hero Orbit → Hero Settle → Exit
     tl.to(
       camState,
       {
-        x: 10,
-        y: -302,
-        z: -735,
-        targetX: 34,
-        targetY: -306,
-        targetZ: -800,
+        x: 14,
+        y: -278,
+        z: -785,
+        targetX: 32,
+        targetY: -303,
+        targetZ: -860,
+        fov: 66,
         fogDensity: 0.024,
         duration: 1.2,
         ease: "power2.out",
       },
-      26.8
+      32.5
     );
-    // Step 6B: Move IN Close to Event Poster & Shrine
     tl.to(
       camState,
       {
         x: 42,
-        y: -296,
-        z: -768,
-        targetX: 42,
-        targetY: -296,
-        targetZ: -800,
-        duration: 1.0,
-        ease: "power1.inOut",
+        y: -292,
+        z: -820,
+        targetX: 32,
+        targetY: -303,
+        targetZ: -860,
+        fov: 60,
+        duration: 1.2,
+        ease: "sine.inOut",
       },
-      28.4
+      33.7
     );
-    tl.to(camState, { targetX: 42, targetY: -296, targetZ: -800, duration: 0.6 }, 29.4);
-
-    // Transit 6 -> 7: Sweep HORIZONTALLY TO THE LEFT SIDE (x = -22, y = -296) while camera gaze remains locked on Surprise Event (x = 42, y = -296, z = -800)
     tl.to(
       camState,
       {
-        x: -22,
+        x: 48,
+        y: -298,
+        z: -838,
+        targetX: 32,
+        targetY: -303,
+        targetZ: -860,
+        fov: 55,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      34.9
+    );
+    tl.to(
+      camState,
+      {
+        x: 30,
+        y: -294,
+        z: -848,
+        targetX: 32,
+        targetY: -303,
+        targetZ: -860,
+        fov: 50,
+        duration: 1.2,
+        ease: "sine.inOut",
+      },
+      36.0
+    );
+    tl.to(
+      camState,
+      {
+        x: 18,
         y: -296,
-        z: -820,
-        targetX: 42,
-        targetY: -296,
-        targetZ: -800,
+        z: -855,
+        targetX: 32,
+        targetY: -303,
+        targetZ: -860,
+        fov: 51,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      37.2
+    );
+    tl.to(
+      camState,
+      {
+        x: -18,
+        y: -315,
+        z: -885,
+        targetX: -28,
+        targetY: -294,
+        targetZ: -905,
+        fov: 64,
         fogDensity: 0.0245,
-        duration: 0.8,
+        duration: 1.2,
         ease: "power1.inOut",
       },
-      30.0
+      38.3
     );
 
-    // Event 07: IT Manager (Elevated Taller Rock Platform at x = -42, y = -310, z = -900)
-    // Step 7A: Arrive & Swoop UPWARD to High Overview (y = -302)
+    // EVENT 07 — IT MANAGER SPIRE: 5-Phase 3D Orbital Trajectory
     tl.to(
       camState,
       {
         x: -10,
-        y: -302,
-        z: -835,
-        targetX: -34,
-        targetY: -306,
-        targetZ: -900,
+        y: -284,
+        z: -876,
+        targetX: -28,
+        targetY: -294,
+        targetZ: -905,
+        fov: 64,
         fogDensity: 0.025,
         duration: 1.2,
         ease: "power2.out",
       },
-      31.0
+      39.5
     );
-    // Step 7B: Move IN Close to Elevated Event Poster & Shrine (y = -296)
     tl.to(
       camState,
       {
         x: -42,
-        y: -296,
-        z: -868,
-        targetX: -42,
-        targetY: -296,
-        targetZ: -900,
-        duration: 1.0,
-        ease: "power1.inOut",
+        y: -286,
+        z: -888,
+        targetX: -28,
+        targetY: -294,
+        targetZ: -905,
+        fov: 58,
+        duration: 1.2,
+        ease: "sine.inOut",
       },
-      32.6
+      40.9
     );
-    tl.to(camState, { targetX: -42, targetY: -296, targetZ: -900, duration: 0.6 }, 33.6);
-
-    // Transit 7 -> 8: Sweep HORIZONTALLY TO THE RIGHT SIDE (x = 22, y = -296) while camera gaze remains locked on IT Manager (x = -42, y = -296, z = -900)
     tl.to(
       camState,
       {
-        x: 22,
-        y: -296,
-        z: -920,
-        targetX: -42,
-        targetY: -296,
-        targetZ: -900,
+        x: -30,
+        y: -287,
+        z: -894,
+        targetX: -28,
+        targetY: -294,
+        targetZ: -905,
+        fov: 51,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      42.3
+    );
+    tl.to(
+      camState,
+      {
+        x: -18,
+        y: -288,
+        z: -898,
+        targetX: -28,
+        targetY: -294,
+        targetZ: -905,
+        fov: 52,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      43.6
+    );
+    tl.to(
+      camState,
+      {
+        x: 15,
+        y: -350,
+        z: -933,
+        targetX: 28,
+        targetY: -383,
+        targetZ: -1015,
+        fov: 64,
         fogDensity: 0.0255,
-        duration: 0.8,
+        duration: 1.1,
         ease: "power1.inOut",
       },
-      34.2
+      44.9
     );
 
-    // Event 08: Startup Event (Rock Platform 8 at x = 42, z = -1000)
-    // Step 8A: Arrive at Wide Overview
+    // EVENT 08 — STARTUP: 5-Phase 3D Orbital Trajectory
     tl.to(
       camState,
       {
-        x: 10,
-        y: -382,
-        z: -935,
-        targetX: 34,
-        targetY: -386,
-        targetZ: -1000,
+        x: 18,
+        y: -365,
+        z: -970,
+        targetX: 28,
+        targetY: -383,
+        targetZ: -1015,
+        fov: 64,
         fogDensity: 0.026,
         duration: 1.2,
         ease: "power2.out",
       },
-      35.2
+      46.1
     );
-    // Step 8B: Move IN Close to Event Poster & Shrine
     tl.to(
       camState,
       {
-        x: 42,
-        y: -376,
-        z: -968,
-        targetX: 42,
-        targetY: -376,
-        targetZ: -1000,
-        duration: 1.0,
-        ease: "power1.inOut",
+        x: 48,
+        y: -366,
+        z: -995,
+        targetX: 28,
+        targetY: -383,
+        targetZ: -1015,
+        fov: 58,
+        duration: 1.2,
+        ease: "sine.inOut",
       },
-      36.8
+      47.4
     );
-    tl.to(camState, { targetX: 42, targetY: -376, targetZ: -1000, duration: 0.6 }, 37.8);
-
-    // Transit 8 -> 9: Sweep HORIZONTALLY TO THE LEFT SIDE (x = -22, y = -376) while camera gaze remains locked on Startup Event (x = 42, y = -376, z = -1000)
     tl.to(
       camState,
       {
-        x: -22,
-        y: -376,
-        z: -1020,
-        targetX: 42,
-        targetY: -376,
-        targetZ: -1000,
+        x: 34,
+        y: -367,
+        z: -1002,
+        targetX: 28,
+        targetY: -383,
+        targetZ: -1015,
+        fov: 51,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      48.7
+    );
+    tl.to(
+      camState,
+      {
+        x: 24,
+        y: -368,
+        z: -1004,
+        targetX: 28,
+        targetY: -383,
+        targetZ: -1015,
+        fov: 52,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      50.0
+    );
+    tl.to(
+      camState,
+      {
+        x: -15,
+        y: -405,
+        z: -1045,
+        targetX: -28,
+        targetY: -423,
+        targetZ: -1115,
+        fov: 64,
         fogDensity: 0.0265,
-        duration: 0.8,
+        duration: 1.1,
         ease: "power1.inOut",
       },
-      38.4
+      51.3
     );
 
-    // Event 09: Dance (Rock Platform 9 at x = -42, z = -1100)
-    // Step 9A: Arrive at Wide Overview
+    // EVENT 09 — DANCE: 5-Phase 3D Orbital Trajectory
     tl.to(
       camState,
       {
-        x: -10,
-        y: -422,
-        z: -1035,
-        targetX: -34,
-        targetY: -426,
-        targetZ: -1100,
+        x: -18,
+        y: -405,
+        z: -1080,
+        targetX: -28,
+        targetY: -423,
+        targetZ: -1115,
+        fov: 64,
         fogDensity: 0.027,
         duration: 1.2,
         ease: "power2.out",
       },
-      39.4
+      52.5
     );
-    // Step 9B: Move IN Close to Event Poster & Shrine
     tl.to(
       camState,
       {
-        x: -42,
-        y: -416,
-        z: -1068,
-        targetX: -42,
-        targetY: -416,
-        targetZ: -1100,
-        duration: 1.0,
-        ease: "power1.inOut",
-      },
-      41.0
-    );
-    tl.to(camState, { targetX: -42, targetY: -416, targetZ: -1100, duration: 0.6 }, 42.0);
-
-    // Transit 9 -> 10: Sweep HORIZONTALLY TO THE RIGHT SIDE (x = 22, y = -416) while camera gaze remains locked on Dance (x = -42, y = -416, z = -1100)
-    tl.to(
-      camState,
-      {
-        x: 22,
-        y: -416,
-        z: -1120,
-        targetX: -42,
-        targetY: -416,
-        targetZ: -1100,
-        fogDensity: 0.0275,
-        duration: 0.8,
-        ease: "power1.inOut",
-      },
-      42.6
-    );
-
-    // Event 10: Photography & Videography (Rock Platform 10 at x = 0, z = -1200)
-    // Step 10A: Arrive at Wide Overview
-    tl.to(
-      camState,
-      {
-        x: 0,
-        y: -462,
-        z: -1135,
-        targetX: 0,
-        targetY: -466,
-        targetZ: -1200,
-        fogDensity: 0.028,
+        x: -48,
+        y: -406,
+        z: -1095,
+        targetX: -28,
+        targetY: -423,
+        targetZ: -1115,
+        fov: 58,
         duration: 1.2,
+        ease: "sine.inOut",
+      },
+      53.8
+    );
+    tl.to(
+      camState,
+      {
+        x: -34,
+        y: -407,
+        z: -1102,
+        targetX: -28,
+        targetY: -423,
+        targetZ: -1115,
+        fov: 51,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      55.1
+    );
+    tl.to(
+      camState,
+      {
+        x: -24,
+        y: -408,
+        z: -1104,
+        targetX: -28,
+        targetY: -423,
+        targetZ: -1115,
+        fov: 52,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      56.4
+    );
+    tl.to(
+      camState,
+      {
+        x: 10,
+        y: -445,
+        z: -1145,
+        targetX: 8,
+        targetY: -463,
+        targetZ: -1215,
+        fov: 64,
+        fogDensity: 0.0275,
+        duration: 1.1,
+        ease: "power1.inOut",
+      },
+      57.7
+    );
+
+    // EVENT 10 — PHOTOGRAPHY: 5-Phase 3D Orbital Trajectory & Grand Finale Settle
+    tl.to(
+      camState,
+      {
+        x: 16,
+        y: -446,
+        z: -1175,
+        targetX: 8,
+        targetY: -463,
+        targetZ: -1215,
+        fov: 64,
+        fogDensity: 0.028,
+        duration: 1.3,
         ease: "power2.out",
       },
-      43.6
+      58.9
     );
-    // Step 10B: Move IN Close to Event Poster & Shrine
+    tl.to(
+      camState,
+      {
+        x: 20,
+        y: -447,
+        z: -1190,
+        targetX: 8,
+        targetY: -463,
+        targetZ: -1215,
+        fov: 58,
+        duration: 1.3,
+        ease: "sine.inOut",
+      },
+      60.3
+    );
+    tl.to(
+      camState,
+      {
+        x: 10,
+        y: -448,
+        z: -1198,
+        targetX: 8,
+        targetY: -463,
+        targetZ: -1215,
+        fov: 50,
+        duration: 1.2,
+        ease: "sine.inOut",
+      },
+      61.7
+    );
+    tl.to(
+      camState,
+      {
+        x: 4,
+        y: -449,
+        z: -1200,
+        targetX: 8,
+        targetY: -463,
+        targetZ: -1215,
+        fov: 48,
+        duration: 1.2,
+        ease: "sine.inOut",
+      },
+      63.0
+    );
     tl.to(
       camState,
       {
         x: 0,
-        y: -456,
-        z: -1168,
-        targetX: 0,
-        targetY: -456,
-        targetZ: -1200,
-        duration: 1.0,
-        ease: "power1.inOut",
+        y: -450,
+        z: -1202,
+        targetX: 8,
+        targetY: -463,
+        targetZ: -1215,
+        fov: 46,
+        fogDensity: 0.029,
+        duration: 1.5,
+        ease: "power2.out",
       },
-      45.0
+      64.3
     );
-    tl.to(camState, { targetX: 0, targetY: -456, targetZ: -1200, duration: 0.8 }, 46.2);
 
-    tl.to({}, { duration: 1 });
+    tl.to({}, { duration: 2.0 });
 
     const clock = new THREE.Clock();
     let animationId;
@@ -2340,7 +2979,7 @@ export default function Scene() {
         const depthFactor = Math.min(1.0, Math.abs(camState.y) / 470);
         const caveFogColor = new THREE.Color(0x031e30).lerp(new THREE.Color(0x000612), depthFactor);
         scene.background = caveFogColor;
-        
+
         const dynamicFogDensity = camState.fogDensity * (1.0 + depthFactor * 0.4);
         scene.fog = new THREE.FogExp2(caveFogColor, dynamicFogDensity);
 
@@ -2351,6 +2990,9 @@ export default function Scene() {
         caveMesh.visible = false;
         sideCliffGroup.visible = true;
         bgMountainsGroup.visible = false;
+
+        // Keep backdrop color matched to surrounding ocean water depth color
+        portalBackdropMat.color.copy(caveFogColor);
       }
 
       // STRICT REQUIREMENT: Event World is STRICTLY INVISIBLE until camera passes inside circular portal ring (camState.z < -185)!
@@ -2359,8 +3001,10 @@ export default function Scene() {
         newWorldGroup.visible = true;
         sideCliffGroup.visible = true;
         caveMesh.visible = false;
+        portalBackdropMesh.visible = false;
       } else {
         newWorldGroup.visible = false;
+        portalBackdropMesh.visible = true;
       }
 
       // Update Portal Vortex Shader and Flow Field Water Particles
@@ -2398,20 +3042,49 @@ export default function Scene() {
       bubbleMat.uniforms.uTime.value = t;
       dustMat.uniforms.uTime.value = t;
       ballMat.uniforms.uTime.value = t;
+      causticUniforms.uTime.value = t;
+      shaftUniforms.uTime.value = t;
 
       // Pulse Portal Ring Backlight
       portalBackLight.intensity = 8.0 + Math.sin(t * 2.5) * 3.0;
 
-      // Rotate top glowing central crystal shrines and add gentle swaying to 3D Event Banners
+      // Rotate top glowing central crystal shrines and animate 3D Holographic Event Title Plaques
       for (const xtal of crystalShrineMeshes) {
         xtal.rotation.y = t * 0.8;
       }
 
+      postPortalMineralGroups.forEach((group, index) => {
+        group.rotation.z = t * (0.025 + index * 0.004);
+      });
+
       for (let b = 0; b < bannerMeshes.length; b++) {
         const bMesh = bannerMeshes[b];
-        const baseRot = eventNodes[b].bannerPos.rotY;
-        bMesh.rotation.z = Math.sin(t * 1.2 + b) * 0.04;
-        bMesh.rotation.y = baseRot + Math.cos(t * 0.8 + b) * 0.03;
+        const node = eventNodes[b];
+        const bGroup = eventBannerGroups[node.id];
+        const baseRot = node.bannerPos.rotY;
+
+        // Subtle gentle floating movement
+        if (bGroup) {
+          bGroup.position.y = node.pos.y + posterAnchorY + Math.sin(t * 0.9 + b) * 0.16;
+        }
+        bMesh.rotation.z = Math.sin(t * 1.1 + b) * 0.025;
+        bMesh.rotation.y = baseRot + Math.cos(t * 0.7 + b) * 0.02;
+
+        // Camera distance-based opacity & scale lerping for all 10 event posters
+        const zDist = Math.abs(camState.z - node.pos.z);
+        let targetOpacity = 0.55;
+        let targetScale = 0.88;
+
+        if (zDist < 120) {
+          const factor = 1.0 - zDist / 120;
+          targetOpacity = 0.55 + factor * 0.45; // Smoothly reaches 1.0 when close
+          targetScale = 0.88 + factor * 0.12;   // Smoothly reaches 1.0 when close
+        }
+
+        if (bMesh.material) {
+          bMesh.material.opacity = THREE.MathUtils.lerp(bMesh.material.opacity || 1.0, targetOpacity, 0.15);
+        }
+        bMesh.scale.setScalar(THREE.MathUtils.lerp(bMesh.scale.x, targetScale, 0.15));
       }
 
       // Animate Waving Sea Grass / Kelp Strands in Current
@@ -2445,6 +3118,13 @@ export default function Scene() {
       const floatX = Math.cos(t * 0.3) * 0.25;
       const floatRotZ = Math.sin(t * 0.2) * 0.008;
 
+      // Smooth Dynamic Camera FOV Transitions (Fast travel vs Hero Close-up)
+      if (camState.fov && Math.abs(camera.fov - camState.fov) > 0.05) {
+        const fovLerp = (isMobile ? 0.10 : 0.07) * (camState.z < -245 && camState.z > -560 ? 0.4 : 1.0);
+        camera.fov += (camState.fov - camera.fov) * fovLerp;
+        camera.updateProjectionMatrix();
+      }
+
       // Parallax Mouse/Touch Camera Drifting
       const parallaxEase = isMobile ? 0.03 : 0.05;
       const parallaxStrength = isMobile ? 0.8 : 1.6;
@@ -2459,16 +3139,235 @@ export default function Scene() {
 
       const moveSpeed = Math.sqrt(vx * vx + vy * vy + vz * vz);
 
-      // Dynamic micro-banking roll on lateral turns (capped at ±0.07 rads / ~4°)
-      const targetBank = Math.max(-0.07, Math.min(0.07, -vx * 0.018));
+      // Dynamic micro-banking roll on lateral turns (capped at ±0.07 rads / ~4°, zero while passing through stargate center)
+      const rawBank = Math.max(-0.07, Math.min(0.07, -vx * 0.018));
+      const targetBank = camState.z > -245 ? 0 : rawBank;
       currentBank += (targetBank - currentBank) * (isMobile ? 0.12 : 0.08);
 
-      // Position spring lerp for smooth, liquid camera movement
-      smoothCamPos.lerp(new THREE.Vector3(camState.x, camState.y, camState.z), isMobile ? 0.10 : 0.07);
+      // VELOCITY-INDEPENDENT & DISTANCE-BASED SPEED DAMPENING ZONES (Events 01, 02 & 03)
+      let eventSpeedScale = 1.0;
+      let event1RightArcOffset = 0.0;
 
-      // Direct, synchronized look-at target interpolation (no velocity-dependent wobbling)
+      // Event 01 (Coding) Slowdown Zone
+      if (camState.z < -245 && camState.z > -350) {
+        const event1ShrinePos = new THREE.Vector3(-22, -106, -318);
+        const distToShrine = smoothCamPos.distanceTo(event1ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        if (distToShrine < 60) {
+          const arcWeight = Math.sin(Math.min(1.0, Math.max(0.0, (60 - distToShrine) / 35)) * Math.PI);
+          event1RightArcOffset = 7.5 * arcWeight;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+
+        if (camState.z < -310) {
+          const exitProgress = Math.min(1.0, Math.max(0.0, (-310 - camState.z) / 25));
+          const exitFactor = exitProgress * exitProgress;
+          eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
+          event1RightArcOffset *= (1.0 - exitFactor);
+        }
+      } 
+      // Event 02 (Web Design) Slowdown Zone
+      else if (camState.z <= -350 && camState.z > -470) {
+        const event2ShrinePos = new THREE.Vector3(22, -186, -430);
+        const distToShrine = smoothCamPos.distanceTo(event2ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+
+        if (camState.z < -435) {
+          const exitProgress = Math.min(1.0, Math.max(0.0, (-435 - camState.z) / 25));
+          const exitFactor = exitProgress * exitProgress;
+          eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
+        }
+      }
+      // Event 03 (IT Quiz) Slowdown Zone
+      else if (camState.z <= -470 && camState.z > -560) {
+        const event3ShrinePos = new THREE.Vector3(-32, -186, -508);
+        const distToShrine = smoothCamPos.distanceTo(event3ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+
+        if (camState.z < -515) {
+          const exitProgress = Math.min(1.0, Math.max(0.0, (-515 - camState.z) / 25));
+          const exitFactor = exitProgress * exitProgress;
+          eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
+        }
+      }
+      // Event 06 (Surprise Event) Slowdown Zone
+      else if (camState.z <= -790 && camState.z > -895) {
+        const event6ShrinePos = new THREE.Vector3(32, -306, -870);
+        const distToShrine = smoothCamPos.distanceTo(event6ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+
+        if (camState.z < -875) {
+          const exitProgress = Math.min(1.0, Math.max(0.0, (-875 - camState.z) / 25));
+          const exitFactor = exitProgress * exitProgress;
+          eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
+        }
+      }
+      // Event 07 (IT Manager Spire) Slowdown Zone
+      else if (camState.z <= -860 && camState.z > -945) {
+        const event7ShrinePos = new THREE.Vector3(-28, -294, -905);
+        const distToShrine = smoothCamPos.distanceTo(event7ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+
+        if (camState.z < -915) {
+          const exitProgress = Math.min(1.0, Math.max(0.0, (-915 - camState.z) / 25));
+          const exitFactor = exitProgress * exitProgress;
+          eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
+        }
+      }
+      // Event 08 (Startup Event) Slowdown Zone
+      else if (camState.z <= -945 && camState.z > -1050) {
+        const event8ShrinePos = new THREE.Vector3(28, -375, -1015);
+        const distToShrine = smoothCamPos.distanceTo(event8ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+
+        if (camState.z < -1025) {
+          const exitProgress = Math.min(1.0, Math.max(0.0, (-1025 - camState.z) / 25));
+          const exitFactor = exitProgress * exitProgress;
+          eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
+        }
+      }
+      // Event 09 (Dance) Slowdown Zone
+      else if (camState.z <= -1050 && camState.z > -1150) {
+        const event9ShrinePos = new THREE.Vector3(-28, -415, -1115);
+        const distToShrine = smoothCamPos.distanceTo(event9ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+
+        if (camState.z < -1125) {
+          const exitProgress = Math.min(1.0, Math.max(0.0, (-1125 - camState.z) / 25));
+          const exitFactor = exitProgress * exitProgress;
+          eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
+        }
+      }
+      // Event 10 (Photography & Videography) Slowdown Zone
+      else if (camState.z <= -1150) {
+        const event10ShrinePos = new THREE.Vector3(8, -455, -1215);
+        const distToShrine = smoothCamPos.distanceTo(event10ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+      }
+
+      // Position spring lerp for smooth, liquid camera movement
+      const basePosLerp = isMobile ? 0.10 : 0.07;
+      const effectivePosLerp = basePosLerp * eventSpeedScale;
+      smoothCamPos.lerp(new THREE.Vector3(camState.x + event1RightArcOffset, camState.y, camState.z), effectivePosLerp);
+
+      // Surface-to-Portal & Event Landmark focus:
+      // GSAP keyframes define precise look-at targets (targetX, targetY, targetZ) for cinematic reveals.
       desiredLookAt.set(camState.targetX, camState.targetY, camState.targetZ);
-      currentLookAt.lerp(desiredLookAt, isMobile ? 0.10 : 0.07);
+      const baseLookLerp = isMobile ? 0.10 : 0.07;
+      const effectiveLookLerp = baseLookLerp * eventSpeedScale;
+      currentLookAt.lerp(desiredLookAt, effectiveLookLerp);
 
       camera.position.set(
         smoothCamPos.x + mouse.x * parallaxStrength + floatX,
@@ -2476,20 +3375,35 @@ export default function Scene() {
         smoothCamPos.z
       );
 
-      if (camState.z > -185) {
-        // Surface and dive sequence before entering stargate
-        camera.rotation.x = camState.rx + mouse.y * (isMobile ? 0.02 : 0.04);
-        camera.rotation.y = camState.ry - mouse.x * (isMobile ? 0.02 : 0.04);
-        camera.rotation.z = floatRotZ;
-      } else {
-        // Inside Event Portal: Smooth underwater steadicam look-ahead gaze with micro-banking roll
-        camera.lookAt(
-          currentLookAt.x + mouse.x * (isMobile ? 0.6 : 1.2),
-          currentLookAt.y + mouse.y * (isMobile ? 0.6 : 1.2),
-          currentLookAt.z
-        );
-        camera.rotation.z = floatRotZ + currentBank;
+      // A soft, inactive-in-normal-travel guard keeps the post-portal camera
+      // outside shrine and platform envelopes if a future keyframe is tightened.
+      if (camState.z < -245) {
+        for (const node of eventNodes) {
+          safetyOffset.set(
+            camera.position.x - node.pos.x,
+            camera.position.y - (node.pos.y + 7.2),
+            camera.position.z - node.pos.z
+          );
+          const shrineDistance = safetyOffset.length();
+          if (shrineDistance < 11.5) {
+            safetyOffset.multiplyScalar(1 / Math.max(shrineDistance, 0.001));
+            safeCameraPosition.set(
+              node.pos.x + safetyOffset.x * 11.5,
+              node.pos.y + 7.2 + safetyOffset.y * 11.5,
+              node.pos.z + safetyOffset.z * 11.5
+            );
+            camera.position.lerp(safeCameraPosition, 0.18);
+          }
+        }
       }
+
+      // Smooth underwater steadicam look-ahead gaze with micro-banking roll
+      camera.lookAt(
+        currentLookAt.x + mouse.x * (isMobile ? 0.6 : 1.2),
+        currentLookAt.y + mouse.y * (isMobile ? 0.6 : 1.2),
+        currentLookAt.z
+      );
+      camera.rotation.z = floatRotZ + currentBank;
 
       renderer.render(scene, camera);
 
@@ -2561,6 +3475,8 @@ export default function Scene() {
       keystoneGeo.dispose();
       portalDiscGeo.dispose();
       portalDiscMat.dispose();
+      portalBackdropGeo.dispose();
+      portalBackdropMat.dispose();
       portalParticleGeo.dispose();
       portalParticleMat.dispose();
       flowFieldGeo.dispose();
@@ -2568,8 +3484,9 @@ export default function Scene() {
       cliffRockMat.dispose();
       stairStoneMat.dispose();
       cyanCrystalMat.dispose();
-      purpleCrystalMat.dispose();
-      amberCrystalMat.dispose();
+      mineralAccentMat.dispose();
+      causticMat.dispose();
+      lightShaftMat.dispose();
       for (const c of cliffMeshes) c.geometry.dispose();
       for (const b of bannerMeshes) {
         b.geometry.dispose();
@@ -2729,9 +3646,8 @@ export default function Scene() {
       {/* Minimal Top-Right Speaker Audio Toggle Icon (Panel-less bare icon design) */}
       <button
         onClick={toggleAudio}
-        className={`fixed top-6 right-6 md:top-8 md:right-10 z-[80] p-1 text-cyan-300 hover:text-white transition-all duration-500 cursor-pointer pointer-events-auto hover:scale-110 active:scale-95 drop-shadow-[0_0_15px_rgba(0,255,255,0.8)] ${
-          scrollProgress >= 4 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
-        }`}
+        className={`fixed top-6 right-6 md:top-8 md:right-10 z-[80] p-1 text-cyan-300 hover:text-white transition-all duration-500 cursor-pointer pointer-events-auto hover:scale-110 active:scale-95 drop-shadow-[0_0_15px_rgba(0,255,255,0.8)] ${scrollProgress >= 4 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+          }`}
         aria-label="Toggle Audio"
         title={isAudioPlaying ? "Mute Audio" : "Play Audio"}
       >
