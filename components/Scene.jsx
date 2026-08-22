@@ -53,9 +53,9 @@ const eventNodes = [
     venue: "Web Lab 2",
     prize: "₹ 12,000",
     rules: ["Individual or teams of 2", "HTML5, CSS3, JavaScript allowed", "Live prototype evaluation"],
-    pos: { x: 22, y: -150, z: -418 },
-    bannerPos: { x: 16, y: -143, z: -413, rotY: -0.35 },
-    portalPos: { x: 40, y: -145, z: -426 },
+    pos: { x: 22, y: -190, z: -430 },
+    bannerPos: { x: 16, y: -183, z: -425, rotY: -0.35 },
+    portalPos: { x: 40, y: -185, z: -438 },
     minScroll: 48,
   },
   {
@@ -117,9 +117,9 @@ const eventNodes = [
     venue: "Open Arena",
     prize: "₹ 10,000",
     rules: ["Rules announced on spot", "Teams of 2 members"],
-    pos: { x: 32, y: -310, z: -818 },
-    bannerPos: { x: 26, y: -303, z: -813, rotY: -0.35 },
-    portalPos: { x: 50, y: -305, z: -826 },
+    pos: { x: 32, y: -310, z: -870 },
+    bannerPos: { x: 26, y: -303, z: -865, rotY: -0.35 },
+    portalPos: { x: 50, y: -305, z: -878 },
     minScroll: 72,
   },
   {
@@ -453,7 +453,7 @@ export default function Scene() {
         audioRef.current
           .play()
           .then(() => setIsAudioPlaying(true))
-          .catch(() => {});
+          .catch(() => { });
       }
     };
 
@@ -1606,75 +1606,6 @@ export default function Scene() {
       bannerGroup.add(bannerMesh);
       bannerMeshes.push(bannerMesh);
 
-      // Poster-linked data network: secondary, behind the plaque, and clear of its title area.
-      const networkGroup = new THREE.Group();
-      networkGroup.position.z = -1.4;
-      const nodePositions = [new THREE.Vector3(-13, 0.3, -0.8), new THREE.Vector3(13, -0.5, -0.8)];
-      nodePositions.forEach((position, networkIndex) => {
-        const dataPanel = new THREE.Mesh(
-          new THREE.PlaneGeometry(4.4, 2.45),
-          new THREE.MeshBasicMaterial({
-            map: createHologramTexture(`NODE ${node.num}.${networkIndex + 1}`, networkIndex ? "SYNCED" : "ACTIVE"),
-            transparent: true,
-            depthWrite: false,
-            side: THREE.DoubleSide,
-          })
-        );
-        dataPanel.position.copy(position);
-        networkGroup.add(dataPanel);
-
-        const nodeMarker = new THREE.Mesh(
-          new THREE.OctahedronGeometry(0.18, 0),
-          new THREE.MeshBasicMaterial({ color: networkIndex ? 0xc77dff : 0x61eff3, transparent: true, opacity: 0.9 })
-        );
-        nodeMarker.position.copy(position).add(new THREE.Vector3(0, -1.45, 0.04));
-        networkGroup.add(nodeMarker);
-
-        const linkGeo = new THREE.BufferGeometry().setFromPoints([
-          new THREE.Vector3(networkIndex ? 9.45 : -9.45, -0.65, -0.45),
-          nodeMarker.position.clone(),
-        ]);
-        const link = new THREE.Line(linkGeo, new THREE.LineBasicMaterial({ color: 0x43e5ef, transparent: true, opacity: 0.48 }));
-        networkGroup.add(link);
-      });
-      bannerGroup.add(networkGroup);
-      postPortalHologramGroups.push(networkGroup);
-
-      if (["event-2", "event-5", "event-8", "event-10"].includes(node.id)) {
-        const depthPanel = new THREE.Mesh(
-          new THREE.PlaneGeometry(8.2, 5.2),
-          new THREE.MeshBasicMaterial({
-            map: createHologramTexture(`depth.map ${node.num}`, `-${Math.abs(y)}m`),
-            transparent: true,
-            opacity: 0.62,
-            depthWrite: false,
-            side: THREE.DoubleSide,
-          })
-        );
-        depthPanel.position.set(sideSign * 29, -10.5, -9);
-        bannerGroup.add(depthPanel);
-      }
-
-      if (["event-1", "event-4", "event-7", "event-10"].includes(node.id)) {
-        const terminalGroup = new THREE.Group();
-        terminalGroup.position.set(-sideSign * 31, -2.5, -12);
-        const terminal = new THREE.Mesh(
-          new THREE.PlaneGeometry(7.8, 4.8),
-          new THREE.MeshBasicMaterial({
-            map: createHologramTexture("<terminal_02>", "CAUSTIC ON"),
-            transparent: true,
-            opacity: 0.5,
-            depthWrite: false,
-            side: THREE.DoubleSide,
-          })
-        );
-        terminalGroup.add(terminal);
-        eventGroup.add(terminalGroup);
-        postPortalHologramGroups.push(terminalGroup);
-      }
-
-
-
       // Glowing Vertical Energy Tether Beam connecting plaque base to crystal shrine
       const tetherGeo = new THREE.CylinderGeometry(0.04, 0.04, 2.2, 8);
       const tetherMat = new THREE.MeshStandardMaterial({
@@ -2187,180 +2118,256 @@ export default function Scene() {
     // 07 IT Manager: (-42, -310, -900) | 08 Startup: (42, -390, -1000) | 09 Dance: (-42, -430, -1100)
     // 10 Photography: (0, -470, -1200)
 
-    // EVENT 01 — CODING: Swoop → Perfectly Center Gem Shrine & Rock Platform → Orbit Arc → Exit
+    // EVENT 01 — CODING: Cinematic Approach → Hero Rise (y: -99) → Straight Rightward Motion Pointing to Crystal (x: +22) → Downward Exit (y: -124)
+    // 1. APPROACH: Exit portal at low position (y: -118), moving forward in Z toward Coding platform
     tl.to(
       camState,
       {
-        x: -32,
-        y: -101,
-        z: -251,
-        targetX: -32,
-        targetY: -103,
-        targetZ: -308,
-        fov: 62,
+        x: -18,
+        y: -118,
+        z: -265,
+        targetX: -22,
+        targetY: -106,
+        targetZ: -318,
+        fov: 64,
         fogDensity: 0.015,
         duration: 1.2,
-        ease: "power2.out",
+        ease: "power2.inOut",
       },
-      5.8
-    );
-    tl.to(
-      camState,
-      {
-        x: -32,
-        y: -101,
-        z: -270,
-        targetX: -32,
-        targetY: -103,
-        targetZ: -308,
-        fov: 50,
-        duration: 1.0,
-        ease: "power1.inOut",
-      },
-      7.4
-    );
-    tl.to(
-      camState,
-      {
-        x: -48,
-        y: -100,
-        z: -273,
-        targetX: -32,
-        targetY: -103,
-        targetZ: -308,
-        fov: 52,
-        duration: 0.6,
-        ease: "sine.inOut",
-      },
-      8.4
-    );
-    tl.to(
-      camState,
-      {
-        x: 20,
-        y: -120,
-        z: -325,
-        targetX: -32,
-        targetY: -103,
-        targetZ: -308,
-        fov: 64,
-        fogDensity: 0.016,
-        duration: 0.8,
-        ease: "power1.inOut",
-      },
-      9.0
+      5.2
     );
 
-    // EVENT 02 — WEB DESIGN: Wide Right Arrival → Broad Curved Arc → Shrine Reveal → Exit Left
+    // 2. HERO ARRIVAL AT DEPTH 99M: Camera rises to elevation y: -99, pointing directly at the crystal orb
     tl.to(
       camState,
       {
-        x: 35,
-        y: -130,
-        z: -328,
+        x: -30,
+        y: -99,
+        z: -282,
+        targetX: -22,
+        targetY: -104,
+        targetZ: -318,
+        fov: 54,
+        duration: 1.3,
+        ease: "power2.out",
+      },
+      6.4
+    );
+
+    // 3. STRAIGHT RIGHT SIDE MOTION POINTING TO CRYSTAL: Glides straight to the RIGHT (x: -30 → +22) while continuously pointing at the crystal orb
+    // 3. SMOOTH ORBIT AROUND CRYSTAL:
+    // Camera moves in a curved right-side arc while continuously looking at the crystal.
+    // This creates a cinematic rotation instead of a straight horizontal slide.
+    // 3. EXTENDED CINEMATIC ORBIT AROUND CODING CRYSTAL
+    // Camera makes a wide curved arc around the crystal while continuously
+    // looking at the crystal. No straight horizontal movement.
+    tl.to(
+      camState,
+      {
+        x: -5,
+        y: -91,
+        z: -300,
+        targetX: -22,
+        targetY: -104,
+        targetZ: -318,
+        fov: 51,
+        duration: 1.1,
+        ease: "power2.inOut",
+      },
+      7.7
+    );
+
+    tl.to(
+      camState,
+      {
+        x: 18,
+        y: -88,
+        z: -307,
+        targetX: -22,
+        targetY: -104,
+        targetZ: -318,
+        fov: 49,
+        duration: 1.2,
+        ease: "sine.inOut",
+      },
+      8.8
+    );
+
+    tl.to(
+      camState,
+      {
+        x: 38,
+        y: -96,
+        z: -296,
+        targetX: -22,
+        targetY: -104,
+        targetZ: -318,
+        fov: 48,
+        duration: 1.2,
+        ease: "sine.inOut",
+      },
+      10.0
+    );
+
+    // 4. THEN DOWNWARD EXIT: After moving straight right, smoothly curve downward in Y (y: -99 → -124) toward Event 02
+    // 4. SMOOTH DOWNWARD EXIT AFTER EXTENDED ORBIT
+    tl.to(
+      camState,
+      {
+        x: 28,
+        y: -124,
+        z: -340,
+        targetX: 28,
+        targetY: -138,
+        targetZ: -405,
+        fov: 64,
+        fogDensity: 0.016,
+        duration: 1.3,
+        ease: "power1.inOut",
+      },
+      11.2
+    );
+
+    // EVENT 02 — WEB DESIGN: Wide Arrival → Right Flank Orbit → Hero Inspection → Extended Micro-Orbit → Smooth Exit
+    tl.to(
+      camState,
+      {
+        x: 42,
+        y: -168,
+        z: -350,
         targetX: 32,
-        targetY: -143,
-        targetZ: -408,
-        fov: 70,
+        targetY: -183,
+        targetZ: -420,
+        fov: 68,
         fogDensity: 0.017,
         duration: 1.2,
         ease: "power2.out",
       },
-      10.0
+      12.5
     );
     tl.to(
       camState,
       {
-        x: 45,
-        y: -140,
-        z: -368,
+        x: 48,
+        y: -176,
+        z: -390,
         targetX: 32,
-        targetY: -143,
-        targetZ: -408,
-        fov: 62,
-        duration: 1.0,
-        ease: "power1.inOut",
-      },
-      11.6
-    );
-    tl.to(
-      camState,
-      {
-        x: 32,
-        y: -136,
-        z: -370,
-        targetX: 32,
-        targetY: -143,
-        targetZ: -408,
-        fov: 50,
-        duration: 0.6,
+        targetY: -183,
+        targetZ: -420,
+        fov: 58,
+        duration: 1.2,
         ease: "sine.inOut",
       },
-      12.6
+      13.7
     );
     tl.to(
       camState,
       {
-        x: -20,
-        y: -160,
-        z: -433,
+        x: 30,
+        y: -174,
+        z: -402,
         targetX: 32,
-        targetY: -143,
-        targetZ: -408,
-        fov: 66,
+        targetY: -183,
+        targetZ: -420,
+        fov: 51,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      14.9
+    );
+    tl.to(
+      camState,
+      {
+        x: 18,
+        y: -176,
+        z: -412,
+        targetX: 32,
+        targetY: -183,
+        targetZ: -420,
+        fov: 52,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      16.0
+    );
+    tl.to(
+      camState,
+      {
+        x: -10,
+        y: -195,
+        z: -445,
+        targetX: 32,
+        targetY: -183,
+        targetZ: -420,
+        fov: 64,
         fogDensity: 0.018,
-        duration: 0.8,
+        duration: 1.2,
         ease: "power1.inOut",
       },
-      13.2
+      17.1
     );
 
-    // EVENT 03 — IT QUIZ: Vertical Dive → Shrine Approach → Small Orbit → Continue Down
+    // EVENT 03 — IT QUIZ: Descending Approach → Left Flank Orbit → Hero Technical Focus → Micro-Arc → Smooth Exit Right
     tl.to(
       camState,
       {
-        x: -15,
-        y: -160,
-        z: -438,
+        x: -18,
+        y: -170,
+        z: -442,
         targetX: -32,
         targetY: -183,
         targetZ: -508,
-        fov: 72,
+        fov: 70,
         fogDensity: 0.019,
         duration: 1.2,
-        ease: "power2.inOut",
+        ease: "power2.out",
       },
-      14.2
+      18.3
     );
     tl.to(
       camState,
       {
-        x: -32,
+        x: -44,
         y: -176,
-        z: -470,
+        z: -475,
         targetX: -32,
         targetY: -183,
         targetZ: -508,
-        fov: 52,
-        duration: 1.0,
-        ease: "power1.inOut",
-      },
-      15.8
-    );
-    tl.to(
-      camState,
-      {
-        x: -32,
-        y: -174,
-        z: -473,
-        targetX: -32,
-        targetY: -183,
-        targetZ: -508,
-        fov: 54,
-        duration: 0.6,
+        fov: 58,
+        duration: 1.2,
         ease: "sine.inOut",
       },
-      16.8
+      19.5
+    );
+    tl.to(
+      camState,
+      {
+        x: -28,
+        y: -174,
+        z: -488,
+        targetX: -32,
+        targetY: -183,
+        targetZ: -508,
+        fov: 51,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      20.7
+    );
+    tl.to(
+      camState,
+      {
+        x: -16,
+        y: -176,
+        z: -496,
+        targetX: -32,
+        targetY: -183,
+        targetZ: -508,
+        fov: 53,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      21.8
     );
     tl.to(
       camState,
@@ -2371,12 +2378,12 @@ export default function Scene() {
         targetX: -32,
         targetY: -183,
         targetZ: -508,
-        fov: 64,
+        fov: 66,
         fogDensity: 0.020,
-        duration: 0.8,
+        duration: 1.2,
         ease: "power1.inOut",
       },
-      17.4
+      22.9
     );
 
     // EVENT 04 — GAMING: Energetic Fast Swoop → Spiral Arc → Close Shrine → Fast Exit
@@ -2394,7 +2401,7 @@ export default function Scene() {
         duration: 1.2,
         ease: "power2.out",
       },
-      18.4
+      24.1
     );
     tl.to(
       camState,
@@ -2409,7 +2416,7 @@ export default function Scene() {
         duration: 1.0,
         ease: "power1.inOut",
       },
-      20.0
+      25.7
     );
     tl.to(
       camState,
@@ -2424,7 +2431,7 @@ export default function Scene() {
         duration: 0.6,
         ease: "sine.inOut",
       },
-      21.0
+      26.7
     );
     tl.to(
       camState,
@@ -2440,7 +2447,7 @@ export default function Scene() {
         duration: 0.8,
         ease: "power1.inOut",
       },
-      21.6
+      27.3
     );
 
     // EVENT 05 — TECH TALK: Slow Approach → Cave Entrance Reveal → Move Toward Cave → Shrine Reveal → Slow Exit
@@ -2458,7 +2465,7 @@ export default function Scene() {
         duration: 1.2,
         ease: "power1.out",
       },
-      22.6
+      28.3
     );
     tl.to(
       camState,
@@ -2473,7 +2480,7 @@ export default function Scene() {
         duration: 1.0,
         ease: "power1.inOut",
       },
-      24.2
+      29.9
     );
     tl.to(
       camState,
@@ -2488,7 +2495,7 @@ export default function Scene() {
         duration: 0.6,
         ease: "sine.inOut",
       },
-      25.2
+      30.9
     );
     tl.to(
       camState,
@@ -2504,314 +2511,420 @@ export default function Scene() {
         duration: 0.8,
         ease: "power1.inOut",
       },
-      25.8
+      31.5
     );
 
-    // EVENT 06 — SURPRISE EVENT: Normal Travel → Sudden Smooth Drop → Right Platform Reveal → Close-Up → Fast Exit
+    // EVENT 06 — SURPRISE EVENT: Deep Approach → Right Approach → Depth Reveal → Hero Orbit → Hero Settle → Exit
     tl.to(
       camState,
       {
-        x: 10,
-        y: -280,
-        z: -738,
+        x: 14,
+        y: -278,
+        z: -785,
         targetX: 32,
         targetY: -303,
-        targetZ: -808,
-        fov: 64,
+        targetZ: -860,
+        fov: 66,
         fogDensity: 0.024,
         duration: 1.2,
         ease: "power2.out",
       },
-      26.8
+      32.5
     );
     tl.to(
       camState,
       {
-        x: 28,
-        y: -305,
-        z: -763,
+        x: 42,
+        y: -292,
+        z: -820,
         targetX: 32,
         targetY: -303,
-        targetZ: -808,
-        fov: 68,
-        duration: 1.0,
-        ease: "power2.inOut",
-      },
-      28.4
-    );
-    tl.to(
-      camState,
-      {
-        x: 32,
-        y: -296,
-        z: -770,
-        targetX: 32,
-        targetY: -303,
-        targetZ: -808,
-        fov: 50,
-        duration: 0.6,
+        targetZ: -860,
+        fov: 60,
+        duration: 1.2,
         ease: "sine.inOut",
       },
-      29.4
+      33.7
     );
     tl.to(
       camState,
       {
-        x: -22,
-        y: -300,
-        z: -833,
+        x: 48,
+        y: -298,
+        z: -838,
         targetX: 32,
         targetY: -303,
-        targetZ: -808,
-        fov: 66,
-        fogDensity: 0.0245,
-        duration: 0.8,
-        ease: "power1.inOut",
+        targetZ: -860,
+        fov: 55,
+        duration: 1.1,
+        ease: "sine.inOut",
       },
-      30.0
+      34.9
     );
-
-    // EVENT 07 — IT MANAGER SPIRE: Low Approach → Camera Rises ↗ → Elevated Spire Shrine → Close-Up → Smooth Exit
     tl.to(
       camState,
       {
-        x: -15,
-        y: -325,
-        z: -838,
-        targetX: -32,
+        x: 30,
+        y: -294,
+        z: -848,
+        targetX: 32,
         targetY: -303,
-        targetZ: -908,
-        fov: 62,
+        targetZ: -860,
+        fov: 50,
+        duration: 1.2,
+        ease: "sine.inOut",
+      },
+      36.0
+    );
+    tl.to(
+      camState,
+      {
+        x: 18,
+        y: -296,
+        z: -855,
+        targetX: 32,
+        targetY: -303,
+        targetZ: -860,
+        fov: 51,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      37.2
+    );
+    tl.to(
+      camState,
+      {
+        x: -18,
+        y: -315,
+        z: -885,
+        targetX: -28,
+        targetY: -294,
+        targetZ: -905,
+        fov: 64,
+        fogDensity: 0.0245,
+        duration: 1.2,
+        ease: "power1.inOut",
+      },
+      38.3
+    );
+
+    // EVENT 07 — IT MANAGER SPIRE: 5-Phase 3D Orbital Trajectory
+    tl.to(
+      camState,
+      {
+        x: -10,
+        y: -284,
+        z: -876,
+        targetX: -28,
+        targetY: -294,
+        targetZ: -905,
+        fov: 64,
         fogDensity: 0.025,
         duration: 1.2,
         ease: "power2.out",
       },
-      31.0
+      39.5
+    );
+    tl.to(
+      camState,
+      {
+        x: -42,
+        y: -286,
+        z: -888,
+        targetX: -28,
+        targetY: -294,
+        targetZ: -905,
+        fov: 58,
+        duration: 1.2,
+        ease: "sine.inOut",
+      },
+      40.9
     );
     tl.to(
       camState,
       {
         x: -30,
-        y: -290,
-        z: -863,
-        targetX: -32,
-        targetY: -303,
-        targetZ: -908,
-        fov: 56,
-        duration: 1.0,
-        ease: "power2.inOut",
-      },
-      32.6
-    );
-    tl.to(
-      camState,
-      {
-        x: -32,
-        y: -296,
-        z: -870,
-        targetX: -32,
-        targetY: -303,
-        targetZ: -908,
-        fov: 50,
-        duration: 0.6,
+        y: -287,
+        z: -894,
+        targetX: -28,
+        targetY: -294,
+        targetZ: -905,
+        fov: 51,
+        duration: 1.1,
         ease: "sine.inOut",
       },
-      33.6
+      42.3
     );
     tl.to(
       camState,
       {
-        x: 22,
-        y: -340,
-        z: -933,
-        targetX: -32,
-        targetY: -303,
-        targetZ: -908,
-        fov: 64,
-        fogDensity: 0.0255,
-        duration: 0.8,
-        ease: "power1.inOut",
-      },
-      34.2
-    );
-
-    // EVENT 08 — STARTUP: Wide Arrival → Forward Acceleration → Shrine Close-Up → Fast Departure
-    tl.to(
-      camState,
-      {
-        x: 15,
-        y: -350,
-        z: -933,
-        targetX: 32,
-        targetY: -383,
-        targetZ: -1008,
-        fov: 68,
-        fogDensity: 0.026,
-        duration: 1.2,
-        ease: "power2.out",
-      },
-      35.2
-    );
-    tl.to(
-      camState,
-      {
-        x: 28,
-        y: -370,
-        z: -958,
-        targetX: 32,
-        targetY: -383,
-        targetZ: -1008,
-        fov: 72,
-        duration: 1.0,
-        ease: "power2.inOut",
-      },
-      36.8
-    );
-    tl.to(
-      camState,
-      {
-        x: 32,
-        y: -376,
-        z: -970,
-        targetX: 32,
-        targetY: -383,
-        targetZ: -1008,
-        fov: 50,
-        duration: 0.6,
-        ease: "sine.inOut",
-      },
-      37.8
-    );
-    tl.to(
-      camState,
-      {
-        x: -22,
-        y: -400,
-        z: -1033,
-        targetX: 32,
-        targetY: -383,
-        targetZ: -1008,
-        fov: 68,
-        fogDensity: 0.0265,
-        duration: 0.8,
-        ease: "power1.inOut",
-      },
-      38.4
-    );
-
-    // EVENT 09 — DANCE: Orbital Arrival → Smooth Circular Orbit around Shrine → Side Arc → Back Exit
-    tl.to(
-      camState,
-      {
-        x: -20,
-        y: -410,
-        z: -1038,
-        targetX: -32,
-        targetY: -423,
-        targetZ: -1108,
-        fov: 64,
-        fogDensity: 0.027,
-        duration: 1.2,
-        ease: "power2.out",
-      },
-      39.4
-    );
-    tl.to(
-      camState,
-      {
-        x: -32,
-        y: -416,
-        z: -1070,
-        targetX: -32,
-        targetY: -423,
-        targetZ: -1108,
+        x: -18,
+        y: -288,
+        z: -898,
+        targetX: -28,
+        targetY: -294,
+        targetZ: -905,
         fov: 52,
-        duration: 1.0,
-        ease: "power1.inOut",
-      },
-      41.0
-    );
-    tl.to(
-      camState,
-      {
-        x: -52,
-        y: -418,
-        z: -1073,
-        targetX: -32,
-        targetY: -423,
-        targetZ: -1108,
-        fov: 54,
-        duration: 0.6,
+        duration: 1.1,
         ease: "sine.inOut",
-      },
-      42.0
-    );
-    tl.to(
-      camState,
-      {
-        x: 15,
-        y: -445,
-        z: -1133,
-        targetX: -32,
-        targetY: -423,
-        targetZ: -1108,
-        fov: 62,
-        fogDensity: 0.0275,
-        duration: 0.8,
-        ease: "power1.inOut",
-      },
-      42.6
-    );
-
-    // EVENT 10 — PHOTOGRAPHY: Dark Abyss Slow Descent → Central Crystal Reveal → Slow Final Approach → Settle
-    tl.to(
-      camState,
-      {
-        x: 0,
-        y: -462,
-        z: -1143,
-        targetX: 0,
-        targetY: -463,
-        targetZ: -1208,
-        fov: 64,
-        fogDensity: 0.028,
-        duration: 1.2,
-        ease: "power1.out",
       },
       43.6
     );
     tl.to(
       camState,
       {
-        x: 0,
-        y: -456,
-        z: -1170,
-        targetX: 0,
-        targetY: -463,
-        targetZ: -1208,
-        fov: 50,
-        duration: 1.0,
+        x: 15,
+        y: -350,
+        z: -933,
+        targetX: 28,
+        targetY: -383,
+        targetZ: -1015,
+        fov: 64,
+        fogDensity: 0.0255,
+        duration: 1.1,
         ease: "power1.inOut",
       },
-      45.0
+      44.9
+    );
+
+    // EVENT 08 — STARTUP: 5-Phase 3D Orbital Trajectory
+    tl.to(
+      camState,
+      {
+        x: 18,
+        y: -365,
+        z: -970,
+        targetX: 28,
+        targetY: -383,
+        targetZ: -1015,
+        fov: 64,
+        fogDensity: 0.026,
+        duration: 1.2,
+        ease: "power2.out",
+      },
+      46.1
+    );
+    tl.to(
+      camState,
+      {
+        x: 48,
+        y: -366,
+        z: -995,
+        targetX: 28,
+        targetY: -383,
+        targetZ: -1015,
+        fov: 58,
+        duration: 1.2,
+        ease: "sine.inOut",
+      },
+      47.4
+    );
+    tl.to(
+      camState,
+      {
+        x: 34,
+        y: -367,
+        z: -1002,
+        targetX: 28,
+        targetY: -383,
+        targetZ: -1015,
+        fov: 51,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      48.7
+    );
+    tl.to(
+      camState,
+      {
+        x: 24,
+        y: -368,
+        z: -1004,
+        targetX: 28,
+        targetY: -383,
+        targetZ: -1015,
+        fov: 52,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      50.0
+    );
+    tl.to(
+      camState,
+      {
+        x: -15,
+        y: -405,
+        z: -1045,
+        targetX: -28,
+        targetY: -423,
+        targetZ: -1115,
+        fov: 64,
+        fogDensity: 0.0265,
+        duration: 1.1,
+        ease: "power1.inOut",
+      },
+      51.3
+    );
+
+    // EVENT 09 — DANCE: 5-Phase 3D Orbital Trajectory
+    tl.to(
+      camState,
+      {
+        x: -18,
+        y: -405,
+        z: -1080,
+        targetX: -28,
+        targetY: -423,
+        targetZ: -1115,
+        fov: 64,
+        fogDensity: 0.027,
+        duration: 1.2,
+        ease: "power2.out",
+      },
+      52.5
+    );
+    tl.to(
+      camState,
+      {
+        x: -48,
+        y: -406,
+        z: -1095,
+        targetX: -28,
+        targetY: -423,
+        targetZ: -1115,
+        fov: 58,
+        duration: 1.2,
+        ease: "sine.inOut",
+      },
+      53.8
+    );
+    tl.to(
+      camState,
+      {
+        x: -34,
+        y: -407,
+        z: -1102,
+        targetX: -28,
+        targetY: -423,
+        targetZ: -1115,
+        fov: 51,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      55.1
+    );
+    tl.to(
+      camState,
+      {
+        x: -24,
+        y: -408,
+        z: -1104,
+        targetX: -28,
+        targetY: -423,
+        targetZ: -1115,
+        fov: 52,
+        duration: 1.1,
+        ease: "sine.inOut",
+      },
+      56.4
+    );
+    tl.to(
+      camState,
+      {
+        x: 10,
+        y: -445,
+        z: -1145,
+        targetX: 8,
+        targetY: -463,
+        targetZ: -1215,
+        fov: 64,
+        fogDensity: 0.0275,
+        duration: 1.1,
+        ease: "power1.inOut",
+      },
+      57.7
+    );
+
+    // EVENT 10 — PHOTOGRAPHY: 5-Phase 3D Orbital Trajectory & Grand Finale Settle
+    tl.to(
+      camState,
+      {
+        x: 16,
+        y: -446,
+        z: -1175,
+        targetX: 8,
+        targetY: -463,
+        targetZ: -1215,
+        fov: 64,
+        fogDensity: 0.028,
+        duration: 1.3,
+        ease: "power2.out",
+      },
+      58.9
+    );
+    tl.to(
+      camState,
+      {
+        x: 20,
+        y: -447,
+        z: -1190,
+        targetX: 8,
+        targetY: -463,
+        targetZ: -1215,
+        fov: 58,
+        duration: 1.3,
+        ease: "sine.inOut",
+      },
+      60.3
+    );
+    tl.to(
+      camState,
+      {
+        x: 10,
+        y: -448,
+        z: -1198,
+        targetX: 8,
+        targetY: -463,
+        targetZ: -1215,
+        fov: 50,
+        duration: 1.2,
+        ease: "sine.inOut",
+      },
+      61.7
+    );
+    tl.to(
+      camState,
+      {
+        x: 4,
+        y: -449,
+        z: -1200,
+        targetX: 8,
+        targetY: -463,
+        targetZ: -1215,
+        fov: 48,
+        duration: 1.2,
+        ease: "sine.inOut",
+      },
+      63.0
     );
     tl.to(
       camState,
       {
         x: 0,
-        y: -456,
-        z: -1170,
-        targetX: 0,
+        y: -450,
+        z: -1202,
+        targetX: 8,
         targetY: -463,
-        targetZ: -1208,
-        fov: 48,
-        duration: 0.8,
-        ease: "sine.out",
+        targetZ: -1215,
+        fov: 46,
+        fogDensity: 0.029,
+        duration: 1.5,
+        ease: "power2.out",
       },
-      46.2
+      64.3
     );
 
-    tl.to({}, { duration: 1 });
+    tl.to({}, { duration: 2.0 });
 
     const clock = new THREE.Clock();
     let animationId;
@@ -2866,7 +2979,7 @@ export default function Scene() {
         const depthFactor = Math.min(1.0, Math.abs(camState.y) / 470);
         const caveFogColor = new THREE.Color(0x031e30).lerp(new THREE.Color(0x000612), depthFactor);
         scene.background = caveFogColor;
-        
+
         const dynamicFogDensity = camState.fogDensity * (1.0 + depthFactor * 0.4);
         scene.fog = new THREE.FogExp2(caveFogColor, dynamicFogDensity);
 
@@ -2940,9 +3053,6 @@ export default function Scene() {
         xtal.rotation.y = t * 0.8;
       }
 
-      postPortalHologramGroups.forEach((group, index) => {
-        group.rotation.z = Math.sin(t * 0.35 + index * 1.7) * 0.006;
-      });
       postPortalMineralGroups.forEach((group, index) => {
         group.rotation.z = t * (0.025 + index * 0.004);
       });
@@ -3010,7 +3120,8 @@ export default function Scene() {
 
       // Smooth Dynamic Camera FOV Transitions (Fast travel vs Hero Close-up)
       if (camState.fov && Math.abs(camera.fov - camState.fov) > 0.05) {
-        camera.fov += (camState.fov - camera.fov) * (isMobile ? 0.10 : 0.07);
+        const fovLerp = (isMobile ? 0.10 : 0.07) * (camState.z < -245 && camState.z > -560 ? 0.4 : 1.0);
+        camera.fov += (camState.fov - camera.fov) * fovLerp;
         camera.updateProjectionMatrix();
       }
 
@@ -3028,31 +3139,235 @@ export default function Scene() {
 
       const moveSpeed = Math.sqrt(vx * vx + vy * vy + vz * vz);
 
-      // Dynamic micro-banking roll on lateral turns (capped at ±0.07 rads / ~4°)
-      const targetBank = Math.max(-0.07, Math.min(0.07, -vx * 0.018));
+      // Dynamic micro-banking roll on lateral turns (capped at ±0.07 rads / ~4°, zero while passing through stargate center)
+      const rawBank = Math.max(-0.07, Math.min(0.07, -vx * 0.018));
+      const targetBank = camState.z > -245 ? 0 : rawBank;
       currentBank += (targetBank - currentBank) * (isMobile ? 0.12 : 0.08);
 
-      // Position spring lerp for smooth, liquid camera movement
-      smoothCamPos.lerp(new THREE.Vector3(camState.x, camState.y, camState.z), isMobile ? 0.10 : 0.07);
+      // VELOCITY-INDEPENDENT & DISTANCE-BASED SPEED DAMPENING ZONES (Events 01, 02 & 03)
+      let eventSpeedScale = 1.0;
+      let event1RightArcOffset = 0.0;
 
-      // Post-portal landmark focus: the authored keyframes keep their distinct motion,
-      // while their target is recentered on the actual poster/shrine composition.
-      // The condition keeps the complete surface-to-stargate camera path untouched.
-      if (camState.z < -185) {
-        let focusedNode = eventNodes[0];
-        let targetDistance = Infinity;
-        for (const node of eventNodes) {
-          const zDistance = Math.abs(camState.targetZ - node.pos.z);
-          if (zDistance < targetDistance) {
-            targetDistance = zDistance;
-            focusedNode = node;
-          }
+      // Event 01 (Coding) Slowdown Zone
+      if (camState.z < -245 && camState.z > -350) {
+        const event1ShrinePos = new THREE.Vector3(-22, -106, -318);
+        const distToShrine = smoothCamPos.distanceTo(event1ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
         }
-        desiredLookAt.set(focusedNode.pos.x, focusedNode.pos.y + 11.5, focusedNode.pos.z);
-      } else {
-        desiredLookAt.set(camState.targetX, camState.targetY, camState.targetZ);
+
+        if (distToShrine < 60) {
+          const arcWeight = Math.sin(Math.min(1.0, Math.max(0.0, (60 - distToShrine) / 35)) * Math.PI);
+          event1RightArcOffset = 7.5 * arcWeight;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+
+        if (camState.z < -310) {
+          const exitProgress = Math.min(1.0, Math.max(0.0, (-310 - camState.z) / 25));
+          const exitFactor = exitProgress * exitProgress;
+          eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
+          event1RightArcOffset *= (1.0 - exitFactor);
+        }
+      } 
+      // Event 02 (Web Design) Slowdown Zone
+      else if (camState.z <= -350 && camState.z > -470) {
+        const event2ShrinePos = new THREE.Vector3(22, -186, -430);
+        const distToShrine = smoothCamPos.distanceTo(event2ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+
+        if (camState.z < -435) {
+          const exitProgress = Math.min(1.0, Math.max(0.0, (-435 - camState.z) / 25));
+          const exitFactor = exitProgress * exitProgress;
+          eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
+        }
       }
-      currentLookAt.lerp(desiredLookAt, isMobile ? 0.10 : 0.07);
+      // Event 03 (IT Quiz) Slowdown Zone
+      else if (camState.z <= -470 && camState.z > -560) {
+        const event3ShrinePos = new THREE.Vector3(-32, -186, -508);
+        const distToShrine = smoothCamPos.distanceTo(event3ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+
+        if (camState.z < -515) {
+          const exitProgress = Math.min(1.0, Math.max(0.0, (-515 - camState.z) / 25));
+          const exitFactor = exitProgress * exitProgress;
+          eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
+        }
+      }
+      // Event 06 (Surprise Event) Slowdown Zone
+      else if (camState.z <= -790 && camState.z > -895) {
+        const event6ShrinePos = new THREE.Vector3(32, -306, -870);
+        const distToShrine = smoothCamPos.distanceTo(event6ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+
+        if (camState.z < -875) {
+          const exitProgress = Math.min(1.0, Math.max(0.0, (-875 - camState.z) / 25));
+          const exitFactor = exitProgress * exitProgress;
+          eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
+        }
+      }
+      // Event 07 (IT Manager Spire) Slowdown Zone
+      else if (camState.z <= -860 && camState.z > -945) {
+        const event7ShrinePos = new THREE.Vector3(-28, -294, -905);
+        const distToShrine = smoothCamPos.distanceTo(event7ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+
+        if (camState.z < -915) {
+          const exitProgress = Math.min(1.0, Math.max(0.0, (-915 - camState.z) / 25));
+          const exitFactor = exitProgress * exitProgress;
+          eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
+        }
+      }
+      // Event 08 (Startup Event) Slowdown Zone
+      else if (camState.z <= -945 && camState.z > -1050) {
+        const event8ShrinePos = new THREE.Vector3(28, -375, -1015);
+        const distToShrine = smoothCamPos.distanceTo(event8ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+
+        if (camState.z < -1025) {
+          const exitProgress = Math.min(1.0, Math.max(0.0, (-1025 - camState.z) / 25));
+          const exitFactor = exitProgress * exitProgress;
+          eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
+        }
+      }
+      // Event 09 (Dance) Slowdown Zone
+      else if (camState.z <= -1050 && camState.z > -1150) {
+        const event9ShrinePos = new THREE.Vector3(-28, -415, -1115);
+        const distToShrine = smoothCamPos.distanceTo(event9ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+
+        if (camState.z < -1125) {
+          const exitProgress = Math.min(1.0, Math.max(0.0, (-1125 - camState.z) / 25));
+          const exitFactor = exitProgress * exitProgress;
+          eventSpeedScale = eventSpeedScale + (1.0 - eventSpeedScale) * exitFactor;
+        }
+      }
+      // Event 10 (Photography & Videography) Slowdown Zone
+      else if (camState.z <= -1150) {
+        const event10ShrinePos = new THREE.Vector3(8, -455, -1215);
+        const distToShrine = smoothCamPos.distanceTo(event10ShrinePos);
+
+        if (distToShrine > 65) {
+          eventSpeedScale = 1.0;
+        } else if (distToShrine > 42) {
+          const t = (distToShrine - 42) / 23;
+          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+        } else {
+          eventSpeedScale = 0.08;
+        }
+
+        const fastScrollVelocity = Math.abs(vz);
+        if (fastScrollVelocity > 0.4 && distToShrine < 55) {
+          const fastDamp = Math.min(0.65, (fastScrollVelocity - 0.4) * 0.25);
+          eventSpeedScale *= (1.0 - fastDamp);
+        }
+      }
+
+      // Position spring lerp for smooth, liquid camera movement
+      const basePosLerp = isMobile ? 0.10 : 0.07;
+      const effectivePosLerp = basePosLerp * eventSpeedScale;
+      smoothCamPos.lerp(new THREE.Vector3(camState.x + event1RightArcOffset, camState.y, camState.z), effectivePosLerp);
+
+      // Surface-to-Portal & Event Landmark focus:
+      // GSAP keyframes define precise look-at targets (targetX, targetY, targetZ) for cinematic reveals.
+      desiredLookAt.set(camState.targetX, camState.targetY, camState.targetZ);
+      const baseLookLerp = isMobile ? 0.10 : 0.07;
+      const effectiveLookLerp = baseLookLerp * eventSpeedScale;
+      currentLookAt.lerp(desiredLookAt, effectiveLookLerp);
 
       camera.position.set(
         smoothCamPos.x + mouse.x * parallaxStrength + floatX,
@@ -3062,7 +3377,7 @@ export default function Scene() {
 
       // A soft, inactive-in-normal-travel guard keeps the post-portal camera
       // outside shrine and platform envelopes if a future keyframe is tightened.
-      if (camState.z < -185) {
+      if (camState.z < -245) {
         for (const node of eventNodes) {
           safetyOffset.set(
             camera.position.x - node.pos.x,
@@ -3082,20 +3397,13 @@ export default function Scene() {
         }
       }
 
-      if (camState.z > -185) {
-        // Surface and dive sequence before entering stargate
-        camera.rotation.x = camState.rx + mouse.y * (isMobile ? 0.02 : 0.04);
-        camera.rotation.y = camState.ry - mouse.x * (isMobile ? 0.02 : 0.04);
-        camera.rotation.z = floatRotZ;
-      } else {
-        // Inside Event Portal: Smooth underwater steadicam look-ahead gaze with micro-banking roll
-        camera.lookAt(
-          currentLookAt.x + mouse.x * (isMobile ? 0.6 : 1.2),
-          currentLookAt.y + mouse.y * (isMobile ? 0.6 : 1.2),
-          currentLookAt.z
-        );
-        camera.rotation.z = floatRotZ + currentBank;
-      }
+      // Smooth underwater steadicam look-ahead gaze with micro-banking roll
+      camera.lookAt(
+        currentLookAt.x + mouse.x * (isMobile ? 0.6 : 1.2),
+        currentLookAt.y + mouse.y * (isMobile ? 0.6 : 1.2),
+        currentLookAt.z
+      );
+      camera.rotation.z = floatRotZ + currentBank;
 
       renderer.render(scene, camera);
 
@@ -3338,9 +3646,8 @@ export default function Scene() {
       {/* Minimal Top-Right Speaker Audio Toggle Icon (Panel-less bare icon design) */}
       <button
         onClick={toggleAudio}
-        className={`fixed top-6 right-6 md:top-8 md:right-10 z-[80] p-1 text-cyan-300 hover:text-white transition-all duration-500 cursor-pointer pointer-events-auto hover:scale-110 active:scale-95 drop-shadow-[0_0_15px_rgba(0,255,255,0.8)] ${
-          scrollProgress >= 4 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
-        }`}
+        className={`fixed top-6 right-6 md:top-8 md:right-10 z-[80] p-1 text-cyan-300 hover:text-white transition-all duration-500 cursor-pointer pointer-events-auto hover:scale-110 active:scale-95 drop-shadow-[0_0_15px_rgba(0,255,255,0.8)] ${scrollProgress >= 4 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+          }`}
         aria-label="Toggle Audio"
         title={isAudioPlaying ? "Mute Audio" : "Play Audio"}
       >
