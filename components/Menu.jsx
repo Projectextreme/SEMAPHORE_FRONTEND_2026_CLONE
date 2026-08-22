@@ -39,6 +39,7 @@ export default function Menu() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoggedIn(!!localStorage.getItem('token'));
   }, []);
 

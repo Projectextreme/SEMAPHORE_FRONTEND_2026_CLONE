@@ -32,6 +32,7 @@ export default function EventsPage() {
       router.push(`/user/register?redirect=${redirectUrl}`);
       return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsAuthorized(true);
 
     async function fetchEvents() {
