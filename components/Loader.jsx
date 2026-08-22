@@ -59,7 +59,7 @@ export default function Loader({ loading, progress }) {
         </div>
         <div className="flex justify-between items-center w-full">
           <span className="text-[10px] md:text-xs tracking-[0.3em] uppercase text-[#8f8a84] font-medium">
-            DEPLOYING INTO THE DEEP
+            DEPLOYING INTO THE DEEP NOW!
           </span>
           <span className="text-xs md:text-sm font-bold text-[#eae5de] tracking-wider">
             {displayProgress}%
