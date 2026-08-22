@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ProfileSidebar from '@/components/profile/ProfileSidebar';
 import MyRegistration from '@/components/profile/MyRegistration';
+import WaterWave from '@/components/WaterWaveWrapper';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 
@@ -62,10 +63,24 @@ export default function MyRegistrationPage() {
   }
 
   return (
-    <main className="relative min-h-screen bg-gradient-to-br from-cyan-100 via-blue-50 to-teal-50 overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
+    <main className="relative min-h-screen bg-gradient-to-br from-cyan-100 via-blue-200 to-teal-200 overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
       {/* Decorative noise/texture overlay for the background */}
-      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
-      
+      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none z-0"></div>
+
+      {/* Water Wave Effect */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-auto">
+        <WaterWave
+          imageUrl="/water.jpg"
+          dropRadius={25}
+          perturbance={0.03}
+          resolution={512}
+          className="absolute inset-0 w-full h-full opacity-90 bg-cover bg-center"
+          style={{ backgroundSize: 'cover', backgroundPosition: 'center' }}
+        >
+          {() => <div className="w-full h-full" />}
+        </WaterWave>
+      </div>
+
       <div className="max-w-6xl mx-auto relative z-10 flex flex-col md:flex-row gap-8">
         <ProfileSidebar user={user} />
         <MyRegistration />
