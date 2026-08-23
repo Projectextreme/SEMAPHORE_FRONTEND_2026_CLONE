@@ -21,6 +21,12 @@ import {
   portalVortexFragment,
   waterCausticsVertex,
   waterCausticsFragment,
+  waveSeabedVertex,
+  waveSeabedFragment,
+  floatingParticleVertex,
+  floatingParticleFragment,
+  diveBurstVertex,
+  diveBurstFragment,
 } from "../src/Shaders/index";
 
 const dolphinVertexShader = `
@@ -134,6 +140,7 @@ const shimmerVertex = `
   attribute float aSpeed;
   uniform float uTime;
   varying float vTwinkle;
+  varying float vSurfaceFade;
 
   void main() {
     vec3 pos = position;
@@ -143,13 +150,17 @@ const shimmerVertex = `
     pos.x += sin(uTime * 0.3 + aPhase * 6.28) * 1.2;
     pos.z += cos(uTime * 0.25 + aPhase * 6.28) * 1.2;
 
+    // Smoothly fade out as particles approach ocean surface from below
+    vSurfaceFade = smoothstep(-5.0, -22.0, pos.y);
+
     // Twinkle intensity: fast sparkle flicker layered on a slow shimmer wave
     float sparkle = sin(uTime * (3.0 + aPhase * 4.0) + aPhase * 50.0) * 0.5 + 0.5;
     float shimmer = sin(uTime * 0.8 + aPhase * 12.0) * 0.5 + 0.5;
     vTwinkle = pow(sparkle, 3.0) * 0.7 + shimmer * 0.3;
 
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-    gl_PointSize = aSize * (300.0 / -mvPosition.z) * (0.4 + vTwinkle * 1.1);
+    gl_PointSize = aSize * (300.0 / -mvPosition.z) * (0.4 + vTwinkle * 1.1) * vSurfaceFade;
+    gl_PointSize = max(gl_PointSize, 0.0);
     gl_Position = projectionMatrix * mvPosition;
   }
 `;
@@ -157,15 +168,18 @@ const shimmerVertex = `
 const shimmerFragment = `
   uniform vec3 uColor;
   varying float vTwinkle;
+  varying float vSurfaceFade;
 
   void main() {
+    if (vSurfaceFade <= 0.001) discard;
+
     vec2 center = gl_PointCoord - vec2(0.5);
     float dist = length(center);
 
     // Crisp bright core + soft glow falloff = "shine" rather than flat dot
     float core = smoothstep(0.06, 0.0, dist);
     float glow = smoothstep(0.5, 0.0, dist);
-    float alpha = (core * 1.0 + glow * 0.35) * (0.25 + vTwinkle * 0.9);
+    float alpha = (core * 1.0 + glow * 0.35) * (0.25 + vTwinkle * 0.9) * vSurfaceFade;
 
     if (alpha < 0.02) discard;
 
@@ -2077,7 +2091,7 @@ export default function Scene() {
 
     for (let i = 0; i < shimmerCount; i++) {
       shimmerPositions[i * 3] = (Math.random() - 0.5) * 420;
-      shimmerPositions[i * 3 + 1] = -520 + Math.random() * 560;
+      shimmerPositions[i * 3 + 1] = -520 + Math.random() * 470;
       shimmerPositions[i * 3 + 2] = -20 - Math.random() * 980;
 
       shimmerSizes[i] = 1.5 + Math.random() * 4.0;
@@ -2116,7 +2130,7 @@ export default function Scene() {
 
     for (let i = 0; i < dustCount; i++) {
       dustPositions[i * 3] = (Math.random() - 0.5) * 320;
-      dustPositions[i * 3 + 1] = -385 + Math.random() * 360;
+      dustPositions[i * 3 + 1] = -385 + Math.random() * 335;
       dustPositions[i * 3 + 2] = -30 - Math.random() * 620;
       dustVelocities[i * 3] = 0;
       dustVelocities[i * 3 + 1] = 0;
@@ -2157,7 +2171,7 @@ export default function Scene() {
 
     for (let i = 0; i < ballCount; i++) {
       ballPositions[i * 3] = (Math.random() - 0.5) * 450;
-      ballPositions[i * 3 + 1] = -400 + Math.random() * 420;
+      ballPositions[i * 3 + 1] = -400 + Math.random() * 350;
       ballPositions[i * 3 + 2] = -20 - Math.random() * 650;
       ballSizes[i] = 2.5 + Math.random() * 6.5;
       ballAlphas[i] = 0.4 + Math.random() * 0.55;
@@ -2184,6 +2198,149 @@ export default function Scene() {
 
     const ballMesh = new THREE.Points(ballGeo, ballMat);
     scene.add(ballMesh);
+
+    // --- BIOLUMINESCENT WAVE SEABED PLANE ---
+    const waveGridCols = isMobile ? 80 : 160;
+    const waveGridRows = isMobile ? 80 : 160;
+    const waveCount = waveGridCols * waveGridRows;
+    const waveWidth = 400;
+    const waveDepth = 1000;
+
+    const wavePositions = new Float32Array(waveCount * 3);
+    const waveRandoms = new Float32Array(waveCount);
+    const waveScales = new Float32Array(waveCount);
+
+    let waveIdx = 0;
+    for (let i = 0; i < waveGridCols; i++) {
+      for (let j = 0; j < waveGridRows; j++) {
+        const u = i / (waveGridCols - 1);
+        const v = j / (waveGridRows - 1);
+
+        wavePositions[waveIdx * 3] = (u - 0.5) * waveWidth;
+        wavePositions[waveIdx * 3 + 1] = -380.0;
+        wavePositions[waveIdx * 3 + 2] = (v - 0.5) * waveDepth - 450.0;
+
+        waveRandoms[waveIdx] = Math.random();
+        waveScales[waveIdx] = 0.7 + Math.random() * 0.8;
+        waveIdx++;
+      }
+    }
+
+    const seabedWaveGeo = new THREE.BufferGeometry();
+    seabedWaveGeo.setAttribute("position", new THREE.BufferAttribute(wavePositions, 3));
+    seabedWaveGeo.setAttribute("aRandom", new THREE.BufferAttribute(waveRandoms, 1));
+    seabedWaveGeo.setAttribute("aScale", new THREE.BufferAttribute(waveScales, 1));
+
+    const seabedWaveMat = new THREE.ShaderMaterial({
+      vertexShader: waveSeabedVertex,
+      fragmentShader: waveSeabedFragment,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uSize: { value: 2.2 },
+        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+        uNoiseScale: { value: 0.04 },
+        uWaveSpeed: { value: 0.8 },
+        uWaveHeight: { value: 7.5 },
+        uColorDeep: { value: new THREE.Color(0x002e4d) },
+        uColorMid: { value: new THREE.Color(0x00a8e8) },
+        uColorPeak: { value: new THREE.Color(0x00f0ff) },
+      },
+    });
+
+    const seabedWaveMesh = new THREE.Points(seabedWaveGeo, seabedWaveMat);
+    scene.add(seabedWaveMesh);
+
+    // --- FLOATING AMBIENT BUBBLES & AQUATIC DUST ---
+    const floatParticleCount = isMobile ? 600 : 1800;
+
+    const floatPositions = new Float32Array(floatParticleCount * 3);
+    const floatSizes = new Float32Array(floatParticleCount);
+    const floatSpeeds = new Float32Array(floatParticleCount);
+    const floatPhases = new Float32Array(floatParticleCount);
+    const floatTypes = new Float32Array(floatParticleCount);
+
+    for (let i = 0; i < floatParticleCount; i++) {
+      const i3 = i * 3;
+      floatPositions[i3] = (Math.random() - 0.5) * 360;
+      floatPositions[i3 + 1] = -385 + Math.random() * 360;
+      floatPositions[i3 + 2] = -30 - Math.random() * 1200;
+
+      const isBubble = Math.random() < 0.35;
+      floatTypes[i] = isBubble ? 0.0 : 1.0;
+      floatSizes[i] = isBubble ? 2.5 + Math.random() * 3.5 : 1.0 + Math.random() * 2.0;
+      floatSpeeds[i] = 0.5 + Math.random() * 1.2;
+      floatPhases[i] = Math.random();
+    }
+
+    const floatingParticlesGeo = new THREE.BufferGeometry();
+    floatingParticlesGeo.setAttribute("position", new THREE.BufferAttribute(floatPositions, 3));
+    floatingParticlesGeo.setAttribute("aSize", new THREE.BufferAttribute(floatSizes, 1));
+    floatingParticlesGeo.setAttribute("aSpeed", new THREE.BufferAttribute(floatSpeeds, 1));
+    floatingParticlesGeo.setAttribute("aPhase", new THREE.BufferAttribute(floatPhases, 1));
+    floatingParticlesGeo.setAttribute("aType", new THREE.BufferAttribute(floatTypes, 1));
+
+    const floatingParticlesMat = new THREE.ShaderMaterial({
+      vertexShader: floatingParticleVertex,
+      fragmentShader: floatingParticleFragment,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+        uBubbleColor: { value: new THREE.Color(0x67e8f9) },
+        uDustColor: { value: new THREE.Color(0x22d3ee) },
+      },
+    });
+
+    const floatingParticlesMesh = new THREE.Points(floatingParticlesGeo, floatingParticlesMat);
+    scene.add(floatingParticlesMesh);
+
+    // --- DIVE BUBBLE BURST (triggered by surface -> underwater scroll transition) ---
+    const diveBurstCount = isMobile ? 120 : 350;
+    const diveBurstGeo = new THREE.BufferGeometry();
+    const diveBurstPositions = new Float32Array(diveBurstCount * 3);
+    const diveBurstAngles = new Float32Array(diveBurstCount);
+    const diveBurstElevations = new Float32Array(diveBurstCount);
+    const diveBurstRadii = new Float32Array(diveBurstCount);
+    const diveBurstSizes = new Float32Array(diveBurstCount);
+    const diveBurstRandoms = new Float32Array(diveBurstCount);
+
+    for (let i = 0; i < diveBurstCount; i++) {
+      diveBurstAngles[i] = Math.random() * Math.PI * 2;
+      diveBurstElevations[i] = (Math.random() - 0.3) * 8.0;
+      diveBurstRadii[i] = 3.0 + Math.random() * 14.0;
+      diveBurstSizes[i] = 6.0 + Math.random() * 14.0;
+      diveBurstRandoms[i] = Math.random();
+    }
+
+    diveBurstGeo.setAttribute("position", new THREE.BufferAttribute(diveBurstPositions, 3));
+    diveBurstGeo.setAttribute("aAngle", new THREE.BufferAttribute(diveBurstAngles, 1));
+    diveBurstGeo.setAttribute("aElevation", new THREE.BufferAttribute(diveBurstElevations, 1));
+    diveBurstGeo.setAttribute("aRadius", new THREE.BufferAttribute(diveBurstRadii, 1));
+    diveBurstGeo.setAttribute("aSize", new THREE.BufferAttribute(diveBurstSizes, 1));
+    diveBurstGeo.setAttribute("aRandom", new THREE.BufferAttribute(diveBurstRandoms, 1));
+
+    const diveBurstMat = new THREE.ShaderMaterial({
+      vertexShader: diveBurstVertex,
+      fragmentShader: diveBurstFragment,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uProgress: { value: 0 },
+        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+        uOrigin: { value: new THREE.Vector3(0, 0, -10) },
+        uColor: { value: new THREE.Color(0x00f0ff) },
+      },
+    });
+
+    const diveBurstMesh = new THREE.Points(diveBurstGeo, diveBurstMat);
+    scene.add(diveBurstMesh);
 
     // --- DISTANT SMALL FISH SCHOOLS ---
     const fishCount = isMobile ? 35 : 75;
@@ -3479,8 +3636,16 @@ export default function Scene() {
       shimmerMat.uniforms.uTime.value = t;
       dustMat.uniforms.uTime.value = t;
       ballMat.uniforms.uTime.value = t;
+      seabedWaveMat.uniforms.uTime.value = t;
+      floatingParticlesMat.uniforms.uTime.value = t;
       causticUniforms.uTime.value = t;
       shaftUniforms.uTime.value = t;
+
+      // Dive Bubble Burst (surface -> underwater transition: camState.y 2.0 down to -14.0)
+      const diveBurstProgress = THREE.MathUtils.clamp((2.0 - camState.y) / 16.0, 0.0, 1.0);
+      diveBurstMat.uniforms.uProgress.value = diveBurstProgress;
+      diveBurstMat.uniforms.uTime.value = t;
+      diveBurstMat.uniforms.uOrigin.value.set(camState.x, camState.y - 2.0, camState.z - 8.0);
 
       // Pulse Portal Ring Backlight
       portalBackLight.intensity = 8.0 + Math.sin(t * 2.5) * 3.0;
@@ -3944,6 +4109,12 @@ export default function Scene() {
       dustMat.dispose();
       ballGeo.dispose();
       ballMat.dispose();
+      seabedWaveGeo.dispose();
+      seabedWaveMat.dispose();
+      floatingParticlesGeo.dispose();
+      floatingParticlesMat.dispose();
+      diveBurstGeo.dispose();
+      diveBurstMat.dispose();
       kelpGeo.dispose();
       kelpMat.dispose();
       fishGeo.dispose();

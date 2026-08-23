@@ -336,13 +336,18 @@ attribute float particleType;
 
 varying float vAlpha;
 varying float vParticleType;
+varying float vSurfaceFade;
 
 void main() {
   vAlpha = alpha;
   vParticleType = particleType;
 
+  // Smoothly fade out as particles approach ocean surface from below
+  vSurfaceFade = smoothstep(-5.0, -22.0, position.y);
+
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-  gl_PointSize = size * (90.0 / -mvPosition.z);
+  gl_PointSize = size * (90.0 / -mvPosition.z) * vSurfaceFade;
+  gl_PointSize = max(gl_PointSize, 0.0);
   gl_Position = projectionMatrix * mvPosition;
 }
 `;
@@ -353,8 +358,11 @@ uniform float uTime;
 
 varying float vAlpha;
 varying float vParticleType;
+varying float vSurfaceFade;
 
 void main() {
+  if (vSurfaceFade <= 0.001) discard;
+
   vec2 center = gl_PointCoord - vec2(0.5);
   float dist = length(center);
 
@@ -368,7 +376,7 @@ void main() {
   float shimmer = sin(uTime * 2.0 + vParticleType * 100.0) * 0.15 + 0.85;
   alpha *= shimmer;
 
-  gl_FragColor = vec4(uColor, alpha);
+  gl_FragColor = vec4(uColor, alpha * vSurfaceFade);
 }
 `;
 
@@ -611,4 +619,251 @@ void main() {
   
   gl_FragColor = vec4(color, alpha);
 }
+`;
+
+// --- BIOLUMINESCENT WATER WAVE SEABED SHADERS ---
+export const waveSeabedVertex = `
+  uniform float uTime;
+  uniform float uSize;
+  uniform float uPixelRatio;
+  uniform float uNoiseScale;
+  uniform float uWaveSpeed;
+  uniform float uWaveHeight;
+
+  attribute float aRandom;
+  attribute float aScale;
+
+  varying float vHeight;
+  varying float vRandom;
+  varying vec3 vWorldPosition;
+
+  // 2D Hash & Noise Functions
+  float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+  }
+
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+  }
+
+  float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.5;
+    vec2 shift = vec2(100.0);
+    for (int i = 0; i < 4; i++) {
+      value += amp * noise(p);
+      p = p * 2.0 + shift;
+      amp *= 0.5;
+    }
+    return value;
+  }
+
+  void main() {
+    vec3 pos = position;
+
+    // Calculate dynamic 3D ocean waves (FBM + Directional Sines)
+    vec2 st = pos.xz * uNoiseScale;
+    float t = uTime * uWaveSpeed;
+
+    float wave1 = sin(pos.x * 0.08 + t * 1.2) * cos(pos.z * 0.08 + t * 0.8) * 3.5;
+    float wave2 = sin(pos.x * 0.14 - t * 1.5 + pos.z * 0.09) * 2.0;
+    float n = fbm(st + vec2(t * 0.2, t * 0.15)) * uWaveHeight;
+
+    float height = wave1 + wave2 + n;
+    pos.y += height;
+
+    vHeight = height;
+    vRandom = aRandom;
+    vWorldPosition = (modelMatrix * vec4(pos, 1.0)).xyz;
+
+    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+
+    // Perspective point scale
+    float distScale = 320.0 / -mvPosition.z;
+    gl_PointSize = uSize * aScale * uPixelRatio * distScale;
+    gl_PointSize = max(gl_PointSize, 1.0);
+  }
+`;
+
+export const waveSeabedFragment = `
+  uniform vec3 uColorDeep;
+  uniform vec3 uColorMid;
+  uniform vec3 uColorPeak;
+  uniform float uTime;
+
+  varying float vHeight;
+  varying float vRandom;
+  varying vec3 vWorldPosition;
+
+  void main() {
+    vec2 center = gl_PointCoord - vec2(0.5);
+    float dist = length(center);
+    if (dist > 0.5) discard;
+
+    // Smooth circular particle glow falloff
+    float alpha = smoothstep(0.5, 0.0, dist);
+    alpha = pow(alpha, 1.3);
+
+    // Color gradient based on wave height (Deep Blue -> Cyan -> Bright Blue Peak)
+    float h = clamp((vHeight + 6.0) / 14.0, 0.0, 1.0);
+    vec3 color = mix(uColorDeep, uColorMid, smoothstep(0.0, 0.5, h));
+    color = mix(color, uColorPeak, smoothstep(0.5, 1.0, h));
+
+    // Shimmering / twinkling highlights
+    float twinkle = sin(uTime * 3.5 + vRandom * 62.8 + vWorldPosition.x * 0.4) * 0.3 + 0.7;
+    color *= twinkle;
+
+    // Intense glow on wave crests
+    float crestGlow = pow(h, 2.8) * 1.4;
+    color += uColorPeak * crestGlow;
+
+    gl_FragColor = vec4(color, alpha * 0.85);
+  }
+`;
+
+// --- FLOATING BUBBLE & DUST SHADERS ---
+export const floatingParticleVertex = `
+  attribute float aSize;
+  attribute float aSpeed;
+  attribute float aPhase;
+  attribute float aType; // 0.0 = Bubble, 1.0 = Dust
+
+  uniform float uTime;
+  uniform float uPixelRatio;
+
+  varying float vType;
+  varying float vPhase;
+  varying float vSurfaceFade;
+
+  void main() {
+    vType = aType;
+    vPhase = aPhase;
+    vec3 pos = position;
+
+    // Upward floating motion within underwater depth (staying strictly below ocean surface y = -8.0)
+    float heightRange = 490.0;
+    pos.y = mod(position.y + uTime * aSpeed * 3.5 + aPhase * 25.0, heightRange) - 500.0;
+    pos.x += sin(uTime * 0.7 + aPhase * 6.28) * 1.8;
+    pos.z += cos(uTime * 0.5 + aPhase * 6.28) * 1.8;
+
+    // Smoothly fade out as particles approach ocean surface from below (completely hidden above y = -5.0)
+    vSurfaceFade = smoothstep(-5.0, -22.0, pos.y);
+
+    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+    gl_PointSize = aSize * uPixelRatio * (220.0 / -mvPosition.z) * vSurfaceFade;
+    gl_PointSize = max(gl_PointSize, 0.0);
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`;
+
+export const floatingParticleFragment = `
+  uniform vec3 uBubbleColor;
+  uniform vec3 uDustColor;
+  uniform float uTime;
+
+  varying float vType;
+  varying float vPhase;
+  varying float vSurfaceFade;
+
+  void main() {
+    if (vSurfaceFade <= 0.001) discard;
+
+    vec2 st = gl_PointCoord - vec2(0.5);
+    float dist = length(st);
+    if (dist > 0.5) discard;
+
+    vec3 color;
+    float alpha;
+
+    if (vType < 0.5) {
+      // Hollow Bubble Ring with Specular Highlight
+      float ring = smoothstep(0.34, 0.48, dist) * (1.0 - smoothstep(0.48, 0.5, dist));
+      float highlight = smoothstep(0.12, 0.0, length(st - vec2(-0.15, 0.15)));
+      alpha = ring * 0.75 + highlight * 0.9;
+      color = mix(uBubbleColor, vec3(1.0), highlight * 0.6);
+    } else {
+      // Soft Twinkling Ambient Aquatic Dust
+      float glow = smoothstep(0.5, 0.0, dist);
+      float shimmer = sin(uTime * 2.2 + vPhase * 40.0) * 0.35 + 0.65;
+      alpha = glow * shimmer * 0.65;
+      color = uDustColor;
+    }
+
+    gl_FragColor = vec4(color, alpha * vSurfaceFade);
+  }
+`;
+
+// --- DIVE BUBBLE BURST SHADERS ---
+export const diveBurstVertex = `
+  attribute float aAngle;
+  attribute float aElevation;
+  attribute float aRadius;
+  attribute float aSize;
+  attribute float aRandom;
+
+  uniform float uTime;
+  uniform float uProgress;   // 0 = at surface, 1 = dive settled
+  uniform float uPixelRatio;
+  uniform vec3 uOrigin;      // dive point in world space
+
+  varying float vAlpha;
+  varying float vRandom;
+
+  void main() {
+    vRandom = aRandom;
+
+    // Outward burst explosion (0 -> 0.5) then fade & settle (0.5 -> 1.0)
+    float spread = smoothstep(0.0, 0.5, uProgress);     // outward burst phase
+    float settle = smoothstep(0.5, 1.0, uProgress);     // fade/settle phase
+
+    vec3 dir = vec3(cos(aAngle) * aRadius, aElevation, sin(aAngle) * aRadius);
+    vec3 pos = uOrigin + dir * spread * 2.2;
+
+    // Upward surge + wobble turbulence during dive entry
+    pos.y += spread * (4.0 + aRandom * 6.0);
+    pos.x += sin(uTime * 2.0 + aRandom * 20.0) * 0.8 * spread;
+    pos.z += cos(uTime * 1.8 + aRandom * 20.0) * 0.8 * spread;
+
+    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+    float distScale = 380.0 / -mvPosition.z;
+    gl_PointSize = aSize * uPixelRatio * distScale * (0.5 + spread * 2.5);
+    gl_PointSize = max(gl_PointSize, 4.0);
+    gl_Position = projectionMatrix * mvPosition;
+
+    // Bright fade in during burst splash, smooth fade out on dive settle
+    vAlpha = sin(spread * 3.14159) * (1.0 - settle * 0.95);
+  }
+`;
+
+export const diveBurstFragment = `
+  uniform vec3 uColor;
+  varying float vAlpha;
+  varying float vRandom;
+
+  void main() {
+    vec2 c = gl_PointCoord - vec2(0.5);
+    float dist = length(c);
+    if (dist > 0.5) discard;
+
+    // Bright glowing core + crisp outer bubble ring
+    float core = smoothstep(0.2, 0.0, dist);
+    float ring = smoothstep(0.32, 0.46, dist) * (1.0 - smoothstep(0.46, 0.5, dist));
+    float alpha = (core * 0.85 + ring * 1.2) * vAlpha;
+
+    if (alpha < 0.01) discard;
+
+    // White highlights in bubble center for vivid splash pop
+    vec3 finalColor = mix(uColor, vec3(1.0), core * 0.8);
+    gl_FragColor = vec4(finalColor, alpha);
+  }
 `;
