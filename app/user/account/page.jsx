@@ -93,7 +93,7 @@ export default function MyRegistrationPage() {
         <ProfileSidebar user={user} />
         <div className="flex-1 flex flex-col">
           <SetTeamCard user={user} onUserUpdate={handleUserUpdate} />
-          <MyRegistration />
+          <MyRegistration user={user} />
         </div>
       </div>
     </main>
