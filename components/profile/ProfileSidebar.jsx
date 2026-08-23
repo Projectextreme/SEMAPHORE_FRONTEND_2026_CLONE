@@ -14,8 +14,8 @@ export default function ProfileSidebar({ user }) {
   };
 
   return (
-    <div className="w-full md:w-80 shrink-0 flex flex-col gap-6">
-      <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl p-6 shadow-[0_8px_32px_rgba(0,100,150,0.15)] flex flex-col items-center">
+    <div className="w-full md:w-120 shrink-0 flex flex-col gap-6">
+      <div className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-3xl p-6 shadow-[0_8px_32px_rgba(0,100,150,0.15)] flex flex-col items-center">
         <img
           src={user.avatar || "https://ui-avatars.com/api/?name=" + user.name + "&background=cffafe&color=164e63"}
           alt={user.name}
@@ -38,14 +38,13 @@ export default function ProfileSidebar({ user }) {
         </div>
 
         <div className="w-full flex flex-col gap-1.5">
-          {['My Dashboard', 'My Profile', 'Events', 'Settings', 'Help'].map((item, idx) => (
-            <button 
+          {['My Dashboard'].map((item, idx) => (
+            <button
               key={idx}
-              className={`text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                idx === 0 
-                  ? "bg-cyan-500/15 text-cyan-900 border border-cyan-400/30" 
-                  : "text-cyan-800/70 hover:bg-white/40 hover:text-cyan-900"
-              }`}
+              className={`text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${idx === 0
+                ? "bg-cyan-500/15 text-cyan-900 border border-cyan-400/30"
+                : "text-cyan-800/70 hover:bg-white/40 hover:text-cyan-900"
+                }`}
             >
               {item}
             </button>
@@ -53,7 +52,7 @@ export default function ProfileSidebar({ user }) {
 
           <div className="h-px bg-cyan-200/50 my-2"></div>
 
-          <button 
+          <button
             onClick={handleLogout}
             className="text-left px-4 py-2.5 rounded-xl text-sm font-bold text-red-500/90 hover:bg-red-50/50 hover:text-red-600 transition-all border border-transparent hover:border-red-200/50"
           >

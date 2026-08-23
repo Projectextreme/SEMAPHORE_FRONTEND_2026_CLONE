@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import WaterWave from '@/components/WaterWaveWrapper';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 
@@ -12,6 +13,8 @@ export default function EventsPage() {
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [registeredEventIds, setRegisteredEventIds] = useState([]);
+  const [globalPaymentStatus, setGlobalPaymentStatus] = useState(null);
+  const [globalPendingAmount, setGlobalPendingAmount] = useState(0);
 
   // Track which event has its registration form open
   const [expandedEventId, setExpandedEventId] = useState(null);
@@ -70,6 +73,16 @@ export default function EventsPage() {
             if (regData.registration && regData.registration.events) {
               const ids = regData.registration.events.map(e => e.eventId._id || e.eventId);
               setRegisteredEventIds(ids);
+              setGlobalPaymentStatus(regData.registration.paymentStatus);
+              
+              if (regData.registration.paymentStatus === 'pending') {
+                // Try to sum registrationFee from populated events if available
+                const total = regData.registration.events.reduce((sum, e) => {
+                  if (e.paymentId) return sum; // Skip if already paid
+                  return sum + (e.eventId.registrationFee || 0);
+                }, 0);
+                setGlobalPendingAmount(total);
+              }
             }
           }
         } catch (err) {
@@ -239,6 +252,7 @@ export default function EventsPage() {
       setGlobalSuccess(`Successfully registered for ${validForms.length} event(s)! Redirecting to payment...`);
       localStorage.removeItem('event_cart_draft'); // Clear global draft
       setTimeout(() => {
+        sessionStorage.setItem('pendingPaymentAmount', calculateTotal());
         router.push('/user/account/payment');
       }, 1500);
 
@@ -253,15 +267,34 @@ export default function EventsPage() {
   const validFormsCount = getValidForms().length;
 
   return (
-    <div style={styles.page}>
-      <div style={styles.container}>
+    <div style={styles.page} className="p-4 sm:p-6 md:p-10">
+      {/* Water Wave Background Layer */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-auto">
+        <WaterWave
+          imageUrl="/water.jpg"
+          dropRadius={25}
+          perturbance={0.03}
+          resolution={512}
+          className="absolute inset-0 w-full h-full  bg-cover bg-center"
+          style={{ backgroundSize: 'cover', backgroundPosition: 'center' }}
+        >
+          {() => <div className="w-full h-full" />}
+        </WaterWave>
+      </div>
+
+      {/* Existing radial gradient as a semi-transparent overlay to preserve the theme's colors slightly */}
+      <div
+        className="fixed inset-0 z-0 pointer-events-none"
+      />
+
+      <div style={{ ...styles.container, position: 'relative', zIndex: 10 }}>
         <div style={styles.header}>
           <h1 style={styles.pageTitle}>Events</h1>
           <p style={styles.pageSubtitle}>Discover and register for the latest events.</p>
         </div>
 
         {loadingEvents ? (
-          <p style={{ color: '#8fb3c7', textAlign: 'center', marginTop: 40 }}>Loading events...</p>
+          <p style={{ color: '#ffffffff', textAlign: 'center', marginTop: 40 }}>Loading events...</p>
         ) : (
           <div style={styles.grid}>
             {events.map((event) => {
@@ -287,20 +320,35 @@ export default function EventsPage() {
                         ? `Team Size: ${event.minParticipants}`
                         : `Team Size: ${event.minParticipants} - ${event.maxParticipants}`}
                     </span>
-                    {isValid && !isRegistered && <span style={{ ...styles.detailTag, backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>✓ Ready to Checkout</span>}
+                    {isValid && !isRegistered && <span style={{ ...styles.detailTag, backgroundColor: 'rgba(175, 247, 223, 0.89)', color: '#067651ff' }}>✓ Ready to Checkout</span>}
                   </div>
 
-                  {isRegistered ? (
+                  {isRegistered && globalPaymentStatus !== 'pending' ? (
                     <button
                       disabled
-                      style={{ ...styles.actionBtn, backgroundColor: '#10b981', opacity: 0.8, cursor: 'not-allowed' }}
+                      style={{ ...styles.actionBtn, backgroundColor: '#024c33ff', opacity: 0.8, cursor: 'not-allowed' }}
                     >
                       Already Registered
+                    </button>
+                  ) : isRegistered && globalPaymentStatus === 'pending' ? (
+                    <button
+                      onClick={() => {
+                        // Use calculated pending amount, or fallback to the event list's fee if we couldn't calculate it properly
+                        let amountToPay = globalPendingAmount;
+                        if (amountToPay === 0) {
+                          amountToPay = events.filter(e => registeredEventIds.includes(e._id)).reduce((sum, e) => sum + (e.registrationFee || 0), 0);
+                        }
+                        sessionStorage.setItem('pendingPaymentAmount', amountToPay);
+                        router.push('/user/account/payment');
+                      }}
+                      style={{ ...styles.actionBtn, backgroundColor: '#b45309', opacity: 1, cursor: 'pointer' }}
+                    >
+                      Complete Payment
                     </button>
                   ) : !isExpanded ? (
                     <button
                       onClick={() => toggleEventForm(event)}
-                      style={{ ...styles.actionBtn, backgroundColor: participants.length > 0 ? '#1e293b' : '#3b82f6' }}
+                      style={{ ...styles.actionBtn, backgroundColor: participants.length > 0 ? '#1e293b' : '#0c4db5ff' }}
                     >
                       {participants.length > 0 ? 'Edit Registration' : 'Register Now'}
                     </button>
@@ -377,42 +425,45 @@ export default function EventsPage() {
             })}
           </div>
         )}
-      </div>
 
-      {/* Global Footer Checkout Bar */}
-      {!loadingEvents && (
-        <div style={styles.footerBar}>
-          <div style={styles.footerContainer}>
-            <div style={styles.footerInfo}>
-              <h3 style={styles.footerTotal}>Total Amount: <span>₹{totalAmount}</span></h3>
-              <p style={styles.footerSub}>({validFormsCount} event(s) ready for checkout)</p>
+        {/* Global Footer Checkout Bar */}
+        {!loadingEvents && (
+          <div style={styles.footerBar}>
+            <div style={styles.footerContainer}>
+              <div style={styles.footerInfo}>
+                <h3 style={styles.footerTotal}>Total Amount: <span>₹{totalAmount}</span></h3>
+                <p style={styles.footerSub}>({validFormsCount} event(s) ready for checkout)</p>
+              </div>
+
+              <div style={styles.footerActions}>
+                <button
+                  type="button"
+                  onClick={handleSaveDraft}
+                  style={styles.draftBtn}
+                  className="text-sm sm:text-[15px] px-3 sm:px-6 py-2.5 sm:py-3"
+                >
+                  Save Draft
+                </button>
+                <button
+                  onClick={handleCheckout}
+                  style={{
+                    ...styles.checkoutBtn,
+                    opacity: submitting || validFormsCount === 0 ? 0.6 : 1,
+                    pointerEvents: submitting || validFormsCount === 0 ? 'none' : 'auto',
+                  }}
+                  className="text-sm sm:text-[15px] px-3 sm:px-6 py-2.5 sm:py-3"
+                >
+                  {submitting ? 'Processing...' : 'Save & Make Payment'}
+                </button>
+              </div>
             </div>
 
-            <div style={styles.footerActions}>
-              <button
-                type="button"
-                onClick={handleSaveDraft}
-                style={styles.draftBtn}
-              >
-                Save Draft
-              </button>
-              <button
-                onClick={handleCheckout}
-                style={{
-                  ...styles.checkoutBtn,
-                  opacity: submitting || validFormsCount === 0 ? 0.6 : 1,
-                  pointerEvents: submitting || validFormsCount === 0 ? 'none' : 'auto',
-                }}
-              >
-                {submitting ? 'Processing...' : 'Save & Make Payment'}
-              </button>
-            </div>
+            {globalError && <div style={styles.globalError}>⚠ {globalError}</div>}
+            {globalSuccess && <div style={styles.globalSuccess}>✓ {globalSuccess}</div>}
           </div>
+        )}
 
-          {globalError && <div style={styles.globalError}>⚠ {globalError}</div>}
-          {globalSuccess && <div style={styles.globalSuccess}>✓ {globalSuccess}</div>}
-        </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -421,9 +472,7 @@ const styles = {
   page: {
     minHeight: '100vh',
     width: '100%',
-    background: 'radial-gradient(circle at center, lightblue 0%, lightblue 50%, white 100%)',
     color: '#0f172a',
-    padding: '40px 24px 140px', // Extra padding at bottom for fixed footer
     boxSizing: 'border-box',
     fontFamily: 'system-ui, -apple-system, sans-serif',
   },
@@ -449,15 +498,15 @@ const styles = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(500px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 500px), 1fr))',
     gap: 24,
     alignItems: 'start',
   },
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    backgroundColor: 'rgba(229, 252, 251, 0.88)',
     border: '1px solid rgba(255, 255, 255, 0.8)',
     borderRadius: 16,
-    padding: 24,
+    padding: '16px', // Reduced padding for mobile
     display: 'flex',
     flexDirection: 'column',
     transition: 'all 0.2s',
@@ -477,13 +526,13 @@ const styles = {
     color: '#0f172a',
   },
   feeBadge: {
-    backgroundColor: 'rgba(14, 165, 233, 0.15)',
-    color: '#0369a1',
+    backgroundColor: 'rgba(14, 218, 233, 0.5)',
+    color: '#014062ff',
     padding: '4px 10px',
-    borderRadius: 99,
+    borderRadius: '20%',
     fontSize: 13,
     fontWeight: 600,
-    border: '1px solid rgba(14, 165, 233, 0.3)',
+    border: '1px solid rgba(3, 54, 78, 0.3)',
   },
   description: {
     fontSize: 14,
@@ -499,11 +548,10 @@ const styles = {
   detailTag: {
     fontSize: 12,
     color: '#0f172a',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(220, 232, 111, 0.96)',
     padding: '4px 8px',
     borderRadius: 6,
     fontWeight: 600,
-    border: '1px solid #e2e8f0',
   },
   actionBtn: {
     width: '100%',
@@ -620,34 +668,38 @@ const styles = {
 
   // Footer Styles
   footerBar: {
-    position: 'fixed',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
-    borderTop: '1px solid rgba(255, 255, 255, 0.9)',
-    padding: '20px 24px',
-    zIndex: 100,
-    boxShadow: '0 -4px 30px rgba(0,0,0,0.05)',
-    backdropFilter: 'blur(16px)',
+    marginTop: 40,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    width: '100%',
   },
   footerContainer: {
-    maxWidth: 1200,
-    margin: '0 auto',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    border: '1px solid rgba(255, 255, 255, 0.9)',
+    padding: '16px 20px', // Reduced from 24px 32px
+    borderRadius: 16,
+    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+    backdropFilter: 'blur(16px)',
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 20,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 16,
+    width: 450,
+    maxWidth: '100%',
+    boxSizing: 'border-box',
   },
   footerInfo: {
     display: 'flex',
     flexDirection: 'column',
+    alignItems: 'flex-end',
+    textAlign: 'right',
   },
   footerTotal: {
     margin: 0,
     fontSize: 24,
     fontWeight: 700,
-    color: '#0f172a',
+    color: '#070124ff',
   },
   footerSub: {
     margin: '4px 0 0',
@@ -657,47 +709,54 @@ const styles = {
   footerActions: {
     display: 'flex',
     gap: 12,
+    width: '100%',
   },
   draftBtn: {
-    padding: '12px 24px',
-    backgroundColor: 'rgba(14, 165, 233, 0.1)',
-    color: '#0284c7',
-    border: '1px solid rgba(14, 165, 233, 0.3)',
+    backgroundColor: 'rgba(27, 110, 149, 0.36)',
+    color: '#042332ff',
+    border: '1px solid rgba(1, 36, 52, 0.41)',
     borderRadius: 10,
-    fontSize: 15,
     fontWeight: 600,
     cursor: 'pointer',
     transition: 'background-color 0.2s',
+    flex: '1 1 100px',
+    textAlign: 'center',
   },
   checkoutBtn: {
-    padding: '12px 24px',
-    backgroundColor: '#10b981',
+    backgroundColor: '#006443ff',
     color: 'white',
     border: 'none',
     borderRadius: 10,
-    fontSize: 15,
     fontWeight: 600,
     cursor: 'pointer',
     transition: 'opacity 0.2s',
+    flex: '2 1 160px',
+    textAlign: 'center',
   },
   globalError: {
-    maxWidth: 1200,
-    margin: '12px auto 0',
+    width: '100%',
+    margin: '8px 0 0',
     padding: '10px 14px',
     backgroundColor: 'rgba(248,113,113,0.1)',
     border: '1px solid rgba(248,113,113,0.2)',
     borderRadius: 8,
     color: '#ef4444',
     fontSize: 14,
+    textAlign: 'center',
+    boxSizing: 'border-box',
+    wordWrap: 'break-word',
   },
   globalSuccess: {
-    maxWidth: 1200,
-    margin: '12px auto 0',
+    width: '100%',
+    margin: '8px 0 0',
     padding: '10px 14px',
     backgroundColor: 'rgba(16, 185, 129, 0.1)',
     border: '1px solid rgba(16, 185, 129, 0.2)',
     borderRadius: 8,
     color: '#10b981',
     fontSize: 14,
+    textAlign: 'center',
+    boxSizing: 'border-box',
+    wordWrap: 'break-word',
   }
 };

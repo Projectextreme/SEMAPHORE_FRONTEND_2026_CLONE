@@ -18,6 +18,16 @@ export default function PaymentSubmission() {
   // const router = useRouter(); 
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedAmount = sessionStorage.getItem('pendingPaymentAmount');
+      if (storedAmount) {
+        setAmount(storedAmount);
+        sessionStorage.removeItem('pendingPaymentAmount'); // Clear it after reading
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     return () => {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
