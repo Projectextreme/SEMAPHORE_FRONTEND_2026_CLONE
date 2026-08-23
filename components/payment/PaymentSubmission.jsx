@@ -178,9 +178,20 @@ export default function PaymentSubmission() {
       )}
       
       {error && (
-        <div className="mb-6 p-4 text-sm text-red-700 bg-red-100/70 backdrop-blur-sm border border-red-300 rounded-xl flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-          {error}
+        <div className="mb-6 p-4 text-sm text-red-700 bg-red-100/70 backdrop-blur-sm border border-red-300 rounded-xl flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0"></div>
+            <span>{error}</span>
+          </div>
+          {error.toLowerCase().includes("team") && (
+            <button
+              type="button"
+              onClick={() => router.push('/user/account')}
+              className="mt-1 self-start text-xs font-bold text-red-800 underline hover:text-red-950 transition-colors"
+            >
+              Click here to set your team on your account dashboard &rarr;
+            </button>
+          )}
         </div>
       )}
       

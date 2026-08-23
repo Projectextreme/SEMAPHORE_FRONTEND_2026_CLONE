@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ProfileSidebar from '@/components/profile/ProfileSidebar';
 import MyRegistration from '@/components/profile/MyRegistration';
+import SetTeamCard from '@/components/profile/SetTeamCard';
 import WaterWave from '@/components/WaterWaveWrapper';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
@@ -30,7 +31,7 @@ export default function MyRegistrationPage() {
         const data = await response.json();
 
         if (!response.ok) throw new Error(data.message || 'Session expired');
-        setUser(data);
+        setUser(data.user || data);
       } catch (err) {
         setError(err.message);
         localStorage.removeItem('token');
@@ -42,6 +43,13 @@ export default function MyRegistrationPage() {
 
     verifyUser();
   }, [router]);
+
+  const handleUserUpdate = (updatedUserData) => {
+    setUser(prev => ({
+      ...prev,
+      ...updatedUserData
+    }));
+  };
 
   if (loading) {
     return (
@@ -83,8 +91,12 @@ export default function MyRegistrationPage() {
 
       <div className="max-w-6xl mx-auto relative z-10 flex flex-col md:flex-row gap-8">
         <ProfileSidebar user={user} />
-        <MyRegistration />
+        <div className="flex-1 flex flex-col">
+          <SetTeamCard user={user} onUserUpdate={handleUserUpdate} />
+          <MyRegistration />
+        </div>
       </div>
     </main>
   );
 }
+

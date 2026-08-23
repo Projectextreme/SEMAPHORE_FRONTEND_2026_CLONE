@@ -14,6 +14,10 @@ export default function ProfileSidebar({ user }) {
     router.push("/user/register");
   };
 
+  // Extract team details
+  const teamObj = user.team || user.teamId || user.teamid;
+  const teamName = typeof teamObj === 'object' ? teamObj?.name : (user.teamName || (typeof user.teamid === 'string' ? null : null));
+
   return (
     <div className="w-full md:w-120 shrink-0 flex flex-col gap-6">
       <div className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-3xl p-6 shadow-[0_8px_32px_rgba(0,100,150,0.15)] flex flex-col items-center">
@@ -29,15 +33,30 @@ export default function ProfileSidebar({ user }) {
         <p className="text-sm text-cyan-800/80 mb-6 text-center">{user.email}</p>
 
         <div className="w-full space-y-3 mb-6 border-t border-cyan-200/50 pt-4">
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-sm items-center">
             <span className="font-bold text-cyan-900">Role:</span>
             <span className="text-cyan-800 font-medium">{user.role || 'Participant'}</span>
           </div>
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-sm items-center">
             <span className="font-bold text-cyan-900">College:</span>
             <span className="text-cyan-800 font-medium text-right max-w-[60%] line-clamp-2">
               {user.collegeName || user.college?.collegeName || 'N/A'}
             </span>
+          </div>
+          <div className="flex justify-between text-sm items-center">
+            <span className="font-bold text-cyan-900">Team:</span>
+            {teamName ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-teal-100 text-teal-800 font-bold rounded-lg text-xs border border-teal-300">
+                <svg className="w-3.5 h-3.5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                {teamName}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200">
+                Not Set
+              </span>
+            )}
           </div>
         </div>
 
@@ -67,3 +86,4 @@ export default function ProfileSidebar({ user }) {
     </div>
   );
 }
+
