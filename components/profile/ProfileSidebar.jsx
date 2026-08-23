@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function ProfileSidebar({ user }) {
   const router = useRouter();
@@ -16,9 +17,12 @@ export default function ProfileSidebar({ user }) {
   return (
     <div className="w-full md:w-120 shrink-0 flex flex-col gap-6">
       <div className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-3xl p-6 shadow-[0_8px_32px_rgba(0,100,150,0.15)] flex flex-col items-center">
-        <img
+        <Image
           src={user.avatar || "https://ui-avatars.com/api/?name=" + user.name + "&background=cffafe&color=164e63"}
           alt={user.name}
+          width={96}
+          height={96}
+          unoptimized
           className="w-24 h-24 rounded-full mb-4 shadow-md object-cover border-4 border-white/60"
         />
         <h2 className="text-xl font-extrabold text-cyan-950 text-center uppercase tracking-wider">{user.name}</h2>

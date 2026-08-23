@@ -1,31 +1,30 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-// import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 
 export default function PaymentSubmission() {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(() => {
+    if (typeof window !== "undefined") {
+      const storedAmount = sessionStorage.getItem('pendingPaymentAmount');
+      if (storedAmount) {
+        sessionStorage.removeItem('pendingPaymentAmount');
+        return storedAmount;
+      }
+    }
+    return "";
+  });
   const [utr, setUtr] = useState("");
   
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  // const router = useRouter(); 
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedAmount = sessionStorage.getItem('pendingPaymentAmount');
-      if (storedAmount) {
-        setAmount(storedAmount);
-        sessionStorage.removeItem('pendingPaymentAmount'); // Clear it after reading
-      }
-    }
-  }, []);
+  const router = useRouter(); 
 
   useEffect(() => {
     return () => {
@@ -83,7 +82,7 @@ export default function PaymentSubmission() {
         setUtr("");
         
         setTimeout(() => {
-          window.location.href = '/user/account';
+          router.push('/user/account');
         }, 2000);
       } else {
         const errorData = await response.json().catch(() => null);
@@ -132,6 +131,7 @@ export default function PaymentSubmission() {
             >
               {previewUrl ? (
                 <div className="relative w-full h-full p-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={previewUrl}
                     alt="Payment Preview"

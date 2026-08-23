@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -47,7 +47,7 @@ if (list.length > 0) setCollegeName(list[0]);
     fetchColleges();
   }, []);
 
-  const authenticateWithGoogle = async (credential) => {
+  const authenticateWithGoogle = useCallback(async (credential) => {
     if (!finalCollegeName) {
       setError('Please select or enter your college name first.');
       return;
@@ -72,7 +72,7 @@ if (list.length > 0) setCollegeName(list[0]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [finalCollegeName, searchParams, router]);
 
   useEffect(() => {
     if (window.google?.accounts?.id) {
@@ -103,7 +103,7 @@ if (list.length > 0) setCollegeName(list[0]);
       width: 320,
       text: 'continue_with',
     });
-  }, [scriptReady, finalCollegeName]);
+  }, [scriptReady, authenticateWithGoogle]);
 
   const canContinue = Boolean(finalCollegeName) && !loading;
 
