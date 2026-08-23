@@ -13,6 +13,7 @@ export default function EventsPage() {
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [registeredEventIds, setRegisteredEventIds] = useState([]);
+  const [registeredEventMap, setRegisteredEventMap] = useState({});
   const [globalPaymentStatus, setGlobalPaymentStatus] = useState(null);
   const [globalPendingAmount, setGlobalPendingAmount] = useState(0);
 
@@ -108,7 +109,7 @@ export default function EventsPage() {
         const data = await res.json();
 
         if (res.ok) {
-          setEvents(data.data || data.events || []);
+          setEvents(data.events || data.data || []);
         } else {
           setEvents([]);
           console.error("Failed to load events", data);
@@ -134,19 +135,43 @@ export default function EventsPage() {
           });
           if (regRes.ok) {
             const regData = await regRes.json();
-            if (regData.registration && regData.registration.events) {
-              const ids = regData.registration.events.map(e => e.eventId?._id || e.eventId);
-              setRegisteredEventIds(ids);
-              setGlobalPaymentStatus(regData.registration.paymentStatus);
-              
-              if (regData.registration.paymentStatus === 'pending') {
-                const total = regData.registration.events.reduce((sum, e) => {
-                  if (e.paymentId) return sum; // Skip if already paid
-                  return sum + (e.eventId?.registrationFee || 0);
-                }, 0);
-                setGlobalPendingAmount(total);
+            const regList = regData.registrations || (regData.registration?.events) || regData.data || [];
+            
+            const ids = [];
+            const map = {};
+            let pendingSum = 0;
+
+            regList.forEach(reg => {
+              const evObj = reg.eventId;
+              const evId = typeof evObj === 'object' ? evObj?._id : evObj;
+              if (evId) {
+                ids.push(evId);
+                const payments = Array.isArray(reg.paymentId)
+                  ? reg.paymentId
+                  : (reg.paymentId ? [reg.paymentId] : []);
+                
+                let pStatus = 'unpaid';
+                if (payments.length > 0) {
+                  const hasApproved = payments.some(p => p.status === 'approved' || p.status === 'verified');
+                  const hasPending = payments.some(p => p.status === 'pending' || p.status === 'submitted');
+                  pStatus = hasApproved ? 'approved' : (hasPending ? 'pending' : 'unpaid');
+                }
+
+                if (pStatus === 'unpaid') {
+                  const fee = typeof evObj === 'object' ? (evObj.registrationFee || 0) : 0;
+                  pendingSum += fee;
+                }
+
+                map[evId] = {
+                  status: pStatus,
+                  registration: reg
+                };
               }
-            }
+            });
+
+            setRegisteredEventIds(ids);
+            setRegisteredEventMap(map);
+            setGlobalPendingAmount(pendingSum);
           }
         } catch (err) {
           console.error("Failed to fetch registrations", err);
@@ -294,29 +319,27 @@ export default function EventsPage() {
       const token = localStorage.getItem('token');
       if (!token) throw new Error("You must be logged in to register.");
 
-      let payload;
-      if (validForms.length === 1) {
-        // Single Event Registration payload
-        const { event, participants } = validForms[0];
-        payload = {
-          eventId: event._id,
+      // Format payload to satisfy backend eventId, eventIds, and events parsing
+      const allEventIds = validForms.map(f => f.event._id || f.event.id);
+      const firstForm = validForms[0];
+      const singleEventId = validForms.length === 1 ? (firstForm.event._id || firstForm.event.id) : undefined;
+      const singleParticipants = validForms.length === 1 
+        ? firstForm.participants.map(p => ({ name: p.name.trim(), phone: p.phone.trim() })) 
+        : undefined;
+
+      const payload = {
+        eventId: singleEventId,
+        eventIds: allEventIds,
+        participants: singleParticipants,
+        events: validForms.map(({ event, participants }) => ({
+          eventId: event._id || event.id,
+          _id: event._id || event.id,
           participants: participants.map(p => ({
             name: p.name.trim(),
             phone: p.phone.trim(),
           }))
-        };
-      } else {
-        // Bulk Events Registration (Per-Event Participants) payload
-        payload = {
-          events: validForms.map(({ event, participants }) => ({
-            eventId: event._id,
-            participants: participants.map(p => ({
-              name: p.name.trim(),
-              phone: p.phone.trim(),
-            }))
-          }))
-        };
-      }
+        }))
+      };
 
       const response = await fetch(`${API_BASE_URL}/api/registrations/events`, {
         method: 'POST',
@@ -336,17 +359,26 @@ export default function EventsPage() {
         throw new Error(data.message || 'Registration failed');
       }
 
-      // Extract registered event IDs from response or valid forms
+      // Extract newly registered event IDs
       const newlyRegisteredIds = validForms.map(f => f.event._id);
+      const newlyRegisteredFee = validForms.reduce((sum, f) => sum + (f.event.registrationFee || 0), 0);
+
       setRegisteredEventIds(prev => Array.from(new Set([...prev, ...newlyRegisteredIds])));
-      setGlobalPaymentStatus('pending');
+      
+      // Update registered map for newly registered items
+      setRegisteredEventMap(prev => {
+        const nextMap = { ...prev };
+        newlyRegisteredIds.forEach(id => {
+          nextMap[id] = { status: 'unpaid' };
+        });
+        return nextMap;
+      });
 
       setGlobalSuccess(data.message || `Successfully registered for ${validForms.length} event(s)! Redirecting to payment...`);
       localStorage.removeItem('event_cart_draft'); // Clear global draft
 
-      const totalFee = calculateTotal();
       setTimeout(() => {
-        sessionStorage.setItem('pendingPaymentAmount', totalFee);
+        sessionStorage.setItem('pendingPaymentAmount', newlyRegisteredFee);
         sessionStorage.setItem('pendingEventIds', JSON.stringify(newlyRegisteredIds));
         router.push('/user/account/payment');
       }, 1500);
@@ -448,9 +480,11 @@ export default function EventsPage() {
               const participants = formsData[event._id] || [];
               const isValid = isFormValid(event._id);
               const isRegistered = registeredEventIds.includes(event._id);
+              const eventRegInfo = registeredEventMap[event._id];
+              const pStatus = eventRegInfo?.status || 'unpaid';
 
               return (
-                <div key={event._id} style={{ ...styles.card, borderColor: isValid ? '#10b981' : '#1e293b' }}>
+                <div key={event._id} style={{ ...styles.card, borderColor: isRegistered ? '#10b981' : isValid ? '#0ea5e9' : '#1e293b' }}>
                   <div style={styles.cardHeader}>
                     <h2 style={styles.cardTitle}>{event.title}</h2>
                     <span style={styles.feeBadge}>
@@ -469,29 +503,34 @@ export default function EventsPage() {
                     {isValid && !isRegistered && <span style={{ ...styles.detailTag, backgroundColor: 'rgba(175, 247, 223, 0.89)', color: '#067651ff' }}>✓ Ready to Checkout</span>}
                   </div>
 
-                  {isRegistered && globalPaymentStatus !== 'pending' ? (
-                    <button
-                      disabled
-                      style={{ ...styles.actionBtn, backgroundColor: '#024c33ff', opacity: 0.8, cursor: 'not-allowed' }}
-                    >
-                      Already Registered
-                    </button>
-                  ) : isRegistered && globalPaymentStatus === 'pending' ? (
-                    <button
-                      onClick={() => {
-                        // Use calculated pending amount, or fallback to the event list's fee if we couldn't calculate it properly
-                        let amountToPay = globalPendingAmount;
-                        if (amountToPay === 0) {
-                          amountToPay = events.filter(e => registeredEventIds.includes(e._id)).reduce((sum, e) => sum + (e.registrationFee || 0), 0);
-                        }
-                        sessionStorage.setItem('pendingPaymentAmount', amountToPay);
-                        sessionStorage.setItem('pendingEventIds', JSON.stringify(registeredEventIds));
-                        router.push('/user/account/payment');
-                      }}
-                      style={{ ...styles.actionBtn, backgroundColor: '#b45309', opacity: 1, cursor: 'pointer' }}
-                    >
-                      Complete Payment
-                    </button>
+                  {isRegistered ? (
+                    pStatus === 'approved' ? (
+                      <button
+                        disabled
+                        style={{ ...styles.actionBtn, backgroundColor: '#024c33ff', opacity: 0.9, cursor: 'not-allowed' }}
+                      >
+                        ✓ Registered & Verified
+                      </button>
+                    ) : pStatus === 'pending' ? (
+                      <button
+                        disabled
+                        style={{ ...styles.actionBtn, backgroundColor: '#b45309', opacity: 0.9, cursor: 'not-allowed' }}
+                      >
+                        ⏳ Payment Verification Pending
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          const amountToPay = event.registrationFee || 0;
+                          sessionStorage.setItem('pendingPaymentAmount', amountToPay);
+                          sessionStorage.setItem('pendingEventIds', JSON.stringify([event._id]));
+                          router.push('/user/account/payment');
+                        }}
+                        style={{ ...styles.actionBtn, backgroundColor: '#d97706', opacity: 1, cursor: 'pointer' }}
+                      >
+                        Complete Payment (₹{event.registrationFee || 0})
+                      </button>
+                    )
                   ) : !isExpanded ? (
                     <button
                       onClick={() => toggleEventForm(event)}

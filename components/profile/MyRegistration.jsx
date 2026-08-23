@@ -56,8 +56,9 @@ export default function MyRegistration({ user: initialUser }) {
               headers: { Authorization: `Bearer ${token}` }
             });
             const fallbackData = await fallbackRes.json();
-            if (fallbackRes.ok && fallbackData.registration) {
-              setFetchedEvents(fallbackData.registration.events || []);
+            if (fallbackRes.ok) {
+              const regs = fallbackData.registrations || (fallbackData.registration?.events) || fallbackData.data || [];
+              setFetchedEvents(regs);
             }
           }
         } catch (fallbackErr) {
@@ -73,31 +74,51 @@ export default function MyRegistration({ user: initialUser }) {
 
   // Helper to extract clean payment info from a registration item
   const getPaymentInfo = (item) => {
-    if (!item || !item.paymentId) return null;
-    let p = item.paymentId;
+    if (!item) return null;
+
+    let p = item.paymentId || item.payment || item.paymentDetails;
     if (Array.isArray(p)) {
       p = p[0];
     }
-    if (!p) return null;
+    
+    // Check if image URL or payment details exist directly on item
+    const directImageUrl = item.imageUrl || item.imageurl || item.image || item.proofUrl || item.url;
+    const directUtr = item.utr || item.utrNumber;
+    const directAmount = item.amount || item.paymentAmount;
+    const directStatus = item.paymentStatus || item.status;
+
+    if (!p) {
+      if (directImageUrl || directUtr) {
+        return {
+          id: item._id || 'payment',
+          amount: directAmount || null,
+          utr: directUtr || null,
+          imageUrl: directImageUrl || null,
+          status: directStatus || 'pending',
+          message: item.message || ''
+        };
+      }
+      return null;
+    }
 
     if (typeof p === 'string') {
       return {
         id: p,
-        amount: null,
-        utr: null,
-        imageUrl: null,
-        status: 'pending',
-        message: ''
+        amount: directAmount || null,
+        utr: directUtr || null,
+        imageUrl: directImageUrl || null,
+        status: directStatus || 'pending',
+        message: item.message || ''
       };
     }
 
     return {
-      id: p._id || p.id,
-      amount: p.amount,
-      utr: p.utr,
-      imageUrl: p.imageUrl || p.imageurl,
-      status: p.status || 'pending',
-      message: p.message || ''
+      id: p._id || p.id || 'payment',
+      amount: p.amount || directAmount || null,
+      utr: p.utr || directUtr || null,
+      imageUrl: p.imageUrl || p.imageurl || p.image || p.url || p.proofUrl || directImageUrl || null,
+      status: p.status || directStatus || 'pending',
+      message: p.message || item.message || ''
     };
   };
 
@@ -235,23 +256,51 @@ export default function MyRegistration({ user: initialUser }) {
                   {/* Payment Image Proof Thumbnail / View Button */}
                   {payment.imageUrl && (
                     <button
+                      type="button"
                       onClick={() => setActiveProofModal({ imageUrl: payment.imageUrl, utr: payment.utr, amount: payment.amount, status: payment.status, message: payment.message })}
                       className="flex items-center gap-2 px-3.5 py-2 bg-cyan-100/80 hover:bg-cyan-200/80 text-cyan-900 rounded-2xl text-xs font-bold transition-all border border-cyan-300/60 shadow-sm shrink-0"
+                    >
+                      <svg className="w-4 h-4 text-cyan-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      <span>View Full Screenshot ↗</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Embedded Uploaded Screenshot Display */}
+                {payment.imageUrl && (
+                  <div className="bg-white/60 border border-cyan-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
+                    <div
+                      className="relative group cursor-pointer shrink-0"
+                      onClick={() => setActiveProofModal({ imageUrl: payment.imageUrl, utr: payment.utr, amount: payment.amount, status: payment.status, message: payment.message })}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={payment.imageUrl}
-                        alt="Proof Thumbnail"
-                        className="w-6 h-6 object-cover rounded-lg border border-white shadow-xs"
+                        alt="Submitted Payment Proof"
+                        className="w-28 h-28 object-cover rounded-xl border-2 border-white shadow-md transition-transform group-hover:scale-105"
                       />
-                      <span>View Payment Proof</span>
-                      <svg className="w-3.5 h-3.5 text-cyan-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
+                      <div className="absolute inset-0 bg-black/30 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">
+                        Click to Enlarge
+                      </div>
+                    </div>
+                    <div className="flex-1 flex flex-col gap-1 text-xs text-cyan-900">
+                      <span className="font-extrabold text-cyan-950 text-sm">Uploaded Payment Screenshot</span>
+                      <p className="text-cyan-800/90 font-medium">
+                        Submitted proof for payment verification. UTR: <code className="bg-cyan-100 px-1.5 py-0.5 rounded font-mono font-bold text-cyan-950">{payment.utr || 'N/A'}</code>
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setActiveProofModal({ imageUrl: payment.imageUrl, utr: payment.utr, amount: payment.amount, status: payment.status, message: payment.message })}
+                        className="mt-1 self-start font-bold text-cyan-700 hover:text-cyan-950 underline"
+                      >
+                        View full-screen proof details &rarr;
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* List of Events sharing this payment */}
                 <div className="flex flex-col gap-3">

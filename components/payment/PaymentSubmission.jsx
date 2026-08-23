@@ -38,6 +38,7 @@ export default function PaymentSubmission() {
   const [eventTitles, setEventTitles] = useState([]);
   const [utr, setUtr] = useState("");
   
+  const [submittedPayment, setSubmittedPayment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
@@ -65,8 +66,12 @@ export default function PaymentSubmission() {
         if (!response.ok) return;
 
         const data = await response.json();
-        if (data?.registration?.events) {
-          const unpaidEvents = data.registration.events.filter(e => !e.paymentId);
+        const regs = data.registrations || (data.registration?.events) || data.data || [];
+        if (Array.isArray(regs) && regs.length > 0) {
+          const unpaidEvents = regs.filter(e => {
+            const payments = Array.isArray(e.paymentId) ? e.paymentId : (e.paymentId ? [e.paymentId] : []);
+            return payments.length === 0;
+          });
           const unpaidIds = unpaidEvents.map(e => e.eventId?._id || e.eventId).filter(Boolean);
           const titles = unpaidEvents.map(e => e.eventId?.title).filter(Boolean);
 
@@ -138,17 +143,17 @@ export default function PaymentSubmission() {
       const responseData = await response.json().catch(() => null);
 
       if (response.status === 201 || response.ok) {
+        const submittedImg = responseData?.payment?.imageUrl || previewUrl;
+        setSubmittedPayment({
+          imageUrl: submittedImg,
+          utr: responseData?.payment?.utr || utr,
+          amount: responseData?.payment?.amount || amount,
+          status: responseData?.payment?.status || 'pending',
+          message: responseData?.message || "Payment submitted successfully and linked to event registrations!"
+        });
         setSuccess(responseData?.message || "Payment submitted successfully and linked to event registrations!");
-        setFile(null);
-        setPreviewUrl(null);
-        setAmount("");
-        setUtr("");
         sessionStorage.removeItem('pendingPaymentAmount');
         sessionStorage.removeItem('pendingEventIds');
-        
-        setTimeout(() => {
-          router.push('/user/account');
-        }, 2000);
       } else {
         setError(responseData?.message || `Error: ${response.status} ${response.statusText}`);
       }
@@ -159,6 +164,53 @@ export default function PaymentSubmission() {
       setLoading(false);
     }
   };
+
+  if (submittedPayment) {
+    return (
+      <div className="w-full h-full p-8 bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl shadow-[0_8px_32px_rgba(0,100,150,0.15)] relative flex flex-col items-center text-center">
+        <div className="w-16 h-16 rounded-full bg-teal-100 border border-teal-300 text-teal-700 flex items-center justify-center mb-4">
+          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+        <h2 className="text-2xl font-extrabold text-cyan-950 uppercase tracking-wide mb-2">
+          Payment Submitted Successfully!
+        </h2>
+        <p className="text-sm text-cyan-800 font-medium mb-6">
+          Your payment screenshot and UTR have been uploaded and linked to your event registrations.
+        </p>
+
+        {/* Uploaded Image Preview */}
+        {submittedPayment.imageUrl && (
+          <div className="mb-6 max-w-sm w-full bg-white/70 p-3 rounded-2xl border border-cyan-200 shadow-md">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={submittedPayment.imageUrl}
+              alt="Uploaded Payment Screenshot"
+              className="w-full max-h-64 object-contain rounded-xl border border-white"
+            />
+            <div className="mt-3 flex justify-between items-center text-xs font-bold text-cyan-950 px-1">
+              <span>UTR: <code className="bg-cyan-100 px-1.5 py-0.5 rounded font-mono">{submittedPayment.utr}</code></span>
+              <span>Amount: ₹{submittedPayment.amount}</span>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+          <button
+            onClick={() => router.push('/user/account')}
+            className="flex-1 py-3 px-4 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md"
+          >
+            Go to My Dashboard ↗
+          </button>
+          <button
+            onClick={() => router.push('/events/register')}
+            className="flex-1 py-3 px-4 bg-white/70 hover:bg-white text-cyan-900 font-bold text-xs uppercase tracking-wider rounded-xl border border-cyan-300 transition-all"
+          >
+            Register More Events
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full p-8 bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl shadow-[0_8px_32px_rgba(0,100,150,0.15)] relative flex flex-col">
