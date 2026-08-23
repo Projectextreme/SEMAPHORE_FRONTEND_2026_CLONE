@@ -294,13 +294,29 @@ export default function EventsPage() {
       const token = localStorage.getItem('token');
       if (!token) throw new Error("You must be logged in to register.");
 
-      const eventsPayload = validForms.map(({ event, participants }) => ({
-        eventId: event._id,
-        participants: participants.map(p => ({
-          name: p.name.trim(),
-          phone: p.phone.trim(),
-        }))
-      }));
+      let payload;
+      if (validForms.length === 1) {
+        // Single Event Registration payload
+        const { event, participants } = validForms[0];
+        payload = {
+          eventId: event._id,
+          participants: participants.map(p => ({
+            name: p.name.trim(),
+            phone: p.phone.trim(),
+          }))
+        };
+      } else {
+        // Bulk Events Registration (Per-Event Participants) payload
+        payload = {
+          events: validForms.map(({ event, participants }) => ({
+            eventId: event._id,
+            participants: participants.map(p => ({
+              name: p.name.trim(),
+              phone: p.phone.trim(),
+            }))
+          }))
+        };
+      }
 
       const response = await fetch(`${API_BASE_URL}/api/registrations/events`, {
         method: 'POST',
@@ -308,7 +324,7 @@ export default function EventsPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ events: eventsPayload }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -320,12 +336,18 @@ export default function EventsPage() {
         throw new Error(data.message || 'Registration failed');
       }
 
-      setGlobalSuccess(`Successfully registered for ${validForms.length} event(s)! Redirecting to payment...`);
+      // Extract registered event IDs from response or valid forms
+      const newlyRegisteredIds = validForms.map(f => f.event._id);
+      setRegisteredEventIds(prev => Array.from(new Set([...prev, ...newlyRegisteredIds])));
+      setGlobalPaymentStatus('pending');
+
+      setGlobalSuccess(data.message || `Successfully registered for ${validForms.length} event(s)! Redirecting to payment...`);
       localStorage.removeItem('event_cart_draft'); // Clear global draft
+
+      const totalFee = calculateTotal();
       setTimeout(() => {
-        const validEventIds = validForms.map(f => f.event._id);
-        sessionStorage.setItem('pendingPaymentAmount', calculateTotal());
-        sessionStorage.setItem('pendingEventIds', JSON.stringify(validEventIds));
+        sessionStorage.setItem('pendingPaymentAmount', totalFee);
+        sessionStorage.setItem('pendingEventIds', JSON.stringify(newlyRegisteredIds));
         router.push('/user/account/payment');
       }, 1500);
 
