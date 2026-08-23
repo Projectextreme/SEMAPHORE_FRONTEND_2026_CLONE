@@ -9,18 +9,11 @@ import WaterWave from '@/components/WaterWaveWrapper';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '168801764074-kcn9c9to0daenc3o5pn9nfutgho8pcin.apps.googleusercontent.com';
 
-const COLLEGES = [
-  'BMS Institute of Technology',
-  'BMS College of Engineering',
-  'RV College of Engineering',
-  'PES University',
-  'MS Ramaiah Institute of Technology',
-];
-
 import { Suspense } from 'react';
 
 function UserRegisterContent() {
-  const [collegeName, setCollegeName] = useState(COLLEGES[0]);
+  const [colleges, setColleges] = useState([]);
+  const [collegeName, setCollegeName] = useState('');
   const [isCustom, setIsCustom] = useState(false);
   const [customCollege, setCustomCollege] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,6 +24,28 @@ function UserRegisterContent() {
   const searchParams = useSearchParams();
 
   const finalCollegeName = isCustom ? customCollege.trim() : collegeName;
+
+  // Fetch colleges list from API
+  useEffect(() => {
+    const fetchColleges = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/colleges`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Failed to load colleges');
+
+        const rawList = Array.isArray(data) ? data : (data.colleges || []);
+const list = rawList.map((c) => (typeof c === 'string' ? c : c.collegeName));
+setColleges(list);
+if (list.length > 0) setCollegeName(list[0]);
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+    fetchColleges();
+  }, []);
 
   const authenticateWithGoogle = async (credential) => {
     if (!finalCollegeName) {
@@ -157,7 +172,7 @@ function UserRegisterContent() {
                   value={collegeName}
                   onChange={(e) => setCollegeName(e.target.value)}
                 >
-                  {COLLEGES.map((c) => (
+                  {colleges.map((c) => (
                     <option key={c} value={c} className="bg-[#0a1420] text-slate-200">
                       {c}
                     </option>
