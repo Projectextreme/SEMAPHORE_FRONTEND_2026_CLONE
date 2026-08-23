@@ -329,6 +329,7 @@ void main() {
 `;
 
 export const flowFieldVertex = `
+#include <fog_pars_vertex>
 attribute vec3 velocity;
 attribute float size;
 attribute float alpha;
@@ -349,10 +350,12 @@ void main() {
   gl_PointSize = size * (90.0 / -mvPosition.z) * vSurfaceFade;
   gl_PointSize = max(gl_PointSize, 0.0);
   gl_Position = projectionMatrix * mvPosition;
+  #include <fog_vertex>
 }
 `;
 
 export const flowFieldFragment = `
+#include <fog_pars_fragment>
 uniform vec3 uColor;
 uniform float uTime;
 
@@ -376,7 +379,12 @@ void main() {
   float shimmer = sin(uTime * 2.0 + vParticleType * 100.0) * 0.15 + 0.85;
   alpha *= shimmer;
 
+<<<<<<< HEAD:src/Shaders/index.js
   gl_FragColor = vec4(uColor, alpha * vSurfaceFade);
+=======
+  gl_FragColor = vec4(uColor, alpha);
+  #include <fog_fragment>
+>>>>>>> f2a14e43e3019c33a09554478d9815c6d61d20cb:src/Shaders/index.ts
 }
 `;
 
@@ -537,6 +545,7 @@ void main() {
 `;
 
 export const bubbleVertex = `
+#include <fog_pars_vertex>
 uniform float uTime;
 uniform float uPixelRatio;
 
@@ -564,10 +573,12 @@ void main() {
   gl_PointSize = clamp(gl_PointSize, 2.0, 28.0);
 
   gl_Position = projectionMatrix * mvPosition;
+  #include <fog_vertex>
 }
 `;
 
 export const bubbleFragment = `
+#include <fog_pars_fragment>
 uniform vec3 uColor;
 
 varying float vLife;
@@ -586,6 +597,7 @@ void main() {
   float alpha = (ring * 0.85 + highlight * 0.95 + core) * fade;
 
   gl_FragColor = vec4(uColor + vec3(highlight * 0.4), alpha * 0.75);
+  #include <fog_fragment>
 }
 `;
 
