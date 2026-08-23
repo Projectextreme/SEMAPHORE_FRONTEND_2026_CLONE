@@ -337,18 +337,13 @@ attribute float particleType;
 
 varying float vAlpha;
 varying float vParticleType;
-varying float vSurfaceFade;
 
 void main() {
   vAlpha = alpha;
   vParticleType = particleType;
 
-  // Smoothly fade out as particles approach ocean surface from below
-  vSurfaceFade = smoothstep(-5.0, -22.0, position.y);
-
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-  gl_PointSize = size * (90.0 / -mvPosition.z) * vSurfaceFade;
-  gl_PointSize = max(gl_PointSize, 0.0);
+  gl_PointSize = size * (90.0 / -mvPosition.z);
   gl_Position = projectionMatrix * mvPosition;
   #include <fog_vertex>
 }
@@ -361,11 +356,8 @@ uniform float uTime;
 
 varying float vAlpha;
 varying float vParticleType;
-varying float vSurfaceFade;
 
 void main() {
-  if (vSurfaceFade <= 0.001) discard;
-
   vec2 center = gl_PointCoord - vec2(0.5);
   float dist = length(center);
 
@@ -379,12 +371,8 @@ void main() {
   float shimmer = sin(uTime * 2.0 + vParticleType * 100.0) * 0.15 + 0.85;
   alpha *= shimmer;
 
-<<<<<<< HEAD:src/Shaders/index.js
-  gl_FragColor = vec4(uColor, alpha * vSurfaceFade);
-=======
   gl_FragColor = vec4(uColor, alpha);
   #include <fog_fragment>
->>>>>>> f2a14e43e3019c33a09554478d9815c6d61d20cb:src/Shaders/index.ts
 }
 `;
 

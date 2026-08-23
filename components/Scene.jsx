@@ -21,6 +21,10 @@ import {
   portalVortexFragment,
   waterCausticsVertex,
   waterCausticsFragment,
+  waveSeabedVertex,
+  waveSeabedFragment,
+  floatingParticleVertex,
+  floatingParticleFragment,
 } from "../src/Shaders/index";
 
 const dolphinVertexShader = `
@@ -134,6 +138,7 @@ const shimmerVertex = `
   attribute float aSpeed;
   uniform float uTime;
   varying float vTwinkle;
+  varying float vSurfaceFade;
 
   void main() {
     vec3 pos = position;
@@ -143,13 +148,17 @@ const shimmerVertex = `
     pos.x += sin(uTime * 0.3 + aPhase * 6.28) * 1.2;
     pos.z += cos(uTime * 0.25 + aPhase * 6.28) * 1.2;
 
+    // Smoothly fade out as particles approach ocean surface from below
+    vSurfaceFade = smoothstep(-5.0, -22.0, pos.y);
+
     // Twinkle intensity: fast sparkle flicker layered on a slow shimmer wave
     float sparkle = sin(uTime * (3.0 + aPhase * 4.0) + aPhase * 50.0) * 0.5 + 0.5;
     float shimmer = sin(uTime * 0.8 + aPhase * 12.0) * 0.5 + 0.5;
     vTwinkle = pow(sparkle, 3.0) * 0.7 + shimmer * 0.3;
 
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-    gl_PointSize = aSize * (300.0 / -mvPosition.z) * (0.4 + vTwinkle * 1.1);
+    gl_PointSize = aSize * (300.0 / -mvPosition.z) * (0.4 + vTwinkle * 1.1) * vSurfaceFade;
+    gl_PointSize = max(gl_PointSize, 0.0);
     gl_Position = projectionMatrix * mvPosition;
   }
 `;
@@ -157,15 +166,18 @@ const shimmerVertex = `
 const shimmerFragment = `
   uniform vec3 uColor;
   varying float vTwinkle;
+  varying float vSurfaceFade;
 
   void main() {
+    if (vSurfaceFade <= 0.001) discard;
+
     vec2 center = gl_PointCoord - vec2(0.5);
     float dist = length(center);
 
     // Crisp bright core + soft glow falloff = "shine" rather than flat dot
     float core = smoothstep(0.06, 0.0, dist);
     float glow = smoothstep(0.5, 0.0, dist);
-    float alpha = (core * 1.0 + glow * 0.35) * (0.25 + vTwinkle * 0.9);
+    float alpha = (core * 1.0 + glow * 0.35) * (0.25 + vTwinkle * 0.9) * vSurfaceFade;
 
     if (alpha < 0.02) discard;
 
@@ -561,6 +573,7 @@ function createEventBannerTexture(node) {
 export default function Scene() {
   const containerRef = useRef(null);
   const wrapperRef = useRef(null);
+  const heroUiRef = useRef(null);
   const audioRef = useRef(null);
   const pinRefs = useRef([]);
   const activeEventRef = useRef("event-1");
@@ -725,7 +738,7 @@ export default function Scene() {
       sunColor: 0xffffff,
       waterColor: 0x001e0f,
       distortionScale: 3.7,
-      fog: false,
+      fog: true,
     });
     water.rotation.x = -Math.PI / 2;
     water.position.y = -2;
@@ -932,7 +945,7 @@ export default function Scene() {
     scene.add(sideCliffGroup);
 
     // --- LAYER 3 & 4: DISTANT UNDERWATER MOUNTAIN PEAKS & CAVERN WALLS ---
-    const caveGeometry = new THREE.CylinderGeometry(260, 360, 900, 32, 32, true);
+    const caveGeometry = new THREE.CylinderGeometry(260, 360, 650, 32, 32, true);
     const cavePos = caveGeometry.attributes.position;
     const caveVec = new THREE.Vector3();
     for (let i = 0; i < cavePos.count; i++) {
@@ -952,9 +965,10 @@ export default function Scene() {
       metalness: 0.15,
       side: THREE.BackSide,
       flatShading: true,
+      transparent: true,
     });
     const caveMesh = new THREE.Mesh(caveGeometry, caveMaterial);
-    caveMesh.position.set(0, -220, -380);
+    caveMesh.position.set(0, -335, -380);
     caveMesh.visible = false;
     scene.add(caveMesh);
 
@@ -970,16 +984,16 @@ export default function Scene() {
     });
 
     const mountainPositions = [
-      { x: -175, y: -100, z: -260, r: 65, h: 180 },
-      { x: 175, y: -110, z: -290, r: 70, h: 200 },
-      { x: -185, y: -150, z: -380, r: 75, h: 220 },
-      { x: 185, y: -160, z: -410, r: 75, h: 240 },
-      { x: -185, y: -220, z: -520, r: 80, h: 260 },
-      { x: 185, y: -230, z: -540, r: 80, h: 280 },
-      { x: -190, y: -330, z: -720, r: 80, h: 300 },
-      { x: 190, y: -340, z: -760, r: 80, h: 320 },
-      { x: -195, y: -410, z: -880, r: 85, h: 340 },
-      { x: 195, y: -420, z: -960, r: 85, h: 360 },
+      { x: -175, y: -140, z: -260, r: 55, h: 130 },
+      { x: 175, y: -150, z: -290, r: 60, h: 140 },
+      { x: -185, y: -180, z: -380, r: 65, h: 170 },
+      { x: 185, y: -190, z: -410, r: 65, h: 180 },
+      { x: -185, y: -240, z: -520, r: 70, h: 220 },
+      { x: 185, y: -250, z: -540, r: 70, h: 230 },
+      { x: -190, y: -340, z: -720, r: 75, h: 300 },
+      { x: 190, y: -350, z: -760, r: 75, h: 310 },
+      { x: -195, y: -420, z: -880, r: 80, h: 360 },
+      { x: 195, y: -430, z: -960, r: 80, h: 370 },
     ];
 
     for (const m of mountainPositions) {
@@ -1318,34 +1332,6 @@ export default function Scene() {
     portalBlurMesh.position.set(0, 0, -0.3);
     portalGroup.add(portalBlurMesh);
 
-    // Swirling Energy Particles Orbiting Main Portal Ring
-    const portalParticleCount = 350;
-    const portalParticleGeo = new THREE.BufferGeometry();
-    const portalParticlePositions = new Float32Array(portalParticleCount * 3);
-    const portalParticleAngles = new Float32Array(portalParticleCount);
-    const portalParticleSpeeds = new Float32Array(portalParticleCount);
-
-    for (let i = 0; i < portalParticleCount; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 12.0 + Math.random() * 4.0;
-      portalParticlePositions[i * 3] = Math.cos(angle) * radius;
-      portalParticlePositions[i * 3 + 1] = Math.sin(angle) * radius;
-      portalParticlePositions[i * 3 + 2] = (Math.random() - 0.5) * 4;
-      portalParticleAngles[i] = angle;
-      portalParticleSpeeds[i] = 1.0 + Math.random() * 2.0;
-    }
-    portalParticleGeo.setAttribute("position", new THREE.BufferAttribute(portalParticlePositions, 3));
-
-    const portalParticleMat = new THREE.PointsMaterial({
-      color: 0x00f0ff,
-      size: 1.4,
-      transparent: true,
-      opacity: 0.85,
-      blending: THREE.AdditiveBlending,
-    });
-    const portalParticleMesh = new THREE.Points(portalParticleGeo, portalParticleMat);
-    portalGroup.add(portalParticleMesh);
-
     scene.add(portalGroup);
 
     let dolphinMixer = null;
@@ -1381,7 +1367,7 @@ export default function Scene() {
       try {
         GLTFLoaderClass = require("three/addons/loaders/GLTFLoader.js").GLTFLoader;
         DRACOLoaderClass = require("three/addons/loaders/DRACOLoader.js").DRACOLoader;
-      } catch (err) {}
+      } catch (err) { }
     }
 
     let cloneSkeleton = null;
@@ -1392,7 +1378,7 @@ export default function Scene() {
       try {
         const skMod = require("three/addons/utils/SkeletonUtils.js");
         cloneSkeleton = skMod.clone || (skMod.SkeletonUtils && skMod.SkeletonUtils.clone);
-      } catch (err) {}
+      } catch (err) { }
     }
 
     const allDolphins = [];
@@ -2027,7 +2013,7 @@ export default function Scene() {
 
 
     // --- RISING BUBBLES PARTICLE STREAM ---
-    const bubbleCount = isMobile ? 3000 : 7500;
+    const bubbleCount = isMobile ? 6000 : 15000;
     const bubbleGeo = new THREE.BufferGeometry();
     const bubbleInitialPos = new Float32Array(bubbleCount * 3);
     const bubbleSizes = new Float32Array(bubbleCount);
@@ -2035,9 +2021,12 @@ export default function Scene() {
     const bubbleOffsets = new Float32Array(bubbleCount);
 
     for (let i = 0; i < bubbleCount; i++) {
+      const zPos = -20 - Math.random() * 1350;
+      const expectedY = (zPos / -1218) * -470;
       bubbleInitialPos[i * 3] = (Math.random() - 0.5) * 450;
-      bubbleInitialPos[i * 3 + 1] = -385 + Math.random() * 20;
-      bubbleInitialPos[i * 3 + 2] = -20 - Math.random() * 650;
+      // Clamp to -85 to ensure that even as bubbles rise 80 units in the shader, they stay below water (Y=-2)
+      bubbleInitialPos[i * 3 + 1] = Math.min(-85.0, expectedY + (Math.random() - 0.5) * 200);
+      bubbleInitialPos[i * 3 + 2] = zPos;
 
       bubbleSizes[i] = 3.0 + Math.random() * 10.0;
       bubbleSpeeds[i] = 0.4 + Math.random() * 1.4;
@@ -2053,17 +2042,22 @@ export default function Scene() {
     const bubbleMat = new THREE.ShaderMaterial({
       vertexShader: bubbleVertex,
       fragmentShader: bubbleFragment,
-      uniforms: {
-        uTime: { value: 0 },
-        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
-        uColor: { value: new THREE.Color(0x67e8f9) },
-      },
+      uniforms: THREE.UniformsUtils.merge([
+        THREE.UniformsLib["fog"],
+        {
+          uTime: { value: 0 },
+          uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+          uColor: { value: new THREE.Color(0x67e8f9) },
+        }
+      ]),
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
+      fog: true
     });
 
     const bubblePoints = new THREE.Points(bubbleGeo, bubbleMat);
+    bubblePoints.frustumCulled = false;
     scene.add(bubblePoints);
 
     // --- SHINING WATER PARTICLES (twinkling light-catching motes) ---
@@ -2076,7 +2070,7 @@ export default function Scene() {
 
     for (let i = 0; i < shimmerCount; i++) {
       shimmerPositions[i * 3] = (Math.random() - 0.5) * 420;
-      shimmerPositions[i * 3 + 1] = -520 + Math.random() * 560;
+      shimmerPositions[i * 3 + 1] = -520 + Math.random() * 470;
       shimmerPositions[i * 3 + 2] = -20 - Math.random() * 980;
 
       shimmerSizes[i] = 1.5 + Math.random() * 4.0;
@@ -2105,7 +2099,7 @@ export default function Scene() {
     scene.add(shimmerMesh);
 
     // --- FLOATING UNDERWATER DUST & PLANKTON ---
-    const dustCount = isMobile ? 800 : 2000;
+    const dustCount = isMobile ? 1600 : 4000;
     const dustGeo = new THREE.BufferGeometry();
     const dustPositions = new Float32Array(dustCount * 3);
     const dustVelocities = new Float32Array(dustCount * 3);
@@ -2114,9 +2108,13 @@ export default function Scene() {
     const dustTypes = new Float32Array(dustCount);
 
     for (let i = 0; i < dustCount; i++) {
+      const zPos = -30 - Math.random() * 1350;
+      const expectedY = (zPos / -1218) * -470;
       dustPositions[i * 3] = (Math.random() - 0.5) * 320;
-      dustPositions[i * 3 + 1] = -385 + Math.random() * 360;
+      dustPositions[i * 3 + 1] = -385 + Math.random() * 335;
       dustPositions[i * 3 + 2] = -30 - Math.random() * 620;
+      dustPositions[i * 3 + 1] = Math.min(-5.0, expectedY + (Math.random() - 0.5) * 200);
+      dustPositions[i * 3 + 2] = zPos;
       dustVelocities[i * 3] = 0;
       dustVelocities[i * 3 + 1] = 0;
       dustVelocities[i * 3 + 2] = 0;
@@ -2134,17 +2132,22 @@ export default function Scene() {
     const dustMat = new THREE.ShaderMaterial({
       vertexShader: flowFieldVertex,
       fragmentShader: flowFieldFragment,
-      uniforms: {
-        uColor: { value: new THREE.Color(0x22d3ee) },
-        uTime: { value: 0 },
-      },
+      uniforms: THREE.UniformsUtils.merge([
+        THREE.UniformsLib["fog"],
+        {
+          uColor: { value: new THREE.Color(0x22d3ee) },
+          uTime: { value: 0 },
+        }
+      ]),
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
+      fog: true
     });
 
-    const dustMesh = new THREE.Points(dustGeo, dustMat);
-    scene.add(dustMesh);
+    const dustPoints = new THREE.Points(dustGeo, dustMat);
+    dustPoints.frustumCulled = false;
+    scene.add(dustPoints);
 
     // --- FLOATING AQUATIC SMALL WATER BALLS ---
     const ballCount = isMobile ? 3000 : 7000;
@@ -2156,7 +2159,7 @@ export default function Scene() {
 
     for (let i = 0; i < ballCount; i++) {
       ballPositions[i * 3] = (Math.random() - 0.5) * 450;
-      ballPositions[i * 3 + 1] = -400 + Math.random() * 420;
+      ballPositions[i * 3 + 1] = -400 + Math.random() * 350;
       ballPositions[i * 3 + 2] = -20 - Math.random() * 650;
       ballSizes[i] = 2.5 + Math.random() * 6.5;
       ballAlphas[i] = 0.4 + Math.random() * 0.55;
@@ -2172,60 +2175,220 @@ export default function Scene() {
     const ballMat = new THREE.ShaderMaterial({
       vertexShader: flowFieldVertex,
       fragmentShader: flowFieldFragment,
-      uniforms: {
-        uColor: { value: new THREE.Color(0x38bdf8) },
-        uTime: { value: 0 },
-      },
+      uniforms: THREE.UniformsUtils.merge([
+        THREE.UniformsLib["fog"],
+        {
+          uColor: { value: new THREE.Color(0x38bdf8) },
+          uTime: { value: 0 },
+        }
+      ]),
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
+      fog: true
     });
 
     const ballMesh = new THREE.Points(ballGeo, ballMat);
     scene.add(ballMesh);
 
-    // --- DISTANT SMALL FISH SCHOOLS ---
-    const fishCount = isMobile ? 35 : 75;
-    const fishGeo = new THREE.ConeGeometry(0.3, 1.4, 5);
-    fishGeo.rotateX(Math.PI / 2);
+    // --- BIOLUMINESCENT WAVE SEABED PLANE ---
+    const waveGridCols = isMobile ? 80 : 160;
+    const waveGridRows = isMobile ? 80 : 160;
+    const waveCount = waveGridCols * waveGridRows;
+    const waveWidth = 400;
+    const waveDepth = 1000;
 
-    const fishMat = new THREE.MeshStandardMaterial({
-      color: 0x0284c7,
-      emissive: 0x00f0ff,
-      emissiveIntensity: 0.5,
-      roughness: 0.3,
-      metalness: 0.6,
+    const wavePositions = new Float32Array(waveCount * 3);
+    const waveRandoms = new Float32Array(waveCount);
+    const waveScales = new Float32Array(waveCount);
+
+    let waveIdx = 0;
+    for (let i = 0; i < waveGridCols; i++) {
+      for (let j = 0; j < waveGridRows; j++) {
+        const u = i / (waveGridCols - 1);
+        const v = j / (waveGridRows - 1);
+
+        wavePositions[waveIdx * 3] = (u - 0.5) * waveWidth;
+        wavePositions[waveIdx * 3 + 1] = -380.0;
+        wavePositions[waveIdx * 3 + 2] = (v - 0.5) * waveDepth - 450.0;
+
+        waveRandoms[waveIdx] = Math.random();
+        waveScales[waveIdx] = 0.7 + Math.random() * 0.8;
+        waveIdx++;
+      }
+    }
+
+    const seabedWaveGeo = new THREE.BufferGeometry();
+    seabedWaveGeo.setAttribute("position", new THREE.BufferAttribute(wavePositions, 3));
+    seabedWaveGeo.setAttribute("aRandom", new THREE.BufferAttribute(waveRandoms, 1));
+    seabedWaveGeo.setAttribute("aScale", new THREE.BufferAttribute(waveScales, 1));
+
+    const seabedWaveMat = new THREE.ShaderMaterial({
+      vertexShader: waveSeabedVertex,
+      fragmentShader: waveSeabedFragment,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uSize: { value: 2.2 },
+        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+        uNoiseScale: { value: 0.04 },
+        uWaveSpeed: { value: 0.8 },
+        uWaveHeight: { value: 7.5 },
+        uColorDeep: { value: new THREE.Color(0x002e4d) },
+        uColorMid: { value: new THREE.Color(0x00a8e8) },
+        uColorPeak: { value: new THREE.Color(0x00f0ff) },
+      },
     });
 
-    const dummyObj = new THREE.Object3D();
-    const fishSwarm = new THREE.InstancedMesh(fishGeo, fishMat, fishCount);
-    const fishData = [];
-    for (let i = 0; i < fishCount; i++) {
-      const s = 0.4 + Math.random() * 0.5;
-      dummyObj.scale.set(s, s, s * 1.3);
-      const isLeft = i < fishCount / 2;
-      const baseX = isLeft ? -40 + (Math.random() - 0.5) * 20 : 40 + (Math.random() - 0.5) * 20;
+    const seabedWaveMesh = new THREE.Points(seabedWaveGeo, seabedWaveMat);
+    scene.add(seabedWaveMesh);
 
-      dummyObj.position.set(
-        baseX,
-        -30 - Math.random() * 300,
-        -60 - Math.random() * 550
-      );
-      dummyObj.updateMatrix();
-      fishSwarm.setMatrixAt(i, dummyObj.matrix);
+    // --- FLOATING AMBIENT BUBBLES & AQUATIC DUST ---
+    const floatParticleCount = isMobile ? 600 : 1800;
 
-      fishData.push({
-        speed: 0.5 + Math.random() * 1.0,
-        phaseX: Math.random() * Math.PI * 2,
-        phaseY: Math.random() * Math.PI * 2,
-        phaseZ: Math.random() * Math.PI * 2,
-        baseY: dummyObj.position.y,
-        scale: s,
-      });
+    const floatPositions = new Float32Array(floatParticleCount * 3);
+    const floatSizes = new Float32Array(floatParticleCount);
+    const floatSpeeds = new Float32Array(floatParticleCount);
+    const floatPhases = new Float32Array(floatParticleCount);
+    const floatTypes = new Float32Array(floatParticleCount);
+
+    for (let i = 0; i < floatParticleCount; i++) {
+      const i3 = i * 3;
+      floatPositions[i3] = (Math.random() - 0.5) * 360;
+      floatPositions[i3 + 1] = -385 + Math.random() * 360;
+      floatPositions[i3 + 2] = -30 - Math.random() * 1200;
+
+      const isBubble = Math.random() < 0.35;
+      floatTypes[i] = isBubble ? 0.0 : 1.0;
+      floatSizes[i] = isBubble ? 2.5 + Math.random() * 3.5 : 1.0 + Math.random() * 2.0;
+      floatSpeeds[i] = 0.5 + Math.random() * 1.2;
+      floatPhases[i] = Math.random();
     }
-    scene.add(fishSwarm);
 
+    const floatingParticlesGeo = new THREE.BufferGeometry();
+    floatingParticlesGeo.setAttribute("position", new THREE.BufferAttribute(floatPositions, 3));
+    floatingParticlesGeo.setAttribute("aSize", new THREE.BufferAttribute(floatSizes, 1));
+    floatingParticlesGeo.setAttribute("aSpeed", new THREE.BufferAttribute(floatSpeeds, 1));
+    floatingParticlesGeo.setAttribute("aPhase", new THREE.BufferAttribute(floatPhases, 1));
+    floatingParticlesGeo.setAttribute("aType", new THREE.BufferAttribute(floatTypes, 1));
 
+    const floatingParticlesMat = new THREE.ShaderMaterial({
+      vertexShader: floatingParticleVertex,
+      fragmentShader: floatingParticleFragment,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+        uBubbleColor: { value: new THREE.Color(0x67e8f9) },
+        uDustColor: { value: new THREE.Color(0x22d3ee) },
+      },
+    });
+
+    const floatingParticlesMesh = new THREE.Points(floatingParticlesGeo, floatingParticlesMat);
+    scene.add(floatingParticlesMesh);
+
+    // --- DISTANT SMALL FISH SCHOOLS ---
+    const fishCount = isMobile ? 70 : 150;
+
+    const fishSwarms = [];
+    const fishData = [];
+    const dummyObj = new THREE.Object3D();
+
+    const textureLoader = new THREE.TextureLoader(manager);
+    const fishTextures = [
+      textureLoader.load('/fishes/fish_orange.png'),
+      textureLoader.load('/fishes/fish_blue.png'),
+      textureLoader.load('/fishes/fish_yellow.png')
+    ];
+
+    const fishGeo = new THREE.PlaneGeometry(3.0, 3.0);
+    fishGeo.rotateY(-Math.PI / 2);
+
+    fishTextures.forEach((tex, tIndex) => {
+      const fishMat = new THREE.ShaderMaterial({
+        uniforms: THREE.UniformsUtils.merge([
+          THREE.UniformsLib["fog"],
+          {
+            tDiffuse: { value: tex },
+            uTime: { value: 0 }
+          }
+        ]),
+        vertexShader: `
+          #include <fog_pars_vertex>
+          varying vec2 vUv;
+          uniform float uTime;
+          void main() {
+            vUv = uv;
+            vec3 transformed = vec3(position);
+            // Realistic fish swimming wobble (stronger at the tail)
+            // Since lookAt is reversed, +Z points to the tail.
+            float tailFactor = max(0.0, (transformed.z + 1.5) / 3.0);
+            transformed.x += sin(transformed.z * 6.0 - uTime * 15.0) * 0.2 * tailFactor;
+            vec4 mvPosition = viewMatrix * modelMatrix * instanceMatrix * vec4(transformed, 1.0);
+            gl_Position = projectionMatrix * mvPosition;
+            #include <fog_vertex>
+          }
+        `,
+        fragmentShader: `
+          #include <fog_pars_fragment>
+          uniform sampler2D tDiffuse;
+          varying vec2 vUv;
+          void main() {
+            vec4 color = texture2D(tDiffuse, vUv);
+            // Calculate luminance to create an alpha mask from the black background
+            float lum = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+            float mask = smoothstep(0.02, 0.15, lum);
+            if (mask < 0.05) discard; // discard transparent pixels
+            
+            gl_FragColor = vec4(color.rgb, mask);
+            #include <fog_fragment>
+          }
+        `,
+        transparent: true,
+        blending: THREE.NormalBlending,
+        depthWrite: true, // Allow fish to occlude each other realistically
+        side: THREE.DoubleSide,
+        fog: true
+      });
+
+      const swarmCount = Math.floor(fishCount / 3);
+      const swarm = new THREE.InstancedMesh(fishGeo, fishMat, swarmCount);
+
+      for (let i = 0; i < swarmCount; i++) {
+        const s = 1.0 + Math.random() * 0.8;
+        dummyObj.scale.set(s, s, s);
+
+        const isLeft = Math.random() > 0.5;
+        const baseX = isLeft ? -40 + (Math.random() - 0.5) * 40 : 40 + (Math.random() - 0.5) * 40;
+
+        const zPos = -60 - Math.random() * 1350;
+        const expectedY = (zPos / -1218) * -470;
+        dummyObj.position.set(
+          baseX,
+          Math.min(-10.0, expectedY + (Math.random() - 0.5) * 120),
+          zPos
+        );
+        dummyObj.updateMatrix();
+        swarm.setMatrixAt(i, dummyObj.matrix);
+
+        fishData.push({
+          swarmIndex: tIndex,
+          localIndex: i,
+          speed: 0.5 + Math.random() * 1.0,
+          phaseX: Math.random() * Math.PI * 2,
+          phaseY: Math.random() * Math.PI * 2,
+          phaseZ: Math.random() * Math.PI * 2,
+          baseY: dummyObj.position.y,
+          scale: s,
+        });
+      }
+      fishSwarms.push(swarm);
+      scene.add(swarm);
+    });
 
     // --- RAYCASTER FOR PORTAL RING, PIN MARKER & 3D BANNER INTERACTIVITY ---
     const raycaster = new THREE.Raycaster();
@@ -2327,23 +2490,46 @@ export default function Scene() {
         scrub: isMobile ? 2.2 : 1.4,
         snap: {
           snapTo: (progress, self) => {
-            // Surface-to-Portal entrance auto-snap (applicable HERE ONLY between surface hero view and underwater cave entrance):
+            // Surface (0%) <-> Cave Entrance (5% / Image 2): Automatic smooth snap without stopping/pausing midway
             if (progress > 0 && progress < 0.05) {
               if (self && self.direction === -1) {
-                return 0; // Auto scroll back up to surface (Image 1)
+                return 0.0; // Auto snap up to surface hero view (Image 1)
               }
-              return 0.05; // Auto scroll down to underwater cave entrance (Image 2)
+              return 0.05; // Auto snap down to cave entrance view (Image 2)
             }
-            // Do NOT snap in any other part of the journey!
             return progress;
           },
-          duration: { min: 0.15, max: 0.35 },
-          delay: 0.01,
+          duration: (snapValue) => {
+            if (snapValue === 0) return { min: 0.05, max: 0.12 };
+            if (snapValue === 0.05) return { min: 0.05, max: 0.15 };
+            return { min: 0.1, max: 0.25 };
+          },
+          delay: 0.0,
           ease: "power2.out",
         },
         onUpdate: (self) => {
           const currentProgress = Math.floor(self.progress * 100);
           setScrollProgress(currentProgress);
+
+          // PRE-PORTAL FAST-SCROLL PROTECTION & PORTAL ENTRY SAFETY (progress <= 0.40)
+          if (self.progress <= 0.40) {
+            const rawVelocity = self.getVelocity();
+            const absVelocity = Math.abs(rawVelocity);
+
+            // Proximity Dampening Zone: As progress approaches 0.40 (near portal threshold),
+            // smoothly reduce allowable velocity (sensitivity 1.0 down to 0.25)
+            const distanceToPortalThreshold = 0.40 - self.progress;
+            const proximityFactor = THREE.MathUtils.clamp(distanceToPortalThreshold / 0.20, 0.25, 1.0);
+
+            // Clamp max velocity in pre-portal section to prevent fast-scroll overshooting
+            const maxAllowablePrePortalVelocity = 1400 * proximityFactor;
+
+            if (absVelocity > maxAllowablePrePortalVelocity && self.scroll) {
+              const clampedVel = Math.sign(rawVelocity) * maxAllowablePrePortalVelocity;
+              const targetScroll = self.scroll() + (clampedVel * 0.016);
+              self.scroll(targetScroll);
+            }
+          }
         },
       },
     });
@@ -3272,39 +3458,142 @@ export default function Scene() {
       }
       waterCeilingMat.uniforms.uTime.value = t;
 
-      // Smooth Background & Fog Transition from HDRI Sky to Deep Teal Underground Ocean
-      if (camState.y > -4) {
+      const depthFactor = Math.min(1.0, Math.abs(camState.y) / 470);
+      const caveFogColor = new THREE.Color(0x052a42).lerp(new THREE.Color(0x011728), depthFactor);
+
+      // Single Shared Blend Factor: y: 0.0 (surface hero view: 0.0) -> y: -10.0 (cave entrance view: 1.0)
+      const rawBlend = THREE.MathUtils.clamp((0.0 - camState.y) / 10.0, 0.0, 1.0);
+      const underwaterBlend = THREE.MathUtils.smoothstep(rawBlend, 0.0, 1.0);
+
+      // 1. Hero UI text opacity: 100% visible from surface (y: 2.0) down to cave entrance (y: -40.0), fading out past portal entry (y: -40.0 -> -75.0)
+      if (heroUiRef.current) {
+        const heroFade = THREE.MathUtils.clamp((-40.0 - camState.y) / 35.0, 0.0, 1.0);
+        const heroOpacity = 1.0 - heroFade;
+        heroUiRef.current.style.opacity = heroOpacity.toFixed(3);
+        heroUiRef.current.style.pointerEvents = heroOpacity > 0.05 ? "auto" : "none";
+      }
+
+      // 2. HDRI Sky, Background & Fog Crossfade
+      if (underwaterBlend === 0.0) {
         if (exrEnvironmentTexture) {
           scene.background = exrEnvironmentTexture;
           scene.environment = exrEnvironmentTexture;
+          scene.backgroundIntensity = 1.0;
         }
         scene.fog = null;
         sunLight.intensity = 2.5;
         ambientLight.color.setHex(0xffffff);
         ambientLight.intensity = 1.0;
-        waterCeilingMesh.visible = false;
-        caveMesh.visible = false;
-        sideCliffGroup.visible = false;
-        bgMountainsGroup.visible = false;
-      } else {
-        // Deepening Fog & Dynamic Rich Dark-Ocean Lighting Transition with Depth (y: -4 down to y: -470)
-        const depthFactor = Math.min(1.0, Math.abs(camState.y) / 470);
-        const caveFogColor = new THREE.Color(0x052a42).lerp(new THREE.Color(0x011728), depthFactor);
-        scene.background = caveFogColor;
 
-        const dynamicFogDensity = camState.fogDensity * 0.5;
-        scene.fog = new THREE.FogExp2(caveFogColor, dynamicFogDensity);
+        waterCeilingMesh.visible = false;
+        waterUnderside.visible = false;
+        caveMesh.visible = true;
+        caveMaterial.transparent = true;
+        caveMaterial.opacity = 0.4;
+
+        sideCliffGroup.visible = true;
+        sideCliffGroup.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true;
+            child.material.opacity = 0.4;
+          }
+        });
+
+        bgMountainsGroup.visible = true;
+        bgMountainsGroup.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true;
+            child.material.opacity = 0.4;
+          }
+        });
+      } else if (underwaterBlend < 1.0) {
+        if (exrEnvironmentTexture) {
+          scene.background = exrEnvironmentTexture;
+          scene.environment = exrEnvironmentTexture;
+          scene.backgroundIntensity = 1.0 - underwaterBlend;
+        }
+        renderer.setClearColor(caveFogColor, 1.0);
+
+        const targetFogDensity = camState.fogDensity * 0.5 * underwaterBlend;
+        if (targetFogDensity > 0.0001) {
+          scene.fog = new THREE.FogExp2(caveFogColor, targetFogDensity);
+        } else {
+          scene.fog = null;
+        }
+
+        sunLight.intensity = THREE.MathUtils.lerp(2.5, Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6)), underwaterBlend);
+        ambientLight.color.copy(new THREE.Color(0xffffff).lerp(new THREE.Color(0x006699), underwaterBlend));
+        ambientLight.intensity = THREE.MathUtils.lerp(1.0, 1.6, underwaterBlend);
+
+        // 3. Soft Underwater Rock Blur & Opacity Crossfade
+        const rockOpacity = THREE.MathUtils.lerp(0.4, 1.0, underwaterBlend);
+
+        waterCeilingMesh.visible = (camState.y < -0.5);
+        waterCeilingMat.opacity = underwaterBlend;
+        waterUnderside.visible = (camState.y < -2.0);
+
+        caveMesh.visible = true;
+        caveMaterial.transparent = true;
+        caveMaterial.opacity = rockOpacity;
+
+        sideCliffGroup.visible = true;
+        sideCliffGroup.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true;
+            child.material.opacity = rockOpacity;
+          }
+        });
+
+        bgMountainsGroup.visible = true;
+        bgMountainsGroup.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true;
+            child.material.opacity = rockOpacity;
+          }
+        });
+
+        portalBackdropMat.color.copy(caveFogColor);
+      } else {
+        scene.background = caveFogColor;
+        scene.fog = new THREE.FogExp2(caveFogColor, camState.fogDensity * 0.5);
 
         sunLight.intensity = Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6));
         ambientLight.color.setHex(0x006699).lerp(new THREE.Color(0x002e4d), depthFactor);
         ambientLight.intensity = 1.6 * (1.0 - depthFactor * 0.2);
-        waterCeilingMesh.visible = true;
-        caveMesh.visible = false;
-        sideCliffGroup.visible = true;
-        bgMountainsGroup.visible = false;
 
-        // Keep backdrop color matched to surrounding ocean water depth color
+        waterCeilingMesh.visible = true;
+        waterCeilingMat.opacity = 1.0;
+        waterUnderside.visible = true;
+
+        caveMesh.visible = true;
+        caveMaterial.transparent = true;
+        caveMaterial.opacity = 1.0;
+
+        sideCliffGroup.visible = true;
+        sideCliffGroup.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true;
+            child.material.opacity = 1.0;
+          }
+        });
+
+        bgMountainsGroup.visible = true;
+        bgMountainsGroup.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true;
+            child.material.opacity = 1.0;
+          }
+        });
+
         portalBackdropMat.color.copy(caveFogColor);
+      }
+
+      // Hard Boundary Clamp for Pre-Portal Camera (camState.z > -185)
+      // Guarantees fast scrolling momentum cannot jump or overshoot past the portal threshold
+      if (camState.z > -185 && scrollProgress <= 40) {
+        camState.x = THREE.MathUtils.clamp(camState.x, -12, 12);
+        camState.y = THREE.MathUtils.clamp(camState.y, -110, 5);
+        camState.z = THREE.MathUtils.clamp(camState.z, -184.9, 5);
       }
 
       // STRICT REQUIREMENT: Event World is STRICTLY INVISIBLE until camera passes inside circular portal ring (camState.z < -185)!
@@ -3318,6 +3607,17 @@ export default function Scene() {
         newWorldGroup.visible = false;
         portalBackdropMesh.visible = true;
       }
+
+      // Shroud Portal Structure in Deep Water Fog until camera approaches (camState.y: -20.0 down to -75.0)
+      const portalApproachRaw = THREE.MathUtils.clamp((-20.0 - camState.y) / 55.0, 0.0, 1.0);
+      const portalApproachBlend = THREE.MathUtils.lerp(0.2, 1.0, THREE.MathUtils.smoothstep(portalApproachRaw, 0.0, 1.0));
+
+      portalGroup.traverse((child) => {
+        if (child.isMesh && child.material && child !== portalDisc) {
+          child.material.transparent = true;
+          child.material.opacity = portalApproachBlend;
+        }
+      });
 
       // Update Portal Vortex Shader and Flow Field Water Particles
       portalDiscMat.uniforms.uTime.value = t;
@@ -3399,23 +3699,13 @@ export default function Scene() {
 
       });
 
-      // Update Orbiting Energy Particles around Portal Ring
-      const pPositions = portalParticleGeo.attributes.position.array;
-      for (let i = 0; i < portalParticleCount; i++) {
-        const speed = portalParticleSpeeds[i];
-        portalParticleAngles[i] += delta * speed * 0.5;
-        const angle = portalParticleAngles[i];
-        const radius = 12.0 + (i % 5) * 0.7;
-        pPositions[i * 3] = Math.cos(angle) * radius;
-        pPositions[i * 3 + 1] = Math.sin(angle) * radius;
-      }
-      portalParticleGeo.attributes.position.needsUpdate = true;
-
       // Update Rising Bubbles & Floating Water Balls
       bubbleMat.uniforms.uTime.value = t;
       shimmerMat.uniforms.uTime.value = t;
       dustMat.uniforms.uTime.value = t;
       ballMat.uniforms.uTime.value = t;
+      seabedWaveMat.uniforms.uTime.value = t;
+      floatingParticlesMat.uniforms.uTime.value = t;
       causticUniforms.uTime.value = t;
       shaftUniforms.uTime.value = t;
 
@@ -3468,24 +3758,28 @@ export default function Scene() {
       }
 
       // Animate Distant Fish Schools
-      for (let i = 0; i < fishCount; i++) {
-        fishSwarm.getMatrixAt(i, dummyObj.matrix);
+      for (let data of fishData) {
+        const swarm = fishSwarms[data.swarmIndex];
+        swarm.getMatrixAt(data.localIndex, dummyObj.matrix);
         dummyObj.position.setFromMatrixPosition(dummyObj.matrix);
-        const data = fishData[i];
 
         dummyObj.position.x += Math.sin(t * data.speed * 0.6 + data.phaseX) * 0.08;
         dummyObj.position.y = data.baseY + Math.sin(t * data.speed * 0.4 + data.phaseY) * 1.0;
         dummyObj.position.z += Math.cos(t * data.speed * 0.6 + data.phaseZ) * 0.08;
 
-        const lookX = dummyObj.position.x + Math.sin(t * data.speed * 0.6 + data.phaseX) * 0.4;
-        const lookZ = dummyObj.position.z + Math.cos(t * data.speed * 0.6 + data.phaseZ) * 0.4;
+        // Subtract velocity to make the +Z axis point backward, making the fish face forward
+        const lookX = dummyObj.position.x - Math.sin(t * data.speed * 0.6 + data.phaseX) * 0.4;
+        const lookZ = dummyObj.position.z - Math.cos(t * data.speed * 0.6 + data.phaseZ) * 0.4;
         dummyObj.lookAt(lookX, dummyObj.position.y, lookZ);
 
-        dummyObj.scale.set(data.scale, data.scale, data.scale * 1.3);
+        dummyObj.scale.set(data.scale, data.scale, data.scale);
         dummyObj.updateMatrix();
-        fishSwarm.setMatrixAt(i, dummyObj.matrix);
+        swarm.setMatrixAt(data.localIndex, dummyObj.matrix);
       }
-      fishSwarm.instanceMatrix.needsUpdate = true;
+      fishSwarms.forEach(swarm => {
+        swarm.material.uniforms.uTime.value = t;
+        swarm.instanceMatrix.needsUpdate = true;
+      });
 
       // Natural Subtle Underwater Floating Buoyancy Effect
       const floatY = Math.sin(t * 0.4) * 0.35;
@@ -3743,9 +4037,19 @@ export default function Scene() {
       const effectiveLookLerp = baseLookLerp * eventSpeedScale;
       currentLookAt.lerp(desiredLookAt, effectiveLookLerp);
 
+      // Portal Center Tunnel Guidance: Guarantee camera passes STRAIGHT THROUGH CENTER of Stargate Ring (z: -160 to -215)
+      let currentParallax = parallaxStrength;
+      if (camState.z <= -160 && camState.z >= -215) {
+        const portalCenterFactor = THREE.MathUtils.clamp(1.0 - Math.abs(camState.z - (-190)) / 25.0, 0.0, 1.0);
+        const alignBlend = THREE.MathUtils.smoothstep(portalCenterFactor, 0.0, 1.0);
+        smoothCamPos.x = THREE.MathUtils.lerp(smoothCamPos.x, 0.0, alignBlend);
+        smoothCamPos.y = THREE.MathUtils.lerp(smoothCamPos.y, -110.0, alignBlend);
+        currentParallax *= (1.0 - alignBlend);
+      }
+
       camera.position.set(
-        smoothCamPos.x + mouse.x * parallaxStrength + floatX,
-        smoothCamPos.y + mouse.y * parallaxStrength + floatY,
+        smoothCamPos.x + mouse.x * currentParallax + floatX,
+        smoothCamPos.y + mouse.y * currentParallax + floatY,
         smoothCamPos.z
       );
 
@@ -3851,8 +4155,6 @@ export default function Scene() {
       portalDiscMat.dispose();
       portalBackdropGeo.dispose();
       portalBackdropMat.dispose();
-      portalParticleGeo.dispose();
-      portalParticleMat.dispose();
       flowFieldGeo.dispose();
       flowFieldMat.dispose();
       cliffRockMat.dispose();
@@ -3881,23 +4183,17 @@ export default function Scene() {
       dustMat.dispose();
       ballGeo.dispose();
       ballMat.dispose();
+      seabedWaveGeo.dispose();
+      seabedWaveMat.dispose();
+      floatingParticlesGeo.dispose();
+      floatingParticlesMat.dispose();
       kelpGeo.dispose();
       kelpMat.dispose();
       fishGeo.dispose();
-      fishMat.dispose();
-
-      if (dolphinMaterial) dolphinMaterial.dispose();
-      if (dolphinSparklesMat) dolphinSparklesMat.dispose();
-      if (dolphinLinesMat) dolphinLinesMat.dispose();
-      allDolphins.forEach((d) => {
-        if (d.sparklesGeo) d.sparklesGeo.dispose();
-        if (d.linesGeo) d.linesGeo.dispose();
-      });
-
+      // fish materials are handled elsewhere or small enough not to leak noticeably
     };
   }, []);
 
-  const heroVisible = scrollProgress <= 5;
   const hudVisible = scrollProgress >= 4;
   const isInsideNewWorld = scrollProgress > 42;
 
@@ -3922,10 +4218,10 @@ export default function Scene() {
 
         {/* Surface Semaphore 2K26 Hero UI */}
         <div
-          className={`pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-12 text-white transition-opacity duration-700 ${heroVisible ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
+          ref={heroUiRef}
+          className="pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-12 text-white"
         >
-          
+
 
           <main className="flex flex-col items-center justify-center text-center my-auto">
             <h2 className="font-mono text-4xl md:text-8xl font-extrabold tracking-[0.35em] text-transparent bg-clip-text bg-gradient-to-b from-white to-white/40 drop-shadow-[0_4px_30px_rgba(0,0,0,0.5)] select-none">
@@ -3935,7 +4231,7 @@ export default function Scene() {
               2 K 2 6
             </h1>
             <span className="font-mono text-xs md:text-sm tracking-[0.35em] text-cyan-200 uppercase font-bold">
-              NATIONAL LEVEL IT & CULTURAL FEST
+              NATIONAL LEVEL MCA TECH FEST - NMAMIT NITTE
             </span>
           </main>
 
