@@ -252,7 +252,9 @@ export default function EventsPage() {
       setGlobalSuccess(`Successfully registered for ${validForms.length} event(s)! Redirecting to payment...`);
       localStorage.removeItem('event_cart_draft'); // Clear global draft
       setTimeout(() => {
+        const validEventIds = validForms.map(f => f.event._id);
         sessionStorage.setItem('pendingPaymentAmount', calculateTotal());
+        sessionStorage.setItem('pendingEventIds', JSON.stringify(validEventIds));
         router.push('/user/account/payment');
       }, 1500);
 
@@ -339,6 +341,7 @@ export default function EventsPage() {
                           amountToPay = events.filter(e => registeredEventIds.includes(e._id)).reduce((sum, e) => sum + (e.registrationFee || 0), 0);
                         }
                         sessionStorage.setItem('pendingPaymentAmount', amountToPay);
+                        sessionStorage.setItem('pendingEventIds', JSON.stringify(registeredEventIds));
                         router.push('/user/account/payment');
                       }}
                       style={{ ...styles.actionBtn, backgroundColor: '#b45309', opacity: 1, cursor: 'pointer' }}

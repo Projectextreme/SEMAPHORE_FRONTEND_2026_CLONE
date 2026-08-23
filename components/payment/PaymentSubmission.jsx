@@ -12,12 +12,30 @@ export default function PaymentSubmission() {
     if (typeof window !== "undefined") {
       const storedAmount = sessionStorage.getItem('pendingPaymentAmount');
       if (storedAmount) {
-        sessionStorage.removeItem('pendingPaymentAmount');
         return storedAmount;
       }
     }
     return "";
   });
+
+  const [eventIds, setEventIds] = useState(() => {
+    if (typeof window !== "undefined") {
+      const storedIds = sessionStorage.getItem('pendingEventIds');
+      if (storedIds) {
+        try {
+          const parsed = JSON.parse(storedIds);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+    return [];
+  });
+
+  const [eventTitles, setEventTitles] = useState([]);
   const [utr, setUtr] = useState("");
   
   const [loading, setLoading] = useState(false);
@@ -33,6 +51,40 @@ export default function PaymentSubmission() {
       }
     };
   }, [previewUrl]);
+
+  // Auto-fetch unpaid event registrations if eventIds or amount is not set
+  useEffect(() => {
+    const fetchRegistrations = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await fetch(`${API_BASE_URL}/api/registrations`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (data?.registration?.events) {
+          const unpaidEvents = data.registration.events.filter(e => !e.paymentId);
+          const unpaidIds = unpaidEvents.map(e => e.eventId?._id || e.eventId).filter(Boolean);
+          const titles = unpaidEvents.map(e => e.eventId?.title).filter(Boolean);
+
+          setEventTitles(titles);
+          setEventIds(prev => (prev.length > 0 ? prev : unpaidIds));
+          setAmount(prev => {
+            if (prev) return prev;
+            const total = unpaidEvents.reduce((sum, e) => sum + (e.eventId?.registrationFee || 0), 0);
+            return total > 0 ? total.toString() : "";
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch registrations for payment context:", err);
+      }
+    };
+
+    fetchRegistrations();
+  }, []);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -61,10 +113,19 @@ export default function PaymentSubmission() {
     try {
       const formData = new FormData();
       formData.append("image", file);
-      if (amount) formData.append("amount", amount);
-      if (utr) formData.append("utr", utr);
+      formData.append("amount", amount.toString());
+      formData.append("utr", utr.trim());
 
-      const token = localStorage.getItem("token") || "your_jwt_token_here";
+      if (eventIds && eventIds.length > 0) {
+        formData.append("eventIds", JSON.stringify(eventIds));
+      }
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("You must be logged in to submit payment.");
+        setLoading(false);
+        return;
+      }
 
       const response = await fetch(`${API_BASE_URL}/api/registrations/payment`, {
         method: "POST",
@@ -74,19 +135,22 @@ export default function PaymentSubmission() {
         body: formData,
       });
 
-      if (response.status === 201) {
-        setSuccess("Payment submitted successfully! Redirecting back to dashboard...");
+      const responseData = await response.json().catch(() => null);
+
+      if (response.status === 201 || response.ok) {
+        setSuccess(responseData?.message || "Payment submitted successfully and linked to event registrations!");
         setFile(null);
         setPreviewUrl(null);
         setAmount("");
         setUtr("");
+        sessionStorage.removeItem('pendingPaymentAmount');
+        sessionStorage.removeItem('pendingEventIds');
         
         setTimeout(() => {
           router.push('/user/account');
         }, 2000);
       } else {
-        const errorData = await response.json().catch(() => null);
-        setError(errorData?.message || `Error: ${response.status} ${response.statusText}`);
+        setError(responseData?.message || `Error: ${response.status} ${response.statusText}`);
       }
     } catch (err) {
       console.error("Payment submission failed:", err);
@@ -98,9 +162,20 @@ export default function PaymentSubmission() {
 
   return (
     <div className="w-full h-full p-8 bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl shadow-[0_8px_32px_rgba(0,100,150,0.15)] relative flex flex-col">
-      <h2 className="text-2xl md:text-3xl font-extrabold text-cyan-950 mb-8 tracking-wide text-center uppercase">
+      <h2 className="text-2xl md:text-3xl font-extrabold text-cyan-950 mb-6 tracking-wide text-center uppercase">
         Payment Submission
       </h2>
+
+      {eventTitles.length > 0 && (
+        <div className="mb-6 p-3.5 bg-cyan-50/70 border border-cyan-200/80 rounded-xl text-xs text-cyan-900 font-medium">
+          <span className="font-bold block mb-1">Paying for Events ({eventTitles.length}):</span>
+          <ul className="list-disc list-inside space-y-0.5 text-cyan-800">
+            {eventTitles.map((title, idx) => (
+              <li key={idx}>{title}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       
       {error && (
         <div className="mb-6 p-4 text-sm text-red-700 bg-red-100/70 backdrop-blur-sm border border-red-300 rounded-xl flex items-center gap-3">
@@ -234,3 +309,4 @@ export default function PaymentSubmission() {
     </div>
   );
 }
+

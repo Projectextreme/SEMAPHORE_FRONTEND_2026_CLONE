@@ -191,7 +191,9 @@ export default function MyRegistration() {
           <button
             className="w-full py-3.5 rounded-xl border mb-5 uppercase tracking-widest text-sm shadow-inner transition-all bg-gradient-to-r from-cyan-500 to-blue-500 text-white cursor-pointer hover:shadow-md border-transparent hover:from-cyan-400 hover:to-blue-400"
             onClick={() => {
+              const unpaidEventIds = events.filter(item => !item.paymentId).map(item => item.eventId?._id || item.eventId).filter(Boolean);
               sessionStorage.setItem('pendingPaymentAmount', totalAmount);
+              sessionStorage.setItem('pendingEventIds', JSON.stringify(unpaidEventIds));
               router.push('/user/account/payment');
             }}
           >
