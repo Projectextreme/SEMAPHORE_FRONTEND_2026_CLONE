@@ -3370,15 +3370,6 @@ export default function Scene() {
         }
       }
 
-      // Portal Stargate Visibility: subtle/reduced (0.25) when far away at cave entrance (camState.y = -40), smoothly increasing to 1.0 as camera dives down towards portal (camState.y <= -100)
-      const portalVisibility = THREE.MathUtils.lerp(0.25, 1.0, THREE.MathUtils.clamp((-40.0 - camState.y) / 60.0, 0.0, 1.0));
-      portalGroup.traverse((child) => {
-        if (child.isMesh && child.material && child !== portalBackdropMesh) {
-          child.material.transparent = true;
-          child.material.opacity = portalVisibility;
-        }
-      });
-
       // STRICT REQUIREMENT: Event World is STRICTLY INVISIBLE until camera passes inside circular portal ring (camState.z < -185)!
       // Cut/hide caveMesh inside the portal so no cavern tunnel mesh ever obstructs or blocks event visibility!
       if (camState.z < -185) {
@@ -4006,7 +3997,7 @@ export default function Scene() {
               2 K 2 6
             </h1>
             <span className="font-mono text-xs md:text-sm tracking-[0.35em] text-cyan-200 uppercase font-bold">
-              NATIONAL LEVEL IT & CULTURAL FEST
+              NATIONAL LEVEL MCA TECH FEST - NMAMIT NITTE
             </span>
           </main>
 
