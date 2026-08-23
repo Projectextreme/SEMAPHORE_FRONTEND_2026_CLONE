@@ -561,6 +561,7 @@ function createEventBannerTexture(node) {
 export default function Scene() {
   const containerRef = useRef(null);
   const wrapperRef = useRef(null);
+  const heroUiRef = useRef(null);
   const audioRef = useRef(null);
   const pinRefs = useRef([]);
   const activeEventRef = useRef("event-1");
@@ -1381,7 +1382,7 @@ export default function Scene() {
       try {
         GLTFLoaderClass = require("three/addons/loaders/GLTFLoader.js").GLTFLoader;
         DRACOLoaderClass = require("three/addons/loaders/DRACOLoader.js").DRACOLoader;
-      } catch (err) {}
+      } catch (err) { }
     }
 
     let cloneSkeleton = null;
@@ -1392,7 +1393,7 @@ export default function Scene() {
       try {
         const skMod = require("three/addons/utils/SkeletonUtils.js");
         cloneSkeleton = skMod.clone || (skMod.SkeletonUtils && skMod.SkeletonUtils.clone);
-      } catch (err) {}
+      } catch (err) { }
     }
 
     const allDolphins = [];
@@ -2327,19 +2328,23 @@ export default function Scene() {
         scrub: isMobile ? 2.2 : 1.4,
         snap: {
           snapTo: (progress, self) => {
-            // Surface-to-Portal entrance auto-snap (applicable HERE ONLY between surface hero view and underwater cave entrance):
+            // Surface-to-Cave-entrance auto scroll (0 to 5%): no stopping or pausing midway
             if (progress > 0 && progress < 0.05) {
               if (self && self.direction === -1) {
-                return 0; // Auto scroll back up to surface (Image 1)
+                return 0; // Auto scroll back up to surface hero view (0%) fast
               }
-              return 0.05; // Auto scroll down to underwater cave entrance (Image 2)
+              return 0.05; // Auto scroll down to cave entrance view (5%) fast
             }
-            // Do NOT snap in any other part of the journey!
             return progress;
           },
-          duration: { min: 0.15, max: 0.35 },
-          delay: 0.01,
-          ease: "power2.out",
+          duration: (snapValue) => {
+            // Ultra-fast automatic scroll UP to surface hero view (progress 0)
+            if (snapValue === 0) return { min: 0.01, max: 0.04 };
+            if (snapValue === 0.05) return { min: 0.05, max: 0.12 };
+            return { min: 0.1, max: 0.2 };
+          },
+          delay: 0.0,
+          ease: "power4.out",
         },
         onUpdate: (self) => {
           const currentProgress = Math.floor(self.progress * 100);
@@ -3272,40 +3277,107 @@ export default function Scene() {
       }
       waterCeilingMat.uniforms.uTime.value = t;
 
-      // Smooth Background & Fog Transition from HDRI Sky to Deep Teal Underground Ocean
+      const depthFactor = Math.min(1.0, Math.abs(camState.y) / 470);
+      const caveFogColor = new THREE.Color(0x052a42).lerp(new THREE.Color(0x011728), depthFactor);
+
+      // Synchronize Hero UI text opacity per frame: 100% visible from surface (0%) down to cave entrance (5%, camState.y: -40), fading out deeper past 5% scroll
+      if (heroUiRef.current) {
+        const heroFadeFactor = THREE.MathUtils.clamp((-40.0 - camState.y) / 35.0, 0.0, 1.0);
+        const heroOpacity = Math.max(0, 1.0 - heroFadeFactor);
+        heroUiRef.current.style.opacity = heroOpacity.toFixed(3);
+        heroUiRef.current.style.pointerEvents = heroOpacity > 0.05 ? "auto" : "none";
+      }
+
+      // Smooth Background & Fog Transition from HDRI Sky to Deep Teal Underground Ocean (Submerged depth: camState.y <= -4)
       if (camState.y > -4) {
         if (exrEnvironmentTexture) {
           scene.background = exrEnvironmentTexture;
           scene.environment = exrEnvironmentTexture;
+          scene.backgroundIntensity = 1.0;
         }
         scene.fog = null;
         sunLight.intensity = 2.5;
         ambientLight.color.setHex(0xffffff);
         ambientLight.intensity = 1.0;
+
         waterCeilingMesh.visible = false;
         caveMesh.visible = false;
         sideCliffGroup.visible = false;
         bgMountainsGroup.visible = false;
       } else {
-        // Deepening Fog & Dynamic Rich Dark-Ocean Lighting Transition with Depth (y: -4 down to y: -470)
-        const depthFactor = Math.min(1.0, Math.abs(camState.y) / 470);
-        const caveFogColor = new THREE.Color(0x052a42).lerp(new THREE.Color(0x011728), depthFactor);
-        scene.background = caveFogColor;
+        const rawBlend = THREE.MathUtils.clamp((-4.0 - camState.y) / 12.0, 0.0, 1.0);
+        const underwaterBlend = THREE.MathUtils.smoothstep(rawBlend, 0.0, 1.0);
 
-        const dynamicFogDensity = camState.fogDensity * 0.5;
-        scene.fog = new THREE.FogExp2(caveFogColor, dynamicFogDensity);
+        if (underwaterBlend < 1.0) {
+          if (exrEnvironmentTexture) {
+            scene.background = exrEnvironmentTexture;
+            scene.environment = exrEnvironmentTexture;
+            scene.backgroundIntensity = 1.0 - underwaterBlend;
+          }
+          renderer.setClearColor(caveFogColor, 1.0);
 
-        sunLight.intensity = Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6));
-        ambientLight.color.setHex(0x006699).lerp(new THREE.Color(0x002e4d), depthFactor);
-        ambientLight.intensity = 1.6 * (1.0 - depthFactor * 0.2);
-        waterCeilingMesh.visible = true;
-        caveMesh.visible = false;
-        sideCliffGroup.visible = true;
-        bgMountainsGroup.visible = false;
+          const targetFogDensity = camState.fogDensity * 0.5 * underwaterBlend;
+          if (targetFogDensity > 0.0001) {
+            scene.fog = new THREE.FogExp2(caveFogColor, targetFogDensity);
+          } else {
+            scene.fog = null;
+          }
 
-        // Keep backdrop color matched to surrounding ocean water depth color
-        portalBackdropMat.color.copy(caveFogColor);
+          sunLight.intensity = THREE.MathUtils.lerp(2.5, Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6)), underwaterBlend);
+          ambientLight.color.copy(new THREE.Color(0xffffff).lerp(new THREE.Color(0x006699), underwaterBlend));
+          ambientLight.intensity = THREE.MathUtils.lerp(1.0, 1.6, underwaterBlend);
+
+          waterCeilingMesh.visible = (underwaterBlend > 0.05);
+          waterCeilingMat.opacity = underwaterBlend;
+
+          caveMesh.visible = false;
+
+          sideCliffGroup.visible = (underwaterBlend > 0.05);
+          sideCliffGroup.traverse((child) => {
+            if (child.isMesh && child.material) {
+              child.material.transparent = true;
+              child.material.opacity = underwaterBlend;
+            }
+          });
+
+          bgMountainsGroup.visible = false;
+          portalBackdropMat.color.copy(caveFogColor);
+        } else {
+          scene.background = caveFogColor;
+          scene.fog = new THREE.FogExp2(caveFogColor, camState.fogDensity * 0.5);
+
+          sunLight.intensity = Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6));
+          ambientLight.color.setHex(0x006699).lerp(new THREE.Color(0x002e4d), depthFactor);
+          ambientLight.intensity = 1.6 * (1.0 - depthFactor * 0.2);
+
+          waterCeilingMesh.visible = true;
+          waterCeilingMat.opacity = 1.0;
+
+          caveMesh.visible = false;
+
+          sideCliffGroup.visible = true;
+          sideCliffGroup.traverse((child) => {
+            if (child.isMesh && child.material) {
+              child.material.transparent = true;
+              child.material.opacity = 1.0;
+            }
+          });
+
+          bgMountainsGroup.visible = false;
+
+          // Keep backdrop color matched to surrounding ocean water depth color
+          portalBackdropMat.color.copy(caveFogColor);
+        }
       }
+
+      // Portal Stargate Visibility: subtle/reduced (0.25) when far away at cave entrance (camState.y = -40), smoothly increasing to 1.0 as camera dives down towards portal (camState.y <= -100)
+      const portalVisibility = THREE.MathUtils.lerp(0.25, 1.0, THREE.MathUtils.clamp((-40.0 - camState.y) / 60.0, 0.0, 1.0));
+      portalGroup.traverse((child) => {
+        if (child.isMesh && child.material && child !== portalBackdropMesh) {
+          child.material.transparent = true;
+          child.material.opacity = portalVisibility;
+        }
+      });
 
       // STRICT REQUIREMENT: Event World is STRICTLY INVISIBLE until camera passes inside circular portal ring (camState.z < -185)!
       // Cut/hide caveMesh inside the portal so no cavern tunnel mesh ever obstructs or blocks event visibility!
@@ -3897,7 +3969,6 @@ export default function Scene() {
     };
   }, []);
 
-  const heroVisible = scrollProgress <= 5;
   const hudVisible = scrollProgress >= 4;
   const isInsideNewWorld = scrollProgress > 42;
 
@@ -3922,10 +3993,10 @@ export default function Scene() {
 
         {/* Surface Semaphore 2K26 Hero UI */}
         <div
-          className={`pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-12 text-white transition-opacity duration-700 ${heroVisible ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
+          ref={heroUiRef}
+          className="pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-12 text-white"
         >
-          
+
 
           <main className="flex flex-col items-center justify-center text-center my-auto">
             <h2 className="font-mono text-4xl md:text-8xl font-extrabold tracking-[0.35em] text-transparent bg-clip-text bg-gradient-to-b from-white to-white/40 drop-shadow-[0_4px_30px_rgba(0,0,0,0.5)] select-none">
