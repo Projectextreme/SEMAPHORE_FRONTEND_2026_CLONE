@@ -1,31 +1,49 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-// import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 
 export default function PaymentSubmission() {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(() => {
+    if (typeof window !== "undefined") {
+      const storedAmount = sessionStorage.getItem('pendingPaymentAmount');
+      if (storedAmount) {
+        return storedAmount;
+      }
+    }
+    return "";
+  });
+
+  const [eventIds, setEventIds] = useState(() => {
+    if (typeof window !== "undefined") {
+      const storedIds = sessionStorage.getItem('pendingEventIds');
+      if (storedIds) {
+        try {
+          const parsed = JSON.parse(storedIds);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+    return [];
+  });
+
+  const [eventTitles, setEventTitles] = useState([]);
   const [utr, setUtr] = useState("");
   
+  const [submittedPayment, setSubmittedPayment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  // const router = useRouter(); 
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedAmount = sessionStorage.getItem('pendingPaymentAmount');
-      if (storedAmount) {
-        setAmount(storedAmount);
-        sessionStorage.removeItem('pendingPaymentAmount'); // Clear it after reading
-      }
-    }
-  }, []);
+  const router = useRouter(); 
 
   useEffect(() => {
     return () => {
@@ -34,6 +52,44 @@ export default function PaymentSubmission() {
       }
     };
   }, [previewUrl]);
+
+  // Auto-fetch unpaid event registrations if eventIds or amount is not set
+  useEffect(() => {
+    const fetchRegistrations = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await fetch(`${API_BASE_URL}/api/registrations`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const regs = data.registrations || (data.registration?.events) || data.data || [];
+        if (Array.isArray(regs) && regs.length > 0) {
+          const unpaidEvents = regs.filter(e => {
+            const payments = Array.isArray(e.paymentId) ? e.paymentId : (e.paymentId ? [e.paymentId] : []);
+            return payments.length === 0;
+          });
+          const unpaidIds = unpaidEvents.map(e => e.eventId?._id || e.eventId).filter(Boolean);
+          const titles = unpaidEvents.map(e => e.eventId?.title).filter(Boolean);
+
+          setEventTitles(titles);
+          setEventIds(prev => (prev.length > 0 ? prev : unpaidIds));
+          setAmount(prev => {
+            if (prev) return prev;
+            const total = unpaidEvents.reduce((sum, e) => sum + (e.eventId?.registrationFee || 0), 0);
+            return total > 0 ? total.toString() : "";
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch registrations for payment context:", err);
+      }
+    };
+
+    fetchRegistrations();
+  }, []);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -62,10 +118,19 @@ export default function PaymentSubmission() {
     try {
       const formData = new FormData();
       formData.append("image", file);
-      if (amount) formData.append("amount", amount);
-      if (utr) formData.append("utr", utr);
+      formData.append("amount", amount.toString());
+      formData.append("utr", utr.trim());
 
-      const token = localStorage.getItem("token") || "your_jwt_token_here";
+      if (eventIds && eventIds.length > 0) {
+        formData.append("eventIds", JSON.stringify(eventIds));
+      }
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("You must be logged in to submit payment.");
+        setLoading(false);
+        return;
+      }
 
       const response = await fetch(`${API_BASE_URL}/api/registrations/payment`, {
         method: "POST",
@@ -75,19 +140,22 @@ export default function PaymentSubmission() {
         body: formData,
       });
 
-      if (response.status === 201) {
-        setSuccess("Payment submitted successfully! Redirecting back to dashboard...");
-        setFile(null);
-        setPreviewUrl(null);
-        setAmount("");
-        setUtr("");
-        
-        setTimeout(() => {
-          window.location.href = '/user/account';
-        }, 2000);
+      const responseData = await response.json().catch(() => null);
+
+      if (response.status === 201 || response.ok) {
+        const submittedImg = responseData?.payment?.imageUrl || previewUrl;
+        setSubmittedPayment({
+          imageUrl: submittedImg,
+          utr: responseData?.payment?.utr || utr,
+          amount: responseData?.payment?.amount || amount,
+          status: responseData?.payment?.status || 'pending',
+          message: responseData?.message || "Payment submitted successfully and linked to event registrations!"
+        });
+        setSuccess(responseData?.message || "Payment submitted successfully and linked to event registrations!");
+        sessionStorage.removeItem('pendingPaymentAmount');
+        sessionStorage.removeItem('pendingEventIds');
       } else {
-        const errorData = await response.json().catch(() => null);
-        setError(errorData?.message || `Error: ${response.status} ${response.statusText}`);
+        setError(responseData?.message || `Error: ${response.status} ${response.statusText}`);
       }
     } catch (err) {
       console.error("Payment submission failed:", err);
@@ -97,16 +165,85 @@ export default function PaymentSubmission() {
     }
   };
 
+  if (submittedPayment) {
+    return (
+      <div className="w-full h-full p-8 bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl shadow-[0_8px_32px_rgba(0,100,150,0.15)] relative flex flex-col items-center text-center">
+        <div className="w-16 h-16 rounded-full bg-teal-100 border border-teal-300 text-teal-700 flex items-center justify-center mb-4">
+          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+        <h2 className="text-2xl font-extrabold text-cyan-950 uppercase tracking-wide mb-2">
+          Payment Submitted Successfully!
+        </h2>
+        <p className="text-sm text-cyan-800 font-medium mb-6">
+          Your payment screenshot and UTR have been uploaded and linked to your event registrations.
+        </p>
+
+        {/* Uploaded Image Preview */}
+        {submittedPayment.imageUrl && (
+          <div className="mb-6 max-w-sm w-full bg-white/70 p-3 rounded-2xl border border-cyan-200 shadow-md">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={submittedPayment.imageUrl}
+              alt="Uploaded Payment Screenshot"
+              className="w-full max-h-64 object-contain rounded-xl border border-white"
+            />
+            <div className="mt-3 flex justify-between items-center text-xs font-bold text-cyan-950 px-1">
+              <span>UTR: <code className="bg-cyan-100 px-1.5 py-0.5 rounded font-mono">{submittedPayment.utr}</code></span>
+              <span>Amount: ₹{submittedPayment.amount}</span>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+          <button
+            onClick={() => router.push('/user/account')}
+            className="flex-1 py-3 px-4 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md"
+          >
+            Go to My Dashboard ↗
+          </button>
+          <button
+            onClick={() => router.push('/events/register')}
+            className="flex-1 py-3 px-4 bg-white/70 hover:bg-white text-cyan-900 font-bold text-xs uppercase tracking-wider rounded-xl border border-cyan-300 transition-all"
+          >
+            Register More Events
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full p-8 bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl shadow-[0_8px_32px_rgba(0,100,150,0.15)] relative flex flex-col">
-      <h2 className="text-2xl md:text-3xl font-extrabold text-cyan-950 mb-8 tracking-wide text-center uppercase">
+      <h2 className="text-2xl md:text-3xl font-extrabold text-cyan-950 mb-6 tracking-wide text-center uppercase">
         Payment Submission
       </h2>
+
+      {eventTitles.length > 0 && (
+        <div className="mb-6 p-3.5 bg-cyan-50/70 border border-cyan-200/80 rounded-xl text-xs text-cyan-900 font-medium">
+          <span className="font-bold block mb-1">Paying for Events ({eventTitles.length}):</span>
+          <ul className="list-disc list-inside space-y-0.5 text-cyan-800">
+            {eventTitles.map((title, idx) => (
+              <li key={idx}>{title}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       
       {error && (
-        <div className="mb-6 p-4 text-sm text-red-700 bg-red-100/70 backdrop-blur-sm border border-red-300 rounded-xl flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-          {error}
+        <div className="mb-6 p-4 text-sm text-red-700 bg-red-100/70 backdrop-blur-sm border border-red-300 rounded-xl flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0"></div>
+            <span>{error}</span>
+          </div>
+          {error.toLowerCase().includes("team") && (
+            <button
+              type="button"
+              onClick={() => router.push('/user/account')}
+              className="mt-1 self-start text-xs font-bold text-red-800 underline hover:text-red-950 transition-colors"
+            >
+              Click here to set your team on your account dashboard &rarr;
+            </button>
+          )}
         </div>
       )}
       
@@ -132,6 +269,7 @@ export default function PaymentSubmission() {
             >
               {previewUrl ? (
                 <div className="relative w-full h-full p-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={previewUrl}
                     alt="Payment Preview"
@@ -234,3 +372,4 @@ export default function PaymentSubmission() {
     </div>
   );
 }
+

@@ -31,6 +31,7 @@ const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, 
         {/* Profile Avatar Frame - Floating Orb effect */}
         <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full p-1 bg-white/5 border border-white/20 shadow-[0_8px_20px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 group-hover:shadow-[0_0_30px_rgba(0,219,233,0.4)] group-hover:border-cyan-300/60 shrink-0">
           {!imageErrorMap[dev.id] ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={dev.image}
               alt={dev.name}

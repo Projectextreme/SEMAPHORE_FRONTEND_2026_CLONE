@@ -13,8 +13,18 @@ export default function EventsPage() {
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [registeredEventIds, setRegisteredEventIds] = useState([]);
+  const [registeredEventMap, setRegisteredEventMap] = useState({});
   const [globalPaymentStatus, setGlobalPaymentStatus] = useState(null);
   const [globalPendingAmount, setGlobalPendingAmount] = useState(0);
+
+  // User profile and team status
+  const [userProfile, setUserProfile] = useState(null);
+  const [hasTeam, setHasTeam] = useState(false);
+  const [teamName, setTeamName] = useState("");
+  const [newTeamInput, setNewTeamInput] = useState("");
+  const [settingTeam, setSettingTeam] = useState(false);
+  const [teamError, setTeamError] = useState(null);
+  const [teamSuccess, setTeamSuccess] = useState(null);
 
   // Track which event has its registration form open
   const [expandedEventId, setExpandedEventId] = useState(null);
@@ -27,6 +37,43 @@ export default function EventsPage() {
   const [globalError, setGlobalError] = useState(null);
   const [globalSuccess, setGlobalSuccess] = useState(null);
 
+  const handleSetTeam = async (e) => {
+    if (e) e.preventDefault();
+    if (!newTeamInput.trim()) {
+      setTeamError("Please enter a valid team name.");
+      return;
+    }
+    setSettingTeam(true);
+    setTeamError(null);
+    setTeamSuccess(null);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/api/teams/set-team`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ teamName: newTeamInput.trim() })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setHasTeam(true);
+        const name = data?.team?.name || newTeamInput.trim();
+        setTeamName(name);
+        setTeamSuccess(`Team '${name}' created and set successfully! You can now register for events.`);
+        setNewTeamInput("");
+        setGlobalError(null);
+      } else {
+        setTeamError(data.message || 'Failed to set team');
+      }
+    } catch (err) {
+      setTeamError(err.message || 'An error occurred while setting team');
+    } finally {
+      setSettingTeam(false);
+    }
+  };
+
   useEffect(() => {
     // Auth check
     const token = localStorage.getItem('token');
@@ -38,13 +85,31 @@ export default function EventsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsAuthorized(true);
 
-    async function fetchEvents() {
+    async function fetchEventsAndUserData() {
       try {
+        // Fetch User Info & Team Status
+        try {
+          const userRes = await fetch(`${API_BASE_URL}/api/auth/verifyuser`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (userRes.ok) {
+            const userData = await userRes.json();
+            const u = userData.user || userData;
+            setUserProfile(u);
+            const userHasTeam = Boolean(userData.hasTeam || u?.teamid || u?.teamName || u?.team);
+            setHasTeam(userHasTeam);
+            const tName = userData.teamName || u?.teamName || u?.team?.name || (typeof u?.teamid === 'object' ? u?.teamid?.name : "");
+            setTeamName(tName);
+          }
+        } catch (err) {
+          console.error("Failed to verify user status", err);
+        }
+
         const res = await fetch(`${API_BASE_URL}/api/events`);
         const data = await res.json();
 
         if (res.ok) {
-          setEvents(data.data || data.events || []);
+          setEvents(data.events || data.data || []);
         } else {
           setEvents([]);
           console.error("Failed to load events", data);
@@ -70,20 +135,43 @@ export default function EventsPage() {
           });
           if (regRes.ok) {
             const regData = await regRes.json();
-            if (regData.registration && regData.registration.events) {
-              const ids = regData.registration.events.map(e => e.eventId._id || e.eventId);
-              setRegisteredEventIds(ids);
-              setGlobalPaymentStatus(regData.registration.paymentStatus);
-              
-              if (regData.registration.paymentStatus === 'pending') {
-                // Try to sum registrationFee from populated events if available
-                const total = regData.registration.events.reduce((sum, e) => {
-                  if (e.paymentId) return sum; // Skip if already paid
-                  return sum + (e.eventId.registrationFee || 0);
-                }, 0);
-                setGlobalPendingAmount(total);
+            const regList = regData.registrations || (regData.registration?.events) || regData.data || [];
+            
+            const ids = [];
+            const map = {};
+            let pendingSum = 0;
+
+            regList.forEach(reg => {
+              const evObj = reg.eventId;
+              const evId = typeof evObj === 'object' ? evObj?._id : evObj;
+              if (evId) {
+                ids.push(evId);
+                const payments = Array.isArray(reg.paymentId)
+                  ? reg.paymentId
+                  : (reg.paymentId ? [reg.paymentId] : []);
+                
+                let pStatus = 'unpaid';
+                if (payments.length > 0) {
+                  const hasApproved = payments.some(p => p.status === 'approved' || p.status === 'verified');
+                  const hasPending = payments.some(p => p.status === 'pending' || p.status === 'submitted');
+                  pStatus = hasApproved ? 'approved' : (hasPending ? 'pending' : 'unpaid');
+                }
+
+                if (pStatus === 'unpaid') {
+                  const fee = typeof evObj === 'object' ? (evObj.registrationFee || 0) : 0;
+                  pendingSum += fee;
+                }
+
+                map[evId] = {
+                  status: pStatus,
+                  registration: reg
+                };
               }
-            }
+            });
+
+            setRegisteredEventIds(ids);
+            setRegisteredEventMap(map);
+            setGlobalPendingAmount(pendingSum);
           }
         } catch (err) {
           console.error("Failed to fetch registrations", err);
@@ -94,7 +182,7 @@ export default function EventsPage() {
         setLoadingEvents(false);
       }
     }
-    fetchEvents();
+    fetchEventsAndUserData();
   }, [router]);
 
   if (!isAuthorized) {
@@ -115,8 +203,10 @@ export default function EventsPage() {
 
       // Initialize participants if not already present in formsData
       if (!formsData[event._id]) {
-        const initialParticipants = Array.from({ length: event.minParticipants || 1 }).map(() => ({
-          name: '', email: '', phone: ''
+        const minLen = event.minParticipants || 1;
+        const initialParticipants = Array.from({ length: minLen }).map((_, idx) => ({
+          name: idx === 0 ? (userProfile?.name || '') : '',
+          phone: idx === 0 ? (userProfile?.phone || '') : ''
         }));
         setFormsData(prev => ({
           ...prev,
@@ -131,7 +221,7 @@ export default function EventsPage() {
     if (currentList.length < event.maxParticipants) {
       setFormsData({
         ...formsData,
-        [event._id]: [...currentList, { name: '', email: '', phone: '' }]
+        [event._id]: [...currentList, { name: '', phone: '' }]
       });
     }
   };
@@ -172,10 +262,12 @@ export default function EventsPage() {
     const event = events.find(e => e._id === eventId);
     if (!event) return false;
 
-    if (participants.length < event.minParticipants || participants.length > event.maxParticipants) return false;
+    const min = event.minParticipants || 1;
+    const max = event.maxParticipants || 100;
+    if (participants.length < min || participants.length > max) return false;
 
     for (let p of participants) {
-      if (!p.name.trim() || !p.email.trim() || !p.phone.trim()) {
+      if (!p.name || !p.name.trim() || !p.phone || !p.phone.trim()) {
         return false;
       }
     }
@@ -208,10 +300,17 @@ export default function EventsPage() {
     setGlobalError(null);
     setGlobalSuccess(null);
 
+    if (!hasTeam) {
+      setGlobalError("Team ID is required before event registration. Please set your team name above first.");
+      setSubmitting(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     const validForms = getValidForms();
 
     if (validForms.length === 0) {
-      setGlobalError("You haven't correctly filled out any event registrations. Please complete at least one form.");
+      setGlobalError("You haven't correctly filled out all participant details (Name & Phone) for any event.");
       setSubmitting(false);
       return;
     }
@@ -220,39 +319,67 @@ export default function EventsPage() {
       const token = localStorage.getItem('token');
       if (!token) throw new Error("You must be logged in to register.");
 
-      // Submit each valid form sequentially
-      // This is safer than bundling if the backend applies the SAME participants array to multiple eventIds
-      for (const { event, participants } of validForms) {
-        const formattedParticipants = participants.map(p => ({
-          name: p.name.trim(),
-          email: p.email.trim(),
-          phone: p.phone.trim(),
-        }));
+      // Format payload to satisfy backend eventId, eventIds, and events parsing
+      const allEventIds = validForms.map(f => f.event._id || f.event.id);
+      const firstForm = validForms[0];
+      const singleEventId = validForms.length === 1 ? (firstForm.event._id || firstForm.event.id) : undefined;
+      const singleParticipants = validForms.length === 1 
+        ? firstForm.participants.map(p => ({ name: p.name.trim(), phone: p.phone.trim() })) 
+        : undefined;
 
-        const payload = {
-          eventId: event._id,
-          participants: formattedParticipants,
-        };
+      const payload = {
+        eventId: singleEventId,
+        eventIds: allEventIds,
+        participants: singleParticipants,
+        events: validForms.map(({ event, participants }) => ({
+          eventId: event._id || event.id,
+          _id: event._id || event.id,
+          participants: participants.map(p => ({
+            name: p.name.trim(),
+            phone: p.phone.trim(),
+          }))
+        }))
+      };
 
-        const response = await fetch(`${API_BASE_URL}/api/registrations/register`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(payload),
-        });
+      const response = await fetch(`${API_BASE_URL}/api/registrations/events`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload),
+      });
 
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(`Failed to register for ${event.title}: ${data.message || 'Unknown error'}`);
+      const data = await response.json();
+      if (!response.ok) {
+        if (data.message && data.message.includes("Team ID")) {
+          setHasTeam(false);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+        throw new Error(data.message || 'Registration failed');
       }
 
-      setGlobalSuccess(`Successfully registered for ${validForms.length} event(s)! Redirecting to payment...`);
+      // Extract newly registered event IDs
+      const newlyRegisteredIds = validForms.map(f => f.event._id);
+      const newlyRegisteredFee = validForms.reduce((sum, f) => sum + (f.event.registrationFee || 0), 0);
+
+      setRegisteredEventIds(prev => Array.from(new Set([...prev, ...newlyRegisteredIds])));
+      
+      // Update registered map for newly registered items
+      setRegisteredEventMap(prev => {
+        const nextMap = { ...prev };
+        newlyRegisteredIds.forEach(id => {
+          nextMap[id] = { status: 'unpaid' };
+        });
+        return nextMap;
+      });
+
+      setGlobalSuccess(data.message || `Successfully registered for ${validForms.length} event(s)! Redirecting to payment...`);
       localStorage.removeItem('event_cart_draft'); // Clear global draft
+
       setTimeout(() => {
-        sessionStorage.setItem('pendingPaymentAmount', calculateTotal());
+        sessionStorage.setItem('pendingPaymentAmount', newlyRegisteredFee);
+        sessionStorage.setItem('pendingEventIds', JSON.stringify(newlyRegisteredIds));
         router.push('/user/account/payment');
       }, 1500);
 
@@ -293,6 +420,57 @@ export default function EventsPage() {
           <p style={styles.pageSubtitle}>Discover and register for the latest events.</p>
         </div>
 
+        {/* Team Banner / Team Setup Card */}
+        <div className="mb-8 p-6 bg-white/45 backdrop-blur-xl border border-white/70 rounded-3xl shadow-sm">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-cyan-100/90 border border-cyan-300 flex items-center justify-center text-cyan-800 shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-cyan-950">
+                  {hasTeam ? `Active Team: ${teamName || "Set"}` : "Team Registration Required"}
+                </h3>
+                <p className="text-xs text-cyan-800/90 font-medium">
+                  {hasTeam 
+                    ? "Your team is set. All event registrations will be grouped under this team." 
+                    : "You must create or enter a Team Name before registering for events."}
+                </p>
+              </div>
+            </div>
+            {hasTeam && (
+              <span className="px-3.5 py-1 bg-teal-100/90 text-teal-800 border border-teal-300 font-bold text-xs rounded-full shrink-0">
+                ✓ Team Ready
+              </span>
+            )}
+          </div>
+
+          {!hasTeam && (
+            <form onSubmit={handleSetTeam} className="flex flex-col sm:flex-row gap-3 mt-4 pt-4 border-t border-cyan-200/60">
+              <input
+                type="text"
+                value={newTeamInput}
+                onChange={(e) => setNewTeamInput(e.target.value)}
+                placeholder="Enter Team Name (e.g. CyberKnights)"
+                className="flex-1 px-4 py-2.5 bg-white/70 hover:bg-white focus:bg-white border border-cyan-300 rounded-xl text-sm font-medium text-cyan-950 focus:outline-none placeholder-cyan-800/40"
+                required
+              />
+              <button
+                type="submit"
+                disabled={settingTeam || !newTeamInput.trim()}
+                className="px-6 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm transition-all border border-teal-500/40 disabled:opacity-50"
+              >
+                {settingTeam ? "Setting Team..." : "Set Team & Continue"}
+              </button>
+            </form>
+          )}
+
+          {teamError && <div className="mt-3 p-2.5 text-xs text-red-700 bg-red-100/70 border border-red-300 rounded-xl font-medium">⚠ {teamError}</div>}
+          {teamSuccess && <div className="mt-3 p-2.5 text-xs text-teal-800 bg-teal-100/70 border border-teal-300 rounded-xl font-medium">✓ {teamSuccess}</div>}
+        </div>
+
         {loadingEvents ? (
           <p style={{ color: '#ffffffff', textAlign: 'center', marginTop: 40 }}>Loading events...</p>
         ) : (
@@ -302,9 +480,11 @@ export default function EventsPage() {
               const participants = formsData[event._id] || [];
               const isValid = isFormValid(event._id);
               const isRegistered = registeredEventIds.includes(event._id);
+              const eventRegInfo = registeredEventMap[event._id];
+              const pStatus = eventRegInfo?.status || 'unpaid';
 
               return (
-                <div key={event._id} style={{ ...styles.card, borderColor: isValid ? '#10b981' : '#1e293b' }}>
+                <div key={event._id} style={{ ...styles.card, borderColor: isRegistered ? '#10b981' : isValid ? '#0ea5e9' : '#1e293b' }}>
                   <div style={styles.cardHeader}>
                     <h2 style={styles.cardTitle}>{event.title}</h2>
                     <span style={styles.feeBadge}>
@@ -323,28 +503,34 @@ export default function EventsPage() {
                     {isValid && !isRegistered && <span style={{ ...styles.detailTag, backgroundColor: 'rgba(175, 247, 223, 0.89)', color: '#067651ff' }}>✓ Ready to Checkout</span>}
                   </div>
 
-                  {isRegistered && globalPaymentStatus !== 'pending' ? (
-                    <button
-                      disabled
-                      style={{ ...styles.actionBtn, backgroundColor: '#024c33ff', opacity: 0.8, cursor: 'not-allowed' }}
-                    >
-                      Already Registered
-                    </button>
-                  ) : isRegistered && globalPaymentStatus === 'pending' ? (
-                    <button
-                      onClick={() => {
-                        // Use calculated pending amount, or fallback to the event list's fee if we couldn't calculate it properly
-                        let amountToPay = globalPendingAmount;
-                        if (amountToPay === 0) {
-                          amountToPay = events.filter(e => registeredEventIds.includes(e._id)).reduce((sum, e) => sum + (e.registrationFee || 0), 0);
-                        }
-                        sessionStorage.setItem('pendingPaymentAmount', amountToPay);
-                        router.push('/user/account/payment');
-                      }}
-                      style={{ ...styles.actionBtn, backgroundColor: '#b45309', opacity: 1, cursor: 'pointer' }}
-                    >
-                      Complete Payment
-                    </button>
+                  {isRegistered ? (
+                    pStatus === 'approved' ? (
+                      <button
+                        disabled
+                        style={{ ...styles.actionBtn, backgroundColor: '#024c33ff', opacity: 0.9, cursor: 'not-allowed' }}
+                      >
+                        ✓ Registered & Verified
+                      </button>
+                    ) : pStatus === 'pending' ? (
+                      <button
+                        disabled
+                        style={{ ...styles.actionBtn, backgroundColor: '#b45309', opacity: 0.9, cursor: 'not-allowed' }}
+                      >
+                        ⏳ Payment Verification Pending
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          const amountToPay = event.registrationFee || 0;
+                          sessionStorage.setItem('pendingPaymentAmount', amountToPay);
+                          sessionStorage.setItem('pendingEventIds', JSON.stringify([event._id]));
+                          router.push('/user/account/payment');
+                        }}
+                        style={{ ...styles.actionBtn, backgroundColor: '#d97706', opacity: 1, cursor: 'pointer' }}
+                      >
+                        Complete Payment (₹{event.registrationFee || 0})
+                      </button>
+                    )
                   ) : !isExpanded ? (
                     <button
                       onClick={() => toggleEventForm(event)}
@@ -375,24 +561,17 @@ export default function EventsPage() {
                               )}
                             </div>
 
-                            <input
-                              style={styles.input}
-                              placeholder="Full Name"
-                              value={p.name}
-                              onChange={(e) => handleChange(index, 'name', e.target.value, event._id)}
-                            />
                             <div style={styles.row}>
                               <input
                                 style={styles.inputHalf}
-                                type="email"
-                                placeholder="Email"
-                                value={p.email}
-                                onChange={(e) => handleChange(index, 'email', e.target.value, event._id)}
+                                placeholder="Full Name"
+                                value={p.name}
+                                onChange={(e) => handleChange(index, 'name', e.target.value, event._id)}
                               />
                               <input
                                 style={styles.inputHalf}
                                 type="tel"
-                                placeholder="Phone"
+                                placeholder="Phone Number"
                                 value={p.phone}
                                 onChange={(e) => handleChange(index, 'phone', e.target.value, event._id)}
                               />

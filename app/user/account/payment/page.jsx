@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import PaymentSubmission from '@/components/payment/PaymentSubmission';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
@@ -69,9 +70,12 @@ export default function PaymentPage() {
           <h2 className="text-2xl font-extrabold text-cyan-950 mb-6 tracking-wide uppercase text-center">Scan to Pay</h2>
           
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-cyan-100 mb-6">
-            <img 
+            <Image 
               src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=semaphore@upi&pn=Semaphore&cu=INR" 
               alt="Payment QR Code" 
+              width={224}
+              height={224}
+              unoptimized
               className="w-56 h-56 object-contain"
             />
           </div>

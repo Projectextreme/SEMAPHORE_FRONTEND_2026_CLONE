@@ -24,9 +24,11 @@ export default function NotFound() {
       </div>
       <div className="absolute inset-0  flex items-center justify-center z-20  pointer-events-none">
         <div className="animate-swim">
-          <img
+          <Image
             src="/notfound1.png"
             alt="Sea turtle swimming"
+            width={600}
+            height={400}
             className="w-[30vw] md:w-[20vw] max-w-3xl object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)] transform -rotate-6 translate-x-4 -translate-y-4"
           />
         </div>
