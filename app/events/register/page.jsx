@@ -136,7 +136,7 @@ export default function EventsPage() {
           if (regRes.ok) {
             const regData = await regRes.json();
             const regList = regData.registrations || (regData.registration?.events) || regData.data || [];
-            
+
             const ids = [];
             const map = {};
             let pendingSum = 0;
@@ -149,7 +149,7 @@ export default function EventsPage() {
                 const payments = Array.isArray(reg.paymentId)
                   ? reg.paymentId
                   : (reg.paymentId ? [reg.paymentId] : []);
-                
+
                 let pStatus = 'unpaid';
                 if (payments.length > 0) {
                   const hasApproved = payments.some(p => p.status === 'approved' || p.status === 'verified');
@@ -323,8 +323,8 @@ export default function EventsPage() {
       const allEventIds = validForms.map(f => f.event._id || f.event.id);
       const firstForm = validForms[0];
       const singleEventId = validForms.length === 1 ? (firstForm.event._id || firstForm.event.id) : undefined;
-      const singleParticipants = validForms.length === 1 
-        ? firstForm.participants.map(p => ({ name: p.name.trim(), phone: p.phone.trim() })) 
+      const singleParticipants = validForms.length === 1
+        ? firstForm.participants.map(p => ({ name: p.name.trim(), phone: p.phone.trim() }))
         : undefined;
 
       const payload = {
@@ -364,7 +364,7 @@ export default function EventsPage() {
       const newlyRegisteredFee = validForms.reduce((sum, f) => sum + (f.event.registrationFee || 0), 0);
 
       setRegisteredEventIds(prev => Array.from(new Set([...prev, ...newlyRegisteredIds])));
-      
+
       // Update registered map for newly registered items
       setRegisteredEventMap(prev => {
         const nextMap = { ...prev };
@@ -421,7 +421,7 @@ export default function EventsPage() {
         </div>
 
         {/* Team Banner / Team Setup Card */}
-        <div className="mb-8 p-6 bg-white/45 backdrop-blur-xl border border-white/70 rounded-3xl shadow-sm">
+        <div className="mb-8 p-6 bg-white/90 backdrop-blur-xl border border-white/70 rounded-3xl shadow-sm">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-cyan-100/90 border border-cyan-300 flex items-center justify-center text-cyan-800 shrink-0">
@@ -434,8 +434,8 @@ export default function EventsPage() {
                   {hasTeam ? `Active Team: ${teamName || "Set"}` : "Team Registration Required"}
                 </h3>
                 <p className="text-xs text-cyan-800/90 font-medium">
-                  {hasTeam 
-                    ? "Your team is set. All event registrations will be grouped under this team." 
+                  {hasTeam
+                    ? "Your team is set. All event registrations will be grouped under this team."
                     : "You must create or enter a Team Name before registering for events."}
                 </p>
               </div>
@@ -448,19 +448,19 @@ export default function EventsPage() {
           </div>
 
           {!hasTeam && (
-            <form onSubmit={handleSetTeam} className="flex flex-col sm:flex-row gap-3 mt-4 pt-4 border-t border-cyan-200/60">
+            <form onSubmit={handleSetTeam} className="border-black-900 flex flex-col sm:flex-row gap-3 mt-4 pt-4 border-t border-cyan-200/60">
               <input
                 type="text"
                 value={newTeamInput}
                 onChange={(e) => setNewTeamInput(e.target.value)}
                 placeholder="Enter Team Name (e.g. CyberKnights)"
-                className="flex-1 px-4 py-2.5 bg-white/70 hover:bg-white focus:bg-white border border-cyan-300 rounded-xl text-sm font-medium text-cyan-950 focus:outline-none placeholder-cyan-800/40"
+                className="flex-1 px-4 py-2.5 bg-white/70 hover:bg-white focus:bg-white border border-blue-200 rounded-xl text-sm font-medium text-cyan-950 focus:outline-none placeholder-cyan-800/40"
                 required
               />
               <button
                 type="submit"
                 disabled={settingTeam || !newTeamInput.trim()}
-                className="px-6 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm transition-all border border-teal-500/40 disabled:opacity-50"
+                className="px-6 py-2.5 bg-blue-900 hover:bg-purple-800  text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm transition-all border border-teal-500/40 "
               >
                 {settingTeam ? "Setting Team..." : "Set Team & Continue"}
               </button>
@@ -656,7 +656,7 @@ const styles = {
     fontFamily: 'system-ui, -apple-system, sans-serif',
   },
   container: {
-    maxWidth: 1200,
+    maxWidth: 1000,
     margin: '0 auto',
   },
   header: {
@@ -677,15 +677,15 @@ const styles = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 500px), 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 400px), 1fr))',
     gap: 24,
     alignItems: 'start',
   },
   card: {
     backgroundColor: 'rgba(229, 252, 251, 0.88)',
     border: '1px solid rgba(255, 255, 255, 0.8)',
-    borderRadius: 16,
-    padding: '16px', // Reduced padding for mobile
+    borderRadius: "10px 30px ",
+    padding: '18px', // Reduced padding for mobile
     display: 'flex',
     flexDirection: 'column',
     transition: 'all 0.2s',
@@ -696,7 +696,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 6,
   },
   cardTitle: {
     fontSize: 20,
@@ -708,7 +708,7 @@ const styles = {
     backgroundColor: 'rgba(14, 218, 233, 0.5)',
     color: '#014062ff',
     padding: '4px 10px',
-    borderRadius: '20%',
+    borderRadius: "10px",
     fontSize: 13,
     fontWeight: 600,
     border: '1px solid rgba(3, 54, 78, 0.3)',
@@ -717,12 +717,12 @@ const styles = {
     fontSize: 14,
     color: '#475569',
     lineHeight: 1.5,
-    margin: '0 0 20px',
+    margin: '0 0 10px',
   },
   detailsRow: {
     display: 'flex',
-    gap: 12,
-    marginBottom: 24,
+    gap: 8,
+    marginBottom: 15,
   },
   detailTag: {
     fontSize: 12,
@@ -738,7 +738,7 @@ const styles = {
     backgroundColor: '#0ea5e9',
     color: 'white',
     border: 'none',
-    borderRadius: 10,
+    borderRadius: "8px 10px 10px 15px",
     fontSize: 15,
     fontWeight: 600,
     cursor: 'pointer',
@@ -838,7 +838,7 @@ const styles = {
     backgroundColor: 'transparent',
     color: '#475569',
     border: '1px solid #94a3b8',
-    borderRadius: 8,
+    borderRadius: "8px 10px 10px 20px",
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',

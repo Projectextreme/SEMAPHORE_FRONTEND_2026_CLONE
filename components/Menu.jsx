@@ -52,7 +52,7 @@ export default function Menu() {
             className="bg-[#0d1424]/80 hover:bg-[#0d1424]/90 aria-expanded:bg-[#0d1424]/90 aria-expanded:text-white text-white rounded-md px-5 py-5 flex items-center gap-2 font-medium text-lg transition-colors border-none"
           >
             Menu
-            <MenuIcon className="w-6 h-6 text-white" />
+            <MenuIcon className="w-8  h-8 text-white" />
           </Button>
         } />
       </div>
