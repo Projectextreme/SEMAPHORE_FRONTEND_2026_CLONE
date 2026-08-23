@@ -260,24 +260,43 @@ export default function MyRegistration({ user: initialUser }) {
                     const dateStr = item.createdAt || item.addedAt 
                       ? new Date(item.createdAt || item.addedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                       : null;
+                    const participants = item.participants || [];
 
                     return (
-                      <div key={item._id || eIdx} className="bg-white/60 rounded-2xl p-4 border border-white/80 flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-cyan-100/90 text-cyan-700 font-extrabold flex items-center justify-center text-lg shrink-0 border border-white">
-                            {ev.title ? ev.title.charAt(0).toUpperCase() : '?'}
+                      <div key={item._id || eIdx} className="bg-white/60 rounded-2xl p-4 border border-white/80 flex flex-col gap-3">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-cyan-100/90 text-cyan-700 font-extrabold flex items-center justify-center text-lg shrink-0 border border-white">
+                              {ev.title ? ev.title.charAt(0).toUpperCase() : '?'}
+                            </div>
+                            <div>
+                              <h4 className="text-base font-extrabold text-cyan-950">{ev.title || 'Event Registration'}</h4>
+                              <p className="text-xs text-cyan-800/80 font-medium">
+                                {ev.registrationFee ? `Fee: ₹${ev.registrationFee}` : 'Registered Event'}
+                                {dateStr ? ` • ${dateStr}` : ''}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="text-base font-extrabold text-cyan-950">{ev.title || 'Event Registration'}</h4>
-                            <p className="text-xs text-cyan-800/80 font-medium">
-                              {ev.registrationFee ? `Fee: ₹${ev.registrationFee}` : 'Registered Event'}
-                              {dateStr ? ` • ${dateStr}` : ''}
-                            </p>
-                          </div>
+                          <span className="text-xs font-bold text-teal-800 bg-teal-50 px-2.5 py-1 rounded-lg border border-teal-200/60 shrink-0">
+                            Linked to Payment
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-teal-800 bg-teal-50 px-2.5 py-1 rounded-lg border border-teal-200/60 shrink-0">
-                          Linked to Payment
-                        </span>
+
+                        {/* Participants list */}
+                        {Array.isArray(participants) && participants.length > 0 && (
+                          <div className="pt-2 border-t border-cyan-200/50 flex flex-col gap-1.5">
+                            <span className="text-[11px] font-bold text-cyan-800 uppercase tracking-wider">
+                              Registered Participants ({participants.length}):
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                              {participants.map((p, pIdx) => (
+                                <span key={pIdx} className="text-xs bg-cyan-50/90 border border-cyan-200/80 text-cyan-950 px-2.5 py-1 rounded-lg font-medium">
+                                  👤 {p.name || `Participant ${pIdx + 1}`} {p.phone ? `• 📞 ${p.phone}` : ''}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -294,31 +313,50 @@ export default function MyRegistration({ user: initialUser }) {
                 year: 'numeric', month: 'long', day: 'numeric'
               })
               : null;
+            const participants = eventItem.participants || [];
 
             return (
-              <div key={ev._id || index} className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center gap-6">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-100 to-blue-50 flex items-center justify-center text-cyan-600 font-extrabold text-2xl border border-white shadow-inner shrink-0">
-                  {ev.title ? ev.title.charAt(0).toUpperCase() : '?'}
-                </div>
-                <div className="flex-1">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1.5 gap-2">
-                    <h3 className="text-lg font-extrabold text-cyan-950">{ev.title || 'Unknown Event'}</h3>
-                    <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-red-100 text-red-700 px-3 py-1 rounded-full border border-red-200 whitespace-nowrap self-start">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                      Payment Required
-                    </span>
+              <div key={ev._id || index} className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-100 to-blue-50 flex items-center justify-center text-cyan-600 font-extrabold text-2xl border border-white shadow-inner shrink-0">
+                    {ev.title ? ev.title.charAt(0).toUpperCase() : '?'}
                   </div>
-                  {dateStr && (
-                    <p className="text-sm text-cyan-800/90 flex items-center gap-2.5 mb-1.5 font-medium">
-                      <svg className="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                      Registered: {dateStr}
+                  <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1.5 gap-2">
+                      <h3 className="text-lg font-extrabold text-cyan-950">{ev.title || 'Unknown Event'}</h3>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-red-100 text-red-700 px-3 py-1 rounded-full border border-red-200 whitespace-nowrap self-start">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Payment Required
+                      </span>
+                    </div>
+                    {dateStr && (
+                      <p className="text-sm text-cyan-800/90 flex items-center gap-2.5 mb-1.5 font-medium">
+                        <svg className="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        Registered: {dateStr}
+                      </p>
+                    )}
+                    <p className="text-sm text-cyan-800/90 flex items-center gap-2.5 font-medium">
+                      <svg className="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                      {ev.location || 'TBA'} {ev.registrationFee ? `| Fee: ₹${ev.registrationFee}` : ''}
                     </p>
-                  )}
-                  <p className="text-sm text-cyan-800/90 flex items-center gap-2.5 font-medium">
-                    <svg className="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    {ev.location || 'TBA'} {ev.registrationFee ? `| Fee: ₹${ev.registrationFee}` : ''}
-                  </p>
+                  </div>
                 </div>
+
+                {/* Participants list for unpaid event */}
+                {Array.isArray(participants) && participants.length > 0 && (
+                  <div className="pt-3 border-t border-cyan-200/50 flex flex-col gap-1.5">
+                    <span className="text-[11px] font-bold text-cyan-800 uppercase tracking-wider">
+                      Registered Participants ({participants.length}):
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {participants.map((p, pIdx) => (
+                        <span key={pIdx} className="text-xs bg-white/70 border border-cyan-200 text-cyan-950 px-2.5 py-1 rounded-lg font-medium">
+                          👤 {p.name || `Participant ${pIdx + 1}`} {p.phone ? `• 📞 ${p.phone}` : ''}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
