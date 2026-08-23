@@ -2055,7 +2055,7 @@ export default function Scene() {
       depthWrite: false,
       fog: true
     });
-    
+
     const bubblePoints = new THREE.Points(bubbleGeo, bubbleMat);
     bubblePoints.frustumCulled = false;
     scene.add(bubblePoints);
@@ -2293,18 +2293,18 @@ export default function Scene() {
 
     // --- DISTANT SMALL FISH SCHOOLS ---
     const fishCount = isMobile ? 70 : 150;
-    
+
     const fishSwarms = [];
     const fishData = [];
     const dummyObj = new THREE.Object3D();
-    
+
     const textureLoader = new THREE.TextureLoader(manager);
     const fishTextures = [
       textureLoader.load('/fishes/fish_orange.png'),
       textureLoader.load('/fishes/fish_blue.png'),
       textureLoader.load('/fishes/fish_yellow.png')
     ];
-    
+
     const fishGeo = new THREE.PlaneGeometry(3.0, 3.0);
     fishGeo.rotateY(-Math.PI / 2);
 
@@ -2354,14 +2354,14 @@ export default function Scene() {
         side: THREE.DoubleSide,
         fog: true
       });
-      
+
       const swarmCount = Math.floor(fishCount / 3);
       const swarm = new THREE.InstancedMesh(fishGeo, fishMat, swarmCount);
-      
+
       for (let i = 0; i < swarmCount; i++) {
         const s = 1.0 + Math.random() * 0.8;
         dummyObj.scale.set(s, s, s);
-        
+
         const isLeft = Math.random() > 0.5;
         const baseX = isLeft ? -40 + (Math.random() - 0.5) * 40 : 40 + (Math.random() - 0.5) * 40;
 
@@ -2375,16 +2375,20 @@ export default function Scene() {
         dummyObj.updateMatrix();
         swarm.setMatrixAt(i, dummyObj.matrix);
 
-      fishData.push({
-        speed: 0.5 + Math.random() * 1.0,
-        phaseX: Math.random() * Math.PI * 2,
-        phaseY: Math.random() * Math.PI * 2,
-        phaseZ: Math.random() * Math.PI * 2,
-        baseY: dummyObj.position.y,
-        scale: s,
-      });
-    }
-    scene.add(fishSwarm);
+        fishData.push({
+          swarmIndex: tIndex,
+          localIndex: i,
+          speed: 0.5 + Math.random() * 1.0,
+          phaseX: Math.random() * Math.PI * 2,
+          phaseY: Math.random() * Math.PI * 2,
+          phaseZ: Math.random() * Math.PI * 2,
+          baseY: dummyObj.position.y,
+          scale: s,
+        });
+      }
+      fishSwarms.push(swarm);
+      scene.add(swarm);
+    });
 
     // --- RAYCASTER FOR PORTAL RING, PIN MARKER & 3D BANNER INTERACTIVITY ---
     const raycaster = new THREE.Raycaster();
