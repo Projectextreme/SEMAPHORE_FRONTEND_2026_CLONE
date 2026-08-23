@@ -25,8 +25,6 @@ import {
   waveSeabedFragment,
   floatingParticleVertex,
   floatingParticleFragment,
-  diveBurstVertex,
-  diveBurstFragment,
 } from "../src/Shaders/index";
 
 const dolphinVertexShader = `
@@ -740,7 +738,7 @@ export default function Scene() {
       sunColor: 0xffffff,
       waterColor: 0x001e0f,
       distortionScale: 3.7,
-      fog: false,
+      fog: true,
     });
     water.rotation.x = -Math.PI / 2;
     water.position.y = -2;
@@ -947,7 +945,7 @@ export default function Scene() {
     scene.add(sideCliffGroup);
 
     // --- LAYER 3 & 4: DISTANT UNDERWATER MOUNTAIN PEAKS & CAVERN WALLS ---
-    const caveGeometry = new THREE.CylinderGeometry(260, 360, 900, 32, 32, true);
+    const caveGeometry = new THREE.CylinderGeometry(260, 360, 650, 32, 32, true);
     const cavePos = caveGeometry.attributes.position;
     const caveVec = new THREE.Vector3();
     for (let i = 0; i < cavePos.count; i++) {
@@ -967,9 +965,10 @@ export default function Scene() {
       metalness: 0.15,
       side: THREE.BackSide,
       flatShading: true,
+      transparent: true,
     });
     const caveMesh = new THREE.Mesh(caveGeometry, caveMaterial);
-    caveMesh.position.set(0, -220, -380);
+    caveMesh.position.set(0, -335, -380);
     caveMesh.visible = false;
     scene.add(caveMesh);
 
@@ -985,16 +984,16 @@ export default function Scene() {
     });
 
     const mountainPositions = [
-      { x: -175, y: -100, z: -260, r: 65, h: 180 },
-      { x: 175, y: -110, z: -290, r: 70, h: 200 },
-      { x: -185, y: -150, z: -380, r: 75, h: 220 },
-      { x: 185, y: -160, z: -410, r: 75, h: 240 },
-      { x: -185, y: -220, z: -520, r: 80, h: 260 },
-      { x: 185, y: -230, z: -540, r: 80, h: 280 },
-      { x: -190, y: -330, z: -720, r: 80, h: 300 },
-      { x: 190, y: -340, z: -760, r: 80, h: 320 },
-      { x: -195, y: -410, z: -880, r: 85, h: 340 },
-      { x: 195, y: -420, z: -960, r: 85, h: 360 },
+      { x: -175, y: -140, z: -260, r: 55, h: 130 },
+      { x: 175, y: -150, z: -290, r: 60, h: 140 },
+      { x: -185, y: -180, z: -380, r: 65, h: 170 },
+      { x: 185, y: -190, z: -410, r: 65, h: 180 },
+      { x: -185, y: -240, z: -520, r: 70, h: 220 },
+      { x: 185, y: -250, z: -540, r: 70, h: 230 },
+      { x: -190, y: -340, z: -720, r: 75, h: 300 },
+      { x: 190, y: -350, z: -760, r: 75, h: 310 },
+      { x: -195, y: -420, z: -880, r: 80, h: 360 },
+      { x: 195, y: -430, z: -960, r: 80, h: 370 },
     ];
 
     for (const m of mountainPositions) {
@@ -1332,34 +1331,6 @@ export default function Scene() {
     const portalBlurMesh = new THREE.Mesh(portalBlurGeo, portalBlurMat);
     portalBlurMesh.position.set(0, 0, -0.3);
     portalGroup.add(portalBlurMesh);
-
-    // Swirling Energy Particles Orbiting Main Portal Ring
-    const portalParticleCount = 350;
-    const portalParticleGeo = new THREE.BufferGeometry();
-    const portalParticlePositions = new Float32Array(portalParticleCount * 3);
-    const portalParticleAngles = new Float32Array(portalParticleCount);
-    const portalParticleSpeeds = new Float32Array(portalParticleCount);
-
-    for (let i = 0; i < portalParticleCount; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 12.0 + Math.random() * 4.0;
-      portalParticlePositions[i * 3] = Math.cos(angle) * radius;
-      portalParticlePositions[i * 3 + 1] = Math.sin(angle) * radius;
-      portalParticlePositions[i * 3 + 2] = (Math.random() - 0.5) * 4;
-      portalParticleAngles[i] = angle;
-      portalParticleSpeeds[i] = 1.0 + Math.random() * 2.0;
-    }
-    portalParticleGeo.setAttribute("position", new THREE.BufferAttribute(portalParticlePositions, 3));
-
-    const portalParticleMat = new THREE.PointsMaterial({
-      color: 0x00f0ff,
-      size: 1.4,
-      transparent: true,
-      opacity: 0.85,
-      blending: THREE.AdditiveBlending,
-    });
-    const portalParticleMesh = new THREE.Points(portalParticleGeo, portalParticleMat);
-    portalGroup.add(portalParticleMesh);
 
     scene.add(portalGroup);
 
@@ -2299,49 +2270,6 @@ export default function Scene() {
     const floatingParticlesMesh = new THREE.Points(floatingParticlesGeo, floatingParticlesMat);
     scene.add(floatingParticlesMesh);
 
-    // --- DIVE BUBBLE BURST (triggered by surface -> underwater scroll transition) ---
-    const diveBurstCount = isMobile ? 120 : 350;
-    const diveBurstGeo = new THREE.BufferGeometry();
-    const diveBurstPositions = new Float32Array(diveBurstCount * 3);
-    const diveBurstAngles = new Float32Array(diveBurstCount);
-    const diveBurstElevations = new Float32Array(diveBurstCount);
-    const diveBurstRadii = new Float32Array(diveBurstCount);
-    const diveBurstSizes = new Float32Array(diveBurstCount);
-    const diveBurstRandoms = new Float32Array(diveBurstCount);
-
-    for (let i = 0; i < diveBurstCount; i++) {
-      diveBurstAngles[i] = Math.random() * Math.PI * 2;
-      diveBurstElevations[i] = (Math.random() - 0.3) * 8.0;
-      diveBurstRadii[i] = 3.0 + Math.random() * 14.0;
-      diveBurstSizes[i] = 6.0 + Math.random() * 14.0;
-      diveBurstRandoms[i] = Math.random();
-    }
-
-    diveBurstGeo.setAttribute("position", new THREE.BufferAttribute(diveBurstPositions, 3));
-    diveBurstGeo.setAttribute("aAngle", new THREE.BufferAttribute(diveBurstAngles, 1));
-    diveBurstGeo.setAttribute("aElevation", new THREE.BufferAttribute(diveBurstElevations, 1));
-    diveBurstGeo.setAttribute("aRadius", new THREE.BufferAttribute(diveBurstRadii, 1));
-    diveBurstGeo.setAttribute("aSize", new THREE.BufferAttribute(diveBurstSizes, 1));
-    diveBurstGeo.setAttribute("aRandom", new THREE.BufferAttribute(diveBurstRandoms, 1));
-
-    const diveBurstMat = new THREE.ShaderMaterial({
-      vertexShader: diveBurstVertex,
-      fragmentShader: diveBurstFragment,
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      uniforms: {
-        uTime: { value: 0 },
-        uProgress: { value: 0 },
-        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
-        uOrigin: { value: new THREE.Vector3(0, 0, -10) },
-        uColor: { value: new THREE.Color(0x00f0ff) },
-      },
-    });
-
-    const diveBurstMesh = new THREE.Points(diveBurstGeo, diveBurstMat);
-    scene.add(diveBurstMesh);
-
     // --- DISTANT SMALL FISH SCHOOLS ---
     const fishCount = isMobile ? 35 : 75;
     const fishGeo = new THREE.ConeGeometry(0.3, 1.4, 5);
@@ -2485,27 +2413,46 @@ export default function Scene() {
         scrub: isMobile ? 2.2 : 1.4,
         snap: {
           snapTo: (progress, self) => {
-            // Surface-to-Cave-entrance auto scroll (0 to 5%): no stopping or pausing midway
+            // Surface (0%) <-> Cave Entrance (5% / Image 2): Automatic smooth snap without stopping/pausing midway
             if (progress > 0 && progress < 0.05) {
               if (self && self.direction === -1) {
-                return 0; // Auto scroll back up to surface hero view (0%) fast
+                return 0.0; // Auto snap up to surface hero view (Image 1)
               }
-              return 0.05; // Auto scroll down to cave entrance view (5%) fast
+              return 0.05; // Auto snap down to cave entrance view (Image 2)
             }
             return progress;
           },
           duration: (snapValue) => {
-            // Ultra-fast automatic scroll UP to surface hero view (progress 0)
-            if (snapValue === 0) return { min: 0.01, max: 0.04 };
-            if (snapValue === 0.05) return { min: 0.05, max: 0.12 };
-            return { min: 0.1, max: 0.2 };
+            if (snapValue === 0) return { min: 0.05, max: 0.12 };
+            if (snapValue === 0.05) return { min: 0.05, max: 0.15 };
+            return { min: 0.1, max: 0.25 };
           },
           delay: 0.0,
-          ease: "power4.out",
+          ease: "power2.out",
         },
         onUpdate: (self) => {
           const currentProgress = Math.floor(self.progress * 100);
           setScrollProgress(currentProgress);
+
+          // PRE-PORTAL FAST-SCROLL PROTECTION & PORTAL ENTRY SAFETY (progress <= 0.40)
+          if (self.progress <= 0.40) {
+            const rawVelocity = self.getVelocity();
+            const absVelocity = Math.abs(rawVelocity);
+
+            // Proximity Dampening Zone: As progress approaches 0.40 (near portal threshold),
+            // smoothly reduce allowable velocity (sensitivity 1.0 down to 0.25)
+            const distanceToPortalThreshold = 0.40 - self.progress;
+            const proximityFactor = THREE.MathUtils.clamp(distanceToPortalThreshold / 0.20, 0.25, 1.0);
+
+            // Clamp max velocity in pre-portal section to prevent fast-scroll overshooting
+            const maxAllowablePrePortalVelocity = 1400 * proximityFactor;
+
+            if (absVelocity > maxAllowablePrePortalVelocity && self.scroll) {
+              const clampedVel = Math.sign(rawVelocity) * maxAllowablePrePortalVelocity;
+              const targetScroll = self.scroll() + (clampedVel * 0.016);
+              self.scroll(targetScroll);
+            }
+          }
         },
       },
     });
@@ -3437,16 +3384,20 @@ export default function Scene() {
       const depthFactor = Math.min(1.0, Math.abs(camState.y) / 470);
       const caveFogColor = new THREE.Color(0x052a42).lerp(new THREE.Color(0x011728), depthFactor);
 
-      // Synchronize Hero UI text opacity per frame: 100% visible from surface (0%) down to cave entrance (5%, camState.y: -40), fading out deeper past 5% scroll
+      // Single Shared Blend Factor: y: 0.0 (surface hero view: 0.0) -> y: -10.0 (cave entrance view: 1.0)
+      const rawBlend = THREE.MathUtils.clamp((0.0 - camState.y) / 10.0, 0.0, 1.0);
+      const underwaterBlend = THREE.MathUtils.smoothstep(rawBlend, 0.0, 1.0);
+
+      // 1. Hero UI text opacity: 100% visible from surface (y: 2.0) down to cave entrance (y: -40.0), fading out past portal entry (y: -40.0 -> -75.0)
       if (heroUiRef.current) {
-        const heroFadeFactor = THREE.MathUtils.clamp((-40.0 - camState.y) / 35.0, 0.0, 1.0);
-        const heroOpacity = Math.max(0, 1.0 - heroFadeFactor);
+        const heroFade = THREE.MathUtils.clamp((-40.0 - camState.y) / 35.0, 0.0, 1.0);
+        const heroOpacity = 1.0 - heroFade;
         heroUiRef.current.style.opacity = heroOpacity.toFixed(3);
         heroUiRef.current.style.pointerEvents = heroOpacity > 0.05 ? "auto" : "none";
       }
 
-      // Smooth Background & Fog Transition from HDRI Sky to Deep Teal Underground Ocean (Submerged depth: camState.y <= -4)
-      if (camState.y > -4) {
+      // 2. HDRI Sky, Background & Fog Crossfade
+      if (underwaterBlend === 0.0) {
         if (exrEnvironmentTexture) {
           scene.background = exrEnvironmentTexture;
           scene.environment = exrEnvironmentTexture;
@@ -3458,73 +3409,114 @@ export default function Scene() {
         ambientLight.intensity = 1.0;
 
         waterCeilingMesh.visible = false;
-        caveMesh.visible = false;
-        sideCliffGroup.visible = false;
-        bgMountainsGroup.visible = false;
-      } else {
-        const rawBlend = THREE.MathUtils.clamp((-4.0 - camState.y) / 12.0, 0.0, 1.0);
-        const underwaterBlend = THREE.MathUtils.smoothstep(rawBlend, 0.0, 1.0);
+        waterUnderside.visible = false;
+        caveMesh.visible = true;
+        caveMaterial.transparent = true;
+        caveMaterial.opacity = 0.4;
 
-        if (underwaterBlend < 1.0) {
-          if (exrEnvironmentTexture) {
-            scene.background = exrEnvironmentTexture;
-            scene.environment = exrEnvironmentTexture;
-            scene.backgroundIntensity = 1.0 - underwaterBlend;
+        sideCliffGroup.visible = true;
+        sideCliffGroup.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true;
+            child.material.opacity = 0.4;
           }
-          renderer.setClearColor(caveFogColor, 1.0);
+        });
 
-          const targetFogDensity = camState.fogDensity * 0.5 * underwaterBlend;
-          if (targetFogDensity > 0.0001) {
-            scene.fog = new THREE.FogExp2(caveFogColor, targetFogDensity);
-          } else {
-            scene.fog = null;
+        bgMountainsGroup.visible = true;
+        bgMountainsGroup.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true;
+            child.material.opacity = 0.4;
           }
-
-          sunLight.intensity = THREE.MathUtils.lerp(2.5, Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6)), underwaterBlend);
-          ambientLight.color.copy(new THREE.Color(0xffffff).lerp(new THREE.Color(0x006699), underwaterBlend));
-          ambientLight.intensity = THREE.MathUtils.lerp(1.0, 1.6, underwaterBlend);
-
-          waterCeilingMesh.visible = (underwaterBlend > 0.05);
-          waterCeilingMat.opacity = underwaterBlend;
-
-          caveMesh.visible = false;
-
-          sideCliffGroup.visible = (underwaterBlend > 0.05);
-          sideCliffGroup.traverse((child) => {
-            if (child.isMesh && child.material) {
-              child.material.transparent = true;
-              child.material.opacity = underwaterBlend;
-            }
-          });
-
-          bgMountainsGroup.visible = false;
-          portalBackdropMat.color.copy(caveFogColor);
-        } else {
-          scene.background = caveFogColor;
-          scene.fog = new THREE.FogExp2(caveFogColor, camState.fogDensity * 0.5);
-
-          sunLight.intensity = Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6));
-          ambientLight.color.setHex(0x006699).lerp(new THREE.Color(0x002e4d), depthFactor);
-          ambientLight.intensity = 1.6 * (1.0 - depthFactor * 0.2);
-
-          waterCeilingMesh.visible = true;
-          waterCeilingMat.opacity = 1.0;
-
-          caveMesh.visible = false;
-
-          sideCliffGroup.visible = true;
-          sideCliffGroup.traverse((child) => {
-            if (child.isMesh && child.material) {
-              child.material.transparent = true;
-              child.material.opacity = 1.0;
-            }
-          });
-
-          bgMountainsGroup.visible = false;
-
-          // Keep backdrop color matched to surrounding ocean water depth color
-          portalBackdropMat.color.copy(caveFogColor);
+        });
+      } else if (underwaterBlend < 1.0) {
+        if (exrEnvironmentTexture) {
+          scene.background = exrEnvironmentTexture;
+          scene.environment = exrEnvironmentTexture;
+          scene.backgroundIntensity = 1.0 - underwaterBlend;
         }
+        renderer.setClearColor(caveFogColor, 1.0);
+
+        const targetFogDensity = camState.fogDensity * 0.5 * underwaterBlend;
+        if (targetFogDensity > 0.0001) {
+          scene.fog = new THREE.FogExp2(caveFogColor, targetFogDensity);
+        } else {
+          scene.fog = null;
+        }
+
+        sunLight.intensity = THREE.MathUtils.lerp(2.5, Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6)), underwaterBlend);
+        ambientLight.color.copy(new THREE.Color(0xffffff).lerp(new THREE.Color(0x006699), underwaterBlend));
+        ambientLight.intensity = THREE.MathUtils.lerp(1.0, 1.6, underwaterBlend);
+
+        // 3. Soft Underwater Rock Blur & Opacity Crossfade
+        const rockOpacity = THREE.MathUtils.lerp(0.4, 1.0, underwaterBlend);
+
+        waterCeilingMesh.visible = (camState.y < -0.5);
+        waterCeilingMat.opacity = underwaterBlend;
+        waterUnderside.visible = (camState.y < -2.0);
+
+        caveMesh.visible = true;
+        caveMaterial.transparent = true;
+        caveMaterial.opacity = rockOpacity;
+
+        sideCliffGroup.visible = true;
+        sideCliffGroup.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true;
+            child.material.opacity = rockOpacity;
+          }
+        });
+
+        bgMountainsGroup.visible = true;
+        bgMountainsGroup.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true;
+            child.material.opacity = rockOpacity;
+          }
+        });
+
+        portalBackdropMat.color.copy(caveFogColor);
+      } else {
+        scene.background = caveFogColor;
+        scene.fog = new THREE.FogExp2(caveFogColor, camState.fogDensity * 0.5);
+
+        sunLight.intensity = Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6));
+        ambientLight.color.setHex(0x006699).lerp(new THREE.Color(0x002e4d), depthFactor);
+        ambientLight.intensity = 1.6 * (1.0 - depthFactor * 0.2);
+
+        waterCeilingMesh.visible = true;
+        waterCeilingMat.opacity = 1.0;
+        waterUnderside.visible = true;
+
+        caveMesh.visible = true;
+        caveMaterial.transparent = true;
+        caveMaterial.opacity = 1.0;
+
+        sideCliffGroup.visible = true;
+        sideCliffGroup.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true;
+            child.material.opacity = 1.0;
+          }
+        });
+
+        bgMountainsGroup.visible = true;
+        bgMountainsGroup.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true;
+            child.material.opacity = 1.0;
+          }
+        });
+
+        portalBackdropMat.color.copy(caveFogColor);
+      }
+
+      // Hard Boundary Clamp for Pre-Portal Camera (camState.z > -185)
+      // Guarantees fast scrolling momentum cannot jump or overshoot past the portal threshold
+      if (camState.z > -185 && scrollProgress <= 40) {
+        camState.x = THREE.MathUtils.clamp(camState.x, -12, 12);
+        camState.y = THREE.MathUtils.clamp(camState.y, -110, 5);
+        camState.z = THREE.MathUtils.clamp(camState.z, -184.9, 5);
       }
 
       // STRICT REQUIREMENT: Event World is STRICTLY INVISIBLE until camera passes inside circular portal ring (camState.z < -185)!
@@ -3538,6 +3530,17 @@ export default function Scene() {
         newWorldGroup.visible = false;
         portalBackdropMesh.visible = true;
       }
+
+      // Shroud Portal Structure in Deep Water Fog until camera approaches (camState.y: -20.0 down to -75.0)
+      const portalApproachRaw = THREE.MathUtils.clamp((-20.0 - camState.y) / 55.0, 0.0, 1.0);
+      const portalApproachBlend = THREE.MathUtils.lerp(0.2, 1.0, THREE.MathUtils.smoothstep(portalApproachRaw, 0.0, 1.0));
+
+      portalGroup.traverse((child) => {
+        if (child.isMesh && child.material && child !== portalDisc) {
+          child.material.transparent = true;
+          child.material.opacity = portalApproachBlend;
+        }
+      });
 
       // Update Portal Vortex Shader and Flow Field Water Particles
       portalDiscMat.uniforms.uTime.value = t;
@@ -3619,18 +3622,6 @@ export default function Scene() {
 
       });
 
-      // Update Orbiting Energy Particles around Portal Ring
-      const pPositions = portalParticleGeo.attributes.position.array;
-      for (let i = 0; i < portalParticleCount; i++) {
-        const speed = portalParticleSpeeds[i];
-        portalParticleAngles[i] += delta * speed * 0.5;
-        const angle = portalParticleAngles[i];
-        const radius = 12.0 + (i % 5) * 0.7;
-        pPositions[i * 3] = Math.cos(angle) * radius;
-        pPositions[i * 3 + 1] = Math.sin(angle) * radius;
-      }
-      portalParticleGeo.attributes.position.needsUpdate = true;
-
       // Update Rising Bubbles & Floating Water Balls
       bubbleMat.uniforms.uTime.value = t;
       shimmerMat.uniforms.uTime.value = t;
@@ -3640,12 +3631,6 @@ export default function Scene() {
       floatingParticlesMat.uniforms.uTime.value = t;
       causticUniforms.uTime.value = t;
       shaftUniforms.uTime.value = t;
-
-      // Dive Bubble Burst (surface -> underwater transition: camState.y 2.0 down to -14.0)
-      const diveBurstProgress = THREE.MathUtils.clamp((2.0 - camState.y) / 16.0, 0.0, 1.0);
-      diveBurstMat.uniforms.uProgress.value = diveBurstProgress;
-      diveBurstMat.uniforms.uTime.value = t;
-      diveBurstMat.uniforms.uOrigin.value.set(camState.x, camState.y - 2.0, camState.z - 8.0);
 
       // Pulse Portal Ring Backlight
       portalBackLight.intensity = 8.0 + Math.sin(t * 2.5) * 3.0;
@@ -3971,9 +3956,19 @@ export default function Scene() {
       const effectiveLookLerp = baseLookLerp * eventSpeedScale;
       currentLookAt.lerp(desiredLookAt, effectiveLookLerp);
 
+      // Portal Center Tunnel Guidance: Guarantee camera passes STRAIGHT THROUGH CENTER of Stargate Ring (z: -160 to -215)
+      let currentParallax = parallaxStrength;
+      if (camState.z <= -160 && camState.z >= -215) {
+        const portalCenterFactor = THREE.MathUtils.clamp(1.0 - Math.abs(camState.z - (-190)) / 25.0, 0.0, 1.0);
+        const alignBlend = THREE.MathUtils.smoothstep(portalCenterFactor, 0.0, 1.0);
+        smoothCamPos.x = THREE.MathUtils.lerp(smoothCamPos.x, 0.0, alignBlend);
+        smoothCamPos.y = THREE.MathUtils.lerp(smoothCamPos.y, -110.0, alignBlend);
+        currentParallax *= (1.0 - alignBlend);
+      }
+
       camera.position.set(
-        smoothCamPos.x + mouse.x * parallaxStrength + floatX,
-        smoothCamPos.y + mouse.y * parallaxStrength + floatY,
+        smoothCamPos.x + mouse.x * currentParallax + floatX,
+        smoothCamPos.y + mouse.y * currentParallax + floatY,
         smoothCamPos.z
       );
 
@@ -4079,8 +4074,6 @@ export default function Scene() {
       portalDiscMat.dispose();
       portalBackdropGeo.dispose();
       portalBackdropMat.dispose();
-      portalParticleGeo.dispose();
-      portalParticleMat.dispose();
       flowFieldGeo.dispose();
       flowFieldMat.dispose();
       cliffRockMat.dispose();
@@ -4113,8 +4106,6 @@ export default function Scene() {
       seabedWaveMat.dispose();
       floatingParticlesGeo.dispose();
       floatingParticlesMat.dispose();
-      diveBurstGeo.dispose();
-      diveBurstMat.dispose();
       kelpGeo.dispose();
       kelpMat.dispose();
       fishGeo.dispose();
