@@ -45,7 +45,27 @@ export default function MyRegistration({ user: initialUser }) {
         setFetchedUserData(verifiedUserObj);
 
         const regEvents = verifiedUserObj.registeredEvents || data.registeredEvents || data.registrations || [];
-        setFetchedEvents(regEvents);
+        
+        // Fetch populated registrations from /api/registrations to ensure payment object (imageUrl, utr, status, amount) is populated
+        try {
+          const regRes = await fetch(`${API_BASE_URL}/api/registrations`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (regRes.ok) {
+            const regData = await regRes.json();
+            const fullRegs = regData.registrations || regData.data || [];
+            if (Array.isArray(fullRegs) && fullRegs.length > 0) {
+              setFetchedEvents(fullRegs);
+            } else {
+              setFetchedEvents(regEvents);
+            }
+          } else {
+            setFetchedEvents(regEvents);
+          }
+        } catch (regErr) {
+          console.error("Failed to fetch populated registrations", regErr);
+          setFetchedEvents(regEvents);
+        }
       } catch (err) {
         console.error("verifyuser fetch error:", err);
         // Fallback to /api/registrations if verifyuser fails or doesn't have events
