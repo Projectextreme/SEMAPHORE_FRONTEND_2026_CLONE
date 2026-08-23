@@ -2111,13 +2111,10 @@ export default function Scene() {
       const zPos = -30 - Math.random() * 1350;
       const expectedY = (zPos / -1218) * -470;
       dustPositions[i * 3] = (Math.random() - 0.5) * 320;
-<<<<<<< HEAD
       dustPositions[i * 3 + 1] = -385 + Math.random() * 335;
       dustPositions[i * 3 + 2] = -30 - Math.random() * 620;
-=======
       dustPositions[i * 3 + 1] = Math.min(-5.0, expectedY + (Math.random() - 0.5) * 200);
       dustPositions[i * 3 + 2] = zPos;
->>>>>>> f2a14e43e3019c33a09554478d9815c6d61d20cb
       dustVelocities[i * 3] = 0;
       dustVelocities[i * 3 + 1] = 0;
       dustVelocities[i * 3 + 2] = 0;
