@@ -19,7 +19,7 @@ export default function ProfileSidebar({ user }) {
   const teamName = typeof teamObj === 'object' ? teamObj?.name : (user.teamName || (typeof user.teamid === 'string' ? null : null));
 
   return (
-    <div className="w-full md:w-120 shrink-0 flex flex-col gap-6">
+    <div className="w-full md:w-120 shrink-0 flex flex-col gap-6 md:sticky md:top-12 h-fit">
       <div className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-3xl p-6 shadow-[0_8px_32px_rgba(0,100,150,0.15)] flex flex-col items-center">
         <Image
           src={user.avatar || "https://ui-avatars.com/api/?name=" + user.name + "&background=cffafe&color=164e63"}
@@ -61,17 +61,18 @@ export default function ProfileSidebar({ user }) {
         </div>
 
         <div className="w-full flex flex-col gap-1.5">
-          {['My Dashboard'].map((item, idx) => (
-            <button
-              key={idx}
-              className={`text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${idx === 0
-                ? "bg-cyan-500/15 text-cyan-900 border border-cyan-400/30"
-                : "text-cyan-800/70 hover:bg-white/40 hover:text-cyan-900"
-                }`}
-            >
-              {item}
-            </button>
-          ))}
+          <button
+            onClick={() => router.push('/user/account')}
+            className="text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all bg-cyan-500/15 text-cyan-900 border border-cyan-400/30"
+          >
+            My Dashboard
+          </button>
+          <button
+            onClick={() => router.push('/events/register')}
+            className="text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all text-cyan-800/70 hover:bg-white/40 hover:text-cyan-900"
+          >
+            Events
+          </button>
 
           <div className="h-px bg-cyan-200/50 my-2"></div>
 

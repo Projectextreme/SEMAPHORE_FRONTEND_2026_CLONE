@@ -71,7 +71,7 @@ export default function MyRegistrationPage() {
   }
 
   return (
-    <main className="relative min-h-screen bg-gradient-to-br from-cyan-100 via-blue-200 to-teal-200 overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
+    <main className="relative min-h-screen bg-gradient-to-br from-cyan-100 via-blue-200 to-teal-200 py-12 px-4 sm:px-6 lg:px-8">
       {/* Decorative noise/texture overlay for the background */}
       <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none z-0"></div>
 
