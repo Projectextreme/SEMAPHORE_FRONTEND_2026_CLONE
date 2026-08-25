@@ -7,6 +7,7 @@ import { Water } from "three/examples/jsm/objects/Water.js";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Loader from "./Loader";
+import EventInfoModal from "./EventInfoModal";
 import { CRITICAL_ASSETS, loadAssets, blobToTexture } from "./assetLoader";
 
 import {
@@ -756,21 +757,32 @@ export default function Scene() {
 
     let sceneDisposed = false;
     function loadHdriEnvironment() {
-      const exrLoader = new EXRLoader();
-      exrLoader.load("/hdri/spiaggia_di_mondello_4k.exr", (texture) => {
-        // The effect may have torn down while this 19MB download was in flight
-        if (sceneDisposed) {
-          texture.dispose();
-          return;
-        }
-        texture.mapping = THREE.EquirectangularReflectionMapping;
-        const exrCubeRenderTarget = pmremGenerator.fromEquirectangular(texture);
-        exrEnvironmentTexture = exrCubeRenderTarget.texture;
-        scene.background = exrCubeRenderTarget.texture;
-        scene.environment = exrCubeRenderTarget.texture;
-        envSwapFade = 0.72; // ramps back to 1.0 in the animate loop
-        fallbackEnvTarget.dispose();
-        texture.dispose();
+      return new Promise((resolve) => {
+        const exrLoader = new EXRLoader();
+        exrLoader.load(
+          "/hdri/spiaggia_di_mondello_4k.exr",
+          (texture) => {
+            if (sceneDisposed) {
+              texture.dispose();
+              resolve();
+              return;
+            }
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            const exrCubeRenderTarget = pmremGenerator.fromEquirectangular(texture);
+            exrEnvironmentTexture = exrCubeRenderTarget.texture;
+            scene.background = exrCubeRenderTarget.texture;
+            scene.environment = exrCubeRenderTarget.texture;
+            envSwapFade = 1.0;
+            fallbackEnvTarget.dispose();
+            texture.dispose();
+            resolve();
+          },
+          undefined,
+          (err) => {
+            console.warn("[Aquasaga] HDRI load failed, using fallback:", err);
+            resolve();
+          }
+        );
       });
     }
 
@@ -812,7 +824,7 @@ export default function Scene() {
     const waterCeilingMesh = new THREE.Mesh(waterCeilingGeo, waterCeilingMat);
     waterCeilingMesh.rotation.x = Math.PI / 2;
     waterCeilingMesh.position.y = -2.05;
-    waterCeilingMesh.visible = false;
+    waterCeilingMesh.visible = true;
     scene.add(waterCeilingMesh);
 
     const waterUnderside = new THREE.Mesh(
@@ -929,7 +941,7 @@ export default function Scene() {
 
     // --- LEFT & RIGHT JAGGED CLIFF WALLS ---
     const sideCliffGroup = new THREE.Group();
-    sideCliffGroup.visible = false;
+    sideCliffGroup.visible = true;
 
     const cliffWallMat = new THREE.MeshStandardMaterial({
       color: 0x051d2c,
@@ -1019,12 +1031,12 @@ export default function Scene() {
     });
     const caveMesh = new THREE.Mesh(caveGeometry, caveMaterial);
     caveMesh.position.set(0, -335, -380);
-    caveMesh.visible = false;
+    caveMesh.visible = true;
     scene.add(caveMesh);
 
     // Large Distant Underwater Mountains
     const bgMountainsGroup = new THREE.Group();
-    bgMountainsGroup.visible = false;
+    bgMountainsGroup.visible = true;
 
     const mountainMaterial = new THREE.MeshStandardMaterial({
       color: 0x031420,
@@ -1563,7 +1575,7 @@ export default function Scene() {
     // --- THE NEW WORLD BEYOND THE MAIN STARGATE: INVISIBLE UNTIL ENTERING STARGATE (z < -155) ---
     // Features 10 DISTINCT DESCENDING ROCK PLATFORMS, PORTALS & 3D EVENT BANNERS
     const newWorldGroup = new THREE.Group();
-    newWorldGroup.visible = false; // Strictly hidden until passing inside the stargate (z < -155)!
+    newWorldGroup.visible = true;
     scene.add(newWorldGroup);
 
     const cliffRockMat = new THREE.MeshStandardMaterial({
@@ -3642,8 +3654,9 @@ export default function Scene() {
         ambientLight.color.setHex(0xffffff);
         ambientLight.intensity = 1.0;
 
-        waterCeilingMesh.visible = false;
-        waterUnderside.visible = false;
+        waterCeilingMesh.visible = true;
+        waterCeilingMat.opacity = 0.0;
+        waterUnderside.visible = true;
         caveMesh.visible = true;
         caveMaterial.transparent = true;
         caveMaterial.opacity = 0.4;
@@ -3677,9 +3690,9 @@ export default function Scene() {
         // 3. Soft Underwater Rock Blur & Opacity Crossfade
         const rockOpacity = THREE.MathUtils.lerp(0.4, 1.0, underwaterBlend);
 
-        waterCeilingMesh.visible = (camState.y < -0.5);
+        waterCeilingMesh.visible = true;
         waterCeilingMat.opacity = underwaterBlend;
-        waterUnderside.visible = (camState.y < -2.0);
+        waterUnderside.visible = true;
 
         caveMesh.visible = true;
         caveMaterial.transparent = true;
@@ -3735,7 +3748,7 @@ export default function Scene() {
         caveMesh.visible = false;
         portalBackdropMesh.visible = false;
       } else {
-        newWorldGroup.visible = false;
+        newWorldGroup.visible = true;
         portalBackdropMesh.visible = true;
       }
 
@@ -4348,12 +4361,29 @@ export default function Scene() {
           await buildDolphinsFromBuffer(await results.dolphin.arrayBuffer());
         }
 
+        // Load HDRI environment and compute PMREM cubemap BEFORE compile & reveal
+        // so pmremGenerator never blocks WebGL during interactive scrolling!
+        await loadHdriEnvironment();
+
         if (sceneDisposed) return;
 
-        // Force a full render so every material/shader is compiled and uploaded
-        // BEFORE the curtain lifts, rather than hitching on the first visible frame.
+        // Force a full multi-pass compile & render so every material/shader/texture is uploaded
+        // BEFORE the curtain lifts, preventing any scroll-time shader compilation freezes.
+        newWorldGroup.visible = true;
+        sideCliffGroup.visible = true;
+        caveMesh.visible = true;
+        bgMountainsGroup.visible = true;
+        waterCeilingMesh.visible = true;
+        waterUnderside.visible = true;
+
         renderer.compile(scene, camera);
         renderer.render(scene, camera);
+
+        // Pass 2: Deep world warm-up camera to force event banner textures and shaders into VRAM upfront
+        const warmUpCam = camera.clone();
+        warmUpCam.position.set(0, -120, -350);
+        warmUpCam.lookAt(0, -150, -700);
+        renderer.render(scene, warmUpCam);
 
         // Hand the browser two frames to actually present that work, then reveal.
         requestAnimationFrame(() => {
@@ -4361,8 +4391,6 @@ export default function Scene() {
             if (sceneDisposed) return;
             setProgress(100);
             setLoading(false);
-            // Scene is live and interactive — only now pull the heavy HDRI.
-            loadHdriEnvironment();
           });
         });
       } catch (err) {
@@ -4587,55 +4615,10 @@ export default function Scene() {
 
       {/* Interactive Event Detail Modal when clicking on any Event Portal, Pin, or 3D Banner */}
       {selectedEvent && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl">
-          <div className="relative w-full max-w-xl p-8 rounded-3xl bg-[#021020] border-2 border-cyan-400/80 shadow-[0_0_60px_rgba(0,255,255,0.4)] text-white">
-            <button
-              onClick={() => setSelectedEvent(null)}
-              className="absolute top-6 right-6 font-mono text-cyan-400 text-sm font-bold hover:text-white"
-            >
-              [ CLOSE ✕ ]
-            </button>
-
-            <span className="inline-block px-3 py-1 rounded-full bg-cyan-950 border border-cyan-400/40 text-cyan-300 text-xs font-mono font-bold tracking-wider mb-4">
-              EVENT {selectedEvent.num} {"//"} {selectedEvent.category}
-            </span>
-
-            <h3 className="text-3xl font-black font-mono text-white mb-2">{selectedEvent.name}</h3>
-            <p className="text-cyan-200/80 text-sm mb-6 leading-relaxed">{selectedEvent.desc}</p>
-
-            <div className="grid grid-cols-2 gap-4 mb-6 p-4 rounded-xl bg-cyan-950/40 border border-cyan-500/20 font-mono text-xs">
-              <div>
-                <span className="text-cyan-400/60 block">DATE & TIME</span>
-                <span className="text-cyan-200 font-bold">{selectedEvent.date} @ {selectedEvent.time}</span>
-              </div>
-              <div>
-                <span className="text-cyan-400/60 block">VENUE</span>
-                <span className="text-cyan-200 font-bold">{selectedEvent.venue}</span>
-              </div>
-              <div>
-                <span className="text-cyan-400/60 block">PRIZE POOL</span>
-                <span className="text-cyan-300 font-bold text-sm">{selectedEvent.prize}</span>
-              </div>
-            </div>
-
-            <h4 className="font-mono text-xs font-bold text-cyan-400 tracking-wider mb-2">EVENT GUIDELINES:</h4>
-            <ul className="list-disc list-inside text-xs text-cyan-100/70 space-y-1 mb-8">
-              {selectedEvent.rules.map((rule, idx) => (
-                <li key={idx}>{rule}</li>
-              ))}
-            </ul>
-
-            <button
-              onClick={() => {
-                alert(`Registration for EVENT ${selectedEvent.num}: ${selectedEvent.name} will open soon!`);
-                setSelectedEvent(null);
-              }}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 font-mono font-bold text-black text-sm tracking-[0.2em] shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:brightness-110 transition-all"
-            >
-              REGISTER FOR EVENT {selectedEvent.num}
-            </button>
-          </div>
-        </div>
+        <EventInfoModal 
+          event={selectedEvent} 
+          onClose={() => setSelectedEvent(null)} 
+        />
       )}
     </div>
   );
