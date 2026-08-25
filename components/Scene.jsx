@@ -7,6 +7,7 @@ import { Water } from "three/examples/jsm/objects/Water.js";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Loader from "./Loader";
+import { CRITICAL_ASSETS, loadAssets, blobToTexture } from "./assetLoader";
 
 import {
   seabedVertex,
@@ -583,6 +584,8 @@ export default function Scene() {
   const [progress, setProgress] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [retryToken, setRetryToken] = useState(0);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [hoveredNode, setHoveredNode] = useState(null);
@@ -679,13 +682,15 @@ export default function Scene() {
     const wrapper = wrapperRef.current;
     if (!container || !wrapper) return;
 
+    // LoadingManager is kept only so any incidental loader still has a home; the
+    // user-facing percentage now comes from real transferred bytes (see the
+    // preload block below), not from itemsLoaded/itemsTotal file counting.
     const manager = new THREE.LoadingManager();
-    manager.onProgress = (_url, itemsLoaded, itemsTotal) => {
-      setProgress(Math.floor((itemsLoaded / itemsTotal) * 100));
+    manager.onError = (url) => {
+      console.error("[Aquasaga] asset failed to load:", url);
     };
-    manager.onLoad = () => {
-      setTimeout(() => setLoading(false), 500);
-    };
+
+    const abortController = new AbortController();
 
     const isMobile = window.innerWidth < 768;
 
@@ -708,28 +713,73 @@ export default function Scene() {
     container.appendChild(renderer.domElement);
 
     // --- HDRI SKY ENVIRONMENT (SURFACE OCEAN START) ---
+    // The 4K EXR is ~19MB — by far the heaviest asset on the page. It is deliberately
+    // NOT registered with `manager`, so the loading screen is gated only on the small
+    // essential assets (water normals, fish, dolphin ≈ 2MB) and dismisses in a fraction
+    // of the time. Until the real HDRI arrives we render a procedural sky that matches
+    // its tonality, then swap it in with a short intensity ramp so the change reads as
+    // a natural brightening rather than a hard cut.
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     pmremGenerator.compileEquirectangularShader();
 
-    let exrEnvironmentTexture = null;
-    const exrLoader = new EXRLoader(manager);
-    exrLoader.load("/hdri/spiaggia_di_mondello_4k.exr", (texture) => {
-      texture.mapping = THREE.EquirectangularReflectionMapping;
-      const exrCubeRenderTarget = pmremGenerator.fromEquirectangular(texture);
-      exrEnvironmentTexture = exrCubeRenderTarget.texture;
-      scene.background = exrCubeRenderTarget.texture;
-      scene.environment = exrCubeRenderTarget.texture;
-      texture.dispose();
-    });
+    // Cheap equirectangular stand-in sky (sun-warmed horizon over deepening blue),
+    // built on a 512x256 canvas so it costs well under a millisecond to produce.
+    function createFallbackSkyTexture() {
+      const skyCanvas = document.createElement("canvas");
+      skyCanvas.width = 512;
+      skyCanvas.height = 256;
+      const sctx = skyCanvas.getContext("2d");
+      const grad = sctx.createLinearGradient(0, 0, 0, 256);
+      grad.addColorStop(0.0, "#1d4e7a");
+      grad.addColorStop(0.34, "#5b9fc4");
+      grad.addColorStop(0.49, "#cfe4ec");
+      grad.addColorStop(0.52, "#e8dcc4");
+      grad.addColorStop(0.62, "#4e7f96");
+      grad.addColorStop(1.0, "#123449");
+      sctx.fillStyle = grad;
+      sctx.fillRect(0, 0, 512, 256);
+      const tex = new THREE.CanvasTexture(skyCanvas);
+      tex.mapping = THREE.EquirectangularReflectionMapping;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    const fallbackSkySource = createFallbackSkyTexture();
+    const fallbackEnvTarget = pmremGenerator.fromEquirectangular(fallbackSkySource);
+    // The animate loop reads `exrEnvironmentTexture` fresh each frame, so pointing it at
+    // the fallback now and reassigning it later swaps the sky with no further wiring.
+    let exrEnvironmentTexture = fallbackEnvTarget.texture;
+    let envSwapFade = 1.0;
+    scene.background = exrEnvironmentTexture;
+    scene.environment = exrEnvironmentTexture;
+    fallbackSkySource.dispose();
+
+    let sceneDisposed = false;
+    function loadHdriEnvironment() {
+      const exrLoader = new EXRLoader();
+      exrLoader.load("/hdri/spiaggia_di_mondello_4k.exr", (texture) => {
+        // The effect may have torn down while this 19MB download was in flight
+        if (sceneDisposed) {
+          texture.dispose();
+          return;
+        }
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        const exrCubeRenderTarget = pmremGenerator.fromEquirectangular(texture);
+        exrEnvironmentTexture = exrCubeRenderTarget.texture;
+        scene.background = exrCubeRenderTarget.texture;
+        scene.environment = exrCubeRenderTarget.texture;
+        envSwapFade = 0.72; // ramps back to 1.0 in the animate loop
+        fallbackEnvTarget.dispose();
+        texture.dispose();
+      });
+    }
 
     // --- SURFACE OCEAN WATER ---
     const waterGeometry = new THREE.PlaneGeometry(10000, 10000);
-    const waterNormals = new THREE.TextureLoader(manager).load(
-      "/textures/waternormals.jpg",
-      (texture) => {
-        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      }
-    );
+    // Placeholder filled in from the preloaded bytes below — the scene graph is built
+    // synchronously, but no frame is revealed until these are populated.
+    const waterNormals = new THREE.Texture();
+    waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping;
     const water = new Water(waterGeometry, {
       textureWidth: 512,
       textureHeight: 512,
@@ -1436,18 +1486,32 @@ export default function Scene() {
       return dolphinObj;
     }
 
-    if (GLTFLoaderClass) {
-      const gltfLoader = new GLTFLoaderClass(manager);
-      if (DRACOLoaderClass) {
-        const dracoLoader = new DRACOLoaderClass();
-        dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
-        gltfLoader.setDRACOLoader(dracoLoader);
-      }
-      gltfLoader.load("/assets/models/dolphin_anim.glb", (gltf) => {
-        // 3D Animated Dolphin Pod swimming in open ocean canyon between Event 2 (Web Design) and Event 3 (IT Quiz)
-        setupDolphinInstance(newWorldGroup, gltf, 4.5, 0.0, false);
-        setupDolphinInstance(newWorldGroup, gltf, 3.8, 0.33, false);
-        setupDolphinInstance(newWorldGroup, gltf, 3.2, 0.66, false);
+    // Parsed from the already-downloaded buffer (no second network request), and the
+    // single parsed gltf is reused for all three pod members rather than re-loaded.
+    function buildDolphinsFromBuffer(arrayBuffer) {
+      return new Promise((resolve) => {
+        if (!GLTFLoaderClass || !arrayBuffer) return resolve(false);
+        const gltfLoader = new GLTFLoaderClass(manager);
+        if (DRACOLoaderClass) {
+          const dracoLoader = new DRACOLoaderClass();
+          dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
+          gltfLoader.setDRACOLoader(dracoLoader);
+        }
+        gltfLoader.parse(
+          arrayBuffer,
+          "",
+          (gltf) => {
+            // Dolphin pod swimming in the open canyon between Event 2 and Event 3
+            setupDolphinInstance(newWorldGroup, gltf, 4.5, 0.0, false);
+            setupDolphinInstance(newWorldGroup, gltf, 3.8, 0.33, false);
+            setupDolphinInstance(newWorldGroup, gltf, 3.2, 0.66, false);
+            resolve(true);
+          },
+          (err) => {
+            console.error("[Aquasaga] dolphin model parse failed:", err);
+            resolve(false); // scene stays usable without the pod
+          }
+        );
       });
     }
 
@@ -2295,15 +2359,17 @@ export default function Scene() {
     const fishCount = isMobile ? 70 : 150;
 
     const fishSwarms = [];
+    const fishSwarmGeos = [];
     const fishData = [];
     const dummyObj = new THREE.Object3D();
 
-    const textureLoader = new THREE.TextureLoader(manager);
-    const fishTextures = [
-      textureLoader.load('/fishes/fish_orange.png'),
-      textureLoader.load('/fishes/fish_blue.png'),
-      textureLoader.load('/fishes/fish_yellow.png')
-    ];
+    const maxAnisotropy = isMobile ? 1 : renderer.capabilities.getMaxAnisotropy();
+    // Placeholders; real pixels are supplied from the preloaded blobs before reveal.
+    const fishTextures = [new THREE.Texture(), new THREE.Texture(), new THREE.Texture()];
+    const fishTextureKeys = ["fishOrange", "fishBlue", "fishYellow"];
+    fishTextures.forEach((tex) => {
+      tex.anisotropy = maxAnisotropy;
+    });
 
     const fishGeo = new THREE.PlaneGeometry(3.0, 3.0);
     fishGeo.rotateY(-Math.PI / 2);
@@ -2321,13 +2387,20 @@ export default function Scene() {
           #include <fog_pars_vertex>
           varying vec2 vUv;
           uniform float uTime;
+          // Per-instance so every fish beats its tail on its own clock and at a rate
+          // proportional to how fast it is actually swimming — a single shared uTime
+          // made the whole school flick in unison, which reads as mechanical.
+          attribute float aPhase;
+          attribute float aBeat;
           void main() {
             vUv = uv;
             vec3 transformed = vec3(position);
             // Realistic fish swimming wobble (stronger at the tail)
             // Since lookAt is reversed, +Z points to the tail.
             float tailFactor = max(0.0, (transformed.z + 1.5) / 3.0);
-            transformed.x += sin(transformed.z * 6.0 - uTime * 15.0) * 0.2 * tailFactor;
+            tailFactor = tailFactor * tailFactor; // bias the sway toward the tail tip
+            float beat = sin(transformed.z * 6.0 - uTime * aBeat + aPhase);
+            transformed.x += beat * 0.22 * tailFactor;
             vec4 mvPosition = viewMatrix * modelMatrix * instanceMatrix * vec4(transformed, 1.0);
             gl_Position = projectionMatrix * mvPosition;
             #include <fog_vertex>
@@ -2356,7 +2429,16 @@ export default function Scene() {
       });
 
       const swarmCount = Math.floor(fishCount / 3);
-      const swarm = new THREE.InstancedMesh(fishGeo, fishMat, swarmCount);
+      // Each swarm needs its own geometry: the per-instance beat/phase attributes are
+      // stored on the geometry, so sharing one instance across all three swarms would
+      // let the last one written clobber the others.
+      const swarmGeo = fishGeo.clone();
+      fishSwarmGeos.push(swarmGeo);
+      const swarm = new THREE.InstancedMesh(swarmGeo, fishMat, swarmCount);
+      dummyObj.rotation.order = "YXZ";
+
+      const beatArray = new Float32Array(swarmCount);
+      const phaseArray = new Float32Array(swarmCount);
 
       for (let i = 0; i < swarmCount; i++) {
         const s = 1.0 + Math.random() * 0.8;
@@ -2367,25 +2449,46 @@ export default function Scene() {
 
         const zPos = -60 - Math.random() * 1350;
         const expectedY = (zPos / -1218) * -470;
-        dummyObj.position.set(
-          baseX,
-          Math.min(-10.0, expectedY + (Math.random() - 0.5) * 120),
-          zPos
-        );
+        const startY = Math.min(-10.0, expectedY + (Math.random() - 0.5) * 120);
+        dummyObj.position.set(baseX, startY, zPos);
         dummyObj.updateMatrix();
         swarm.setMatrixAt(i, dummyObj.matrix);
 
+        // Smaller fish beat their tails faster than larger ones, as in life.
+        beatArray[i] = (16.0 / s) * (0.85 + Math.random() * 0.3);
+        phaseArray[i] = Math.random() * Math.PI * 2;
+
+        const cruise = 2.4 + Math.random() * 3.6;
         fishData.push({
           swarmIndex: tIndex,
           localIndex: i,
-          speed: 0.5 + Math.random() * 1.0,
-          phaseX: Math.random() * Math.PI * 2,
-          phaseY: Math.random() * Math.PI * 2,
-          phaseZ: Math.random() * Math.PI * 2,
-          baseY: dummyObj.position.y,
+          // Live integrated state — position is advanced along a heading each frame
+          // rather than being read back out of the instance matrix.
+          x: baseX,
+          y: startY,
+          z: zPos,
+          homeX: baseX,
+          homeY: startY,
+          homeZ: zPos,
+          heading: Math.random() * Math.PI * 2,
+          pitch: 0,
+          roll: 0,
+          turnRate: 0,
+          speed: cruise,
+          cruise,
+          // Independent slow oscillators keep each fish off every other fish's rhythm
+          wanderPhase: Math.random() * Math.PI * 2,
+          wanderRate: 0.16 + Math.random() * 0.3,
+          bobPhase: Math.random() * Math.PI * 2,
+          bobRate: 0.35 + Math.random() * 0.5,
+          dartCooldown: 3.0 + Math.random() * 12.0,
+          dartBoost: 0,
           scale: s,
         });
       }
+
+      swarmGeo.setAttribute("aBeat", new THREE.InstancedBufferAttribute(beatArray, 1));
+      swarmGeo.setAttribute("aPhase", new THREE.InstancedBufferAttribute(phaseArray, 1));
       fishSwarms.push(swarm);
       scene.add(swarm);
     });
@@ -3424,6 +3527,55 @@ export default function Scene() {
 
     tl.to({}, { duration: 2.0 });
 
+    // --- PERF: Pre-flatten group materials once so the render loop never has to
+    // walk the scene graph (traverse()) every frame — just iterate flat arrays. ---
+    function flattenGroupMaterials(group, excludeMesh = null) {
+      const seen = new Set();
+      group.traverse((child) => {
+        if (child.isMesh && child.material && child !== excludeMesh) {
+          child.material.transparent = true;
+          seen.add(child.material);
+        }
+      });
+      return Array.from(seen);
+    }
+    function setMaterialsOpacity(materials, opacity) {
+      for (let i = 0; i < materials.length; i++) {
+        materials[i].opacity = opacity;
+      }
+    }
+    const sideCliffMaterials = flattenGroupMaterials(sideCliffGroup);
+    const bgMountainMaterials = flattenGroupMaterials(bgMountainsGroup);
+    const portalGroupMaterials = flattenGroupMaterials(portalGroup, portalDisc);
+    let lastSurfaceStateKey = null; // tracks which fixed-opacity branch (surface/blended/underwater) was last applied
+    let lastPortalApproachBlend = -1;
+
+    // --- PERF: Reusable scratch vectors/quaternions/colors so the animate loop
+    // allocates ~0 objects per frame (avoids GC-driven stutter). ---
+    const _caveFogColorA = new THREE.Color(0x052a42);
+    const _caveFogColorB = new THREE.Color(0x011728);
+    const _caveFogColor = new THREE.Color();
+    const _deepAmbientColor = new THREE.Color(0x002e4d);
+    const _podForward = new THREE.Vector3();
+    const _podRight = new THREE.Vector3();
+    const _podUp = new THREE.Vector3();
+    const _worldUp = new THREE.Vector3(0, 1, 0);
+    const _unitZ = new THREE.Vector3(0, 0, 1);
+    const _dolphinPos = new THREE.Vector3();
+    const _dolphinTargetQuat = new THREE.Quaternion();
+    const _dolphinRollQuat = new THREE.Quaternion();
+    const _smoothCamTarget = new THREE.Vector3();
+    const _eventShrinePositions = {
+      1: new THREE.Vector3(-22, -106, -318),
+      2: new THREE.Vector3(22, -186, -430),
+      3: new THREE.Vector3(-32, -186, -508),
+      6: new THREE.Vector3(32, -306, -870),
+      7: new THREE.Vector3(-28, -294, -905),
+      8: new THREE.Vector3(28, -375, -1015),
+      9: new THREE.Vector3(-28, -415, -1115),
+      10: new THREE.Vector3(8, -455, -1215),
+    };
+
     const clock = new THREE.Clock();
     let animationId;
     let frameCount = 0;
@@ -3459,7 +3611,7 @@ export default function Scene() {
       waterCeilingMat.uniforms.uTime.value = t;
 
       const depthFactor = Math.min(1.0, Math.abs(camState.y) / 470);
-      const caveFogColor = new THREE.Color(0x052a42).lerp(new THREE.Color(0x011728), depthFactor);
+      const caveFogColor = _caveFogColor.copy(_caveFogColorA).lerp(_caveFogColorB, depthFactor);
 
       // Single Shared Blend Factor: y: 0.0 (surface hero view: 0.0) -> y: -10.0 (cave entrance view: 1.0)
       const rawBlend = THREE.MathUtils.clamp((0.0 - camState.y) / 10.0, 0.0, 1.0);
@@ -3474,11 +3626,16 @@ export default function Scene() {
       }
 
       // 2. HDRI Sky, Background & Fog Crossfade
+      // Ease the sky back to full intensity after the real HDRI replaces the stand-in
+      if (envSwapFade < 1.0) {
+        envSwapFade = Math.min(1.0, envSwapFade + delta * 0.9);
+      }
+
       if (underwaterBlend === 0.0) {
         if (exrEnvironmentTexture) {
           scene.background = exrEnvironmentTexture;
           scene.environment = exrEnvironmentTexture;
-          scene.backgroundIntensity = 1.0;
+          scene.backgroundIntensity = envSwapFade;
         }
         scene.fog = null;
         sunLight.intensity = 2.5;
@@ -3492,25 +3649,17 @@ export default function Scene() {
         caveMaterial.opacity = 0.4;
 
         sideCliffGroup.visible = true;
-        sideCliffGroup.traverse((child) => {
-          if (child.isMesh && child.material) {
-            child.material.transparent = true;
-            child.material.opacity = 0.4;
-          }
-        });
-
         bgMountainsGroup.visible = true;
-        bgMountainsGroup.traverse((child) => {
-          if (child.isMesh && child.material) {
-            child.material.transparent = true;
-            child.material.opacity = 0.4;
-          }
-        });
+        if (lastSurfaceStateKey !== "surface") {
+          setMaterialsOpacity(sideCliffMaterials, 0.4);
+          setMaterialsOpacity(bgMountainMaterials, 0.4);
+          lastSurfaceStateKey = "surface";
+        }
       } else if (underwaterBlend < 1.0) {
         if (exrEnvironmentTexture) {
           scene.background = exrEnvironmentTexture;
           scene.environment = exrEnvironmentTexture;
-          scene.backgroundIntensity = 1.0 - underwaterBlend;
+          scene.backgroundIntensity = (1.0 - underwaterBlend) * envSwapFade;
         }
         renderer.setClearColor(caveFogColor, 1.0);
 
@@ -3537,20 +3686,10 @@ export default function Scene() {
         caveMaterial.opacity = rockOpacity;
 
         sideCliffGroup.visible = true;
-        sideCliffGroup.traverse((child) => {
-          if (child.isMesh && child.material) {
-            child.material.transparent = true;
-            child.material.opacity = rockOpacity;
-          }
-        });
-
         bgMountainsGroup.visible = true;
-        bgMountainsGroup.traverse((child) => {
-          if (child.isMesh && child.material) {
-            child.material.transparent = true;
-            child.material.opacity = rockOpacity;
-          }
-        });
+        setMaterialsOpacity(sideCliffMaterials, rockOpacity);
+        setMaterialsOpacity(bgMountainMaterials, rockOpacity);
+        lastSurfaceStateKey = "blended";
 
         portalBackdropMat.color.copy(caveFogColor);
       } else {
@@ -3558,7 +3697,7 @@ export default function Scene() {
         scene.fog = new THREE.FogExp2(caveFogColor, camState.fogDensity * 0.5);
 
         sunLight.intensity = Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6));
-        ambientLight.color.setHex(0x006699).lerp(new THREE.Color(0x002e4d), depthFactor);
+        ambientLight.color.setHex(0x006699).lerp(_deepAmbientColor, depthFactor);
         ambientLight.intensity = 1.6 * (1.0 - depthFactor * 0.2);
 
         waterCeilingMesh.visible = true;
@@ -3570,20 +3709,12 @@ export default function Scene() {
         caveMaterial.opacity = 1.0;
 
         sideCliffGroup.visible = true;
-        sideCliffGroup.traverse((child) => {
-          if (child.isMesh && child.material) {
-            child.material.transparent = true;
-            child.material.opacity = 1.0;
-          }
-        });
-
         bgMountainsGroup.visible = true;
-        bgMountainsGroup.traverse((child) => {
-          if (child.isMesh && child.material) {
-            child.material.transparent = true;
-            child.material.opacity = 1.0;
-          }
-        });
+        if (lastSurfaceStateKey !== "underwater") {
+          setMaterialsOpacity(sideCliffMaterials, 1.0);
+          setMaterialsOpacity(bgMountainMaterials, 1.0);
+          lastSurfaceStateKey = "underwater";
+        }
 
         portalBackdropMat.color.copy(caveFogColor);
       }
@@ -3612,12 +3743,10 @@ export default function Scene() {
       const portalApproachRaw = THREE.MathUtils.clamp((-20.0 - camState.y) / 55.0, 0.0, 1.0);
       const portalApproachBlend = THREE.MathUtils.lerp(0.2, 1.0, THREE.MathUtils.smoothstep(portalApproachRaw, 0.0, 1.0));
 
-      portalGroup.traverse((child) => {
-        if (child.isMesh && child.material && child !== portalDisc) {
-          child.material.transparent = true;
-          child.material.opacity = portalApproachBlend;
-        }
-      });
+      if (Math.abs(portalApproachBlend - lastPortalApproachBlend) > 0.0005) {
+        setMaterialsOpacity(portalGroupMaterials, portalApproachBlend);
+        lastPortalApproachBlend = portalApproachBlend;
+      }
 
       // Update Portal Vortex Shader and Flow Field Water Particles
       portalDiscMat.uniforms.uTime.value = t;
@@ -3654,9 +3783,9 @@ export default function Scene() {
       const nextY = -175.0 + Math.sin(nextPodTime * 1.3) * 8.0;
       const nextZ = -475.0 + Math.cos(nextPodTime) * 75.0;
 
-      const podForward = new THREE.Vector3(nextX - masterX, nextY - masterY, nextZ - masterZ).normalize();
-      const podRight = new THREE.Vector3().crossVectors(podForward, new THREE.Vector3(0, 1, 0)).normalize();
-      const podUp = new THREE.Vector3().crossVectors(podRight, podForward).normalize();
+      const podForward = _podForward.set(nextX - masterX, nextY - masterY, nextZ - masterZ).normalize();
+      const podRight = _podRight.crossVectors(podForward, _worldUp).normalize();
+      const podUp = _podUp.crossVectors(podRight, podForward).normalize();
 
       allDolphins.forEach((dolphin, idx) => {
         if (dolphin.mixer) {
@@ -3682,19 +3811,19 @@ export default function Scene() {
           offUp = -2.2 + Math.cos(t * 1.6) * 1.0;
         }
 
-        const dPos = new THREE.Vector3(masterX, masterY, masterZ)
+        const dPos = _dolphinPos.set(masterX, masterY, masterZ)
           .addScaledVector(podForward, offFwd)
           .addScaledVector(podRight, offRight)
           .addScaledVector(podUp, offUp);
 
         dolphin.group.position.copy(dPos);
 
-        const targetQuat = new THREE.Quaternion().setFromUnitVectors(
-          new THREE.Vector3(0, 0, 1),
+        const targetQuat = _dolphinTargetQuat.setFromUnitVectors(
+          _unitZ,
           podForward
         );
         const rollAngle = Math.sin(podTime * 1.8 + idx * 0.8) * 0.38;
-        targetQuat.multiply(new THREE.Quaternion().setFromAxisAngle(podForward, rollAngle));
+        targetQuat.multiply(_dolphinRollQuat.setFromAxisAngle(podForward, rollAngle));
         dolphin.group.quaternion.slerp(targetQuat, 0.15);
 
       });
@@ -3757,21 +3886,73 @@ export default function Scene() {
         k.mesh.rotation.x = Math.cos(t * k.speed * 0.8 + k.phase) * 0.12;
       }
 
-      // Animate Distant Fish Schools
-      for (let data of fishData) {
+      // --- FISH SCHOOLS: steered swimming rather than fixed oscillation ---
+      // Each fish integrates a heading and speed, wanders on its own slow clock,
+      // banks into its turns, and drifts back toward a home volume so the schools
+      // stay in their regions of the canyon without ever repeating a fixed path.
+      const fishDelta = Math.min(delta, 0.05); // clamp so a stalled tab can't fling fish away
+      for (let f = 0; f < fishData.length; f++) {
+        const data = fishData[f];
         const swarm = fishSwarms[data.swarmIndex];
-        swarm.getMatrixAt(data.localIndex, dummyObj.matrix);
-        dummyObj.position.setFromMatrixPosition(dummyObj.matrix);
 
-        dummyObj.position.x += Math.sin(t * data.speed * 0.6 + data.phaseX) * 0.08;
-        dummyObj.position.y = data.baseY + Math.sin(t * data.speed * 0.4 + data.phaseY) * 1.0;
-        dummyObj.position.z += Math.cos(t * data.speed * 0.6 + data.phaseZ) * 0.08;
+        // Slow wander: two incommensurate oscillators so the turn pattern never
+        // visibly loops, unlike a single sine.
+        data.wanderPhase += fishDelta * data.wanderRate;
+        const wander =
+          Math.sin(data.wanderPhase) * 0.6 +
+          Math.sin(data.wanderPhase * 2.37 + 1.1) * 0.4;
 
-        // Subtract velocity to make the +Z axis point backward, making the fish face forward
-        const lookX = dummyObj.position.x - Math.sin(t * data.speed * 0.6 + data.phaseX) * 0.4;
-        const lookZ = dummyObj.position.z - Math.cos(t * data.speed * 0.6 + data.phaseZ) * 0.4;
-        dummyObj.lookAt(lookX, dummyObj.position.y, lookZ);
+        // Steer gently back toward the home anchor when the fish strays too far.
+        const dxHome = data.homeX - data.x;
+        const dzHome = data.homeZ - data.z;
+        const homeDist = Math.hypot(dxHome, dzHome);
+        let homePull = 0;
+        if (homeDist > 26) {
+          const desired = Math.atan2(dxHome, dzHome);
+          let diff = desired - data.heading;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          homePull = diff * Math.min(1.0, (homeDist - 26) / 34);
+        }
 
+        // Occasional dart: a short burst of speed, the way real fish break cruise.
+        data.dartCooldown -= fishDelta;
+        if (data.dartCooldown <= 0) {
+          data.dartBoost = 3.0 + Math.random() * 4.0;
+          data.dartCooldown = 5.0 + Math.random() * 14.0;
+        }
+        if (data.dartBoost > 0) {
+          data.dartBoost = Math.max(0, data.dartBoost - fishDelta * 3.2);
+        }
+
+        // Turn rate eases toward the desired turn so heading changes are never instant.
+        const desiredTurn = wander * 0.55 + homePull * 1.4;
+        data.turnRate += (desiredTurn - data.turnRate) * Math.min(1, fishDelta * 2.6);
+        data.heading += data.turnRate * fishDelta;
+
+        // Speed eases toward cruise (+ any dart), giving natural accel/decel.
+        const targetSpeed = data.cruise + data.dartBoost;
+        data.speed += (targetSpeed - data.speed) * Math.min(1, fishDelta * 1.7);
+
+        // Vertical drift on its own rhythm, plus a pull back toward home depth.
+        data.bobPhase += fishDelta * data.bobRate;
+        const targetY = data.homeY + Math.sin(data.bobPhase) * 7.0;
+        const dyHome = targetY - data.y;
+        const climb = THREE.MathUtils.clamp(dyHome * 0.5, -3.0, 3.0);
+
+        data.x += Math.sin(data.heading) * data.speed * fishDelta;
+        data.z += Math.cos(data.heading) * data.speed * fishDelta;
+        data.y += climb * fishDelta;
+
+        // Pitch follows the climb; roll banks into the turn, both eased.
+        const targetPitch = THREE.MathUtils.clamp(-climb / Math.max(data.speed, 0.8), -0.45, 0.45);
+        data.pitch += (targetPitch - data.pitch) * Math.min(1, fishDelta * 3.0);
+        const targetRoll = THREE.MathUtils.clamp(-data.turnRate * 0.75, -0.6, 0.6);
+        data.roll += (targetRoll - data.roll) * Math.min(1, fishDelta * 3.0);
+
+        dummyObj.position.set(data.x, data.y, data.z);
+        // The sprite's nose points along -Z, so yaw is heading + PI.
+        dummyObj.rotation.set(data.pitch, data.heading + Math.PI, data.roll);
         dummyObj.scale.set(data.scale, data.scale, data.scale);
         dummyObj.updateMatrix();
         swarm.setMatrixAt(data.localIndex, dummyObj.matrix);
@@ -3818,7 +3999,7 @@ export default function Scene() {
 
       // Event 01 (Coding) Slowdown Zone
       if (camState.z < -245 && camState.z > -350) {
-        const event1ShrinePos = new THREE.Vector3(-22, -106, -318);
+        const event1ShrinePos = _eventShrinePositions[1];
         const distToShrine = smoothCamPos.distanceTo(event1ShrinePos);
 
         if (distToShrine > 65) {
@@ -3850,7 +4031,7 @@ export default function Scene() {
       }
       // Event 02 (Web Design) Slowdown Zone
       else if (camState.z <= -350 && camState.z > -470) {
-        const event2ShrinePos = new THREE.Vector3(22, -186, -430);
+        const event2ShrinePos = _eventShrinePositions[2];
         const distToShrine = smoothCamPos.distanceTo(event2ShrinePos);
 
         if (distToShrine > 65) {
@@ -3876,7 +4057,7 @@ export default function Scene() {
       }
       // Event 03 (IT Quiz) Slowdown Zone
       else if (camState.z <= -470 && camState.z > -560) {
-        const event3ShrinePos = new THREE.Vector3(-32, -186, -508);
+        const event3ShrinePos = _eventShrinePositions[3];
         const distToShrine = smoothCamPos.distanceTo(event3ShrinePos);
 
         if (distToShrine > 65) {
@@ -3902,7 +4083,7 @@ export default function Scene() {
       }
       // Event 06 (Surprise Event) Slowdown Zone
       else if (camState.z <= -790 && camState.z > -895) {
-        const event6ShrinePos = new THREE.Vector3(32, -306, -870);
+        const event6ShrinePos = _eventShrinePositions[6];
         const distToShrine = smoothCamPos.distanceTo(event6ShrinePos);
 
         if (distToShrine > 65) {
@@ -3928,7 +4109,7 @@ export default function Scene() {
       }
       // Event 07 (IT Manager Spire) Slowdown Zone
       else if (camState.z <= -860 && camState.z > -945) {
-        const event7ShrinePos = new THREE.Vector3(-28, -294, -905);
+        const event7ShrinePos = _eventShrinePositions[7];
         const distToShrine = smoothCamPos.distanceTo(event7ShrinePos);
 
         if (distToShrine > 65) {
@@ -3954,7 +4135,7 @@ export default function Scene() {
       }
       // Event 08 (Startup Event) Slowdown Zone
       else if (camState.z <= -945 && camState.z > -1050) {
-        const event8ShrinePos = new THREE.Vector3(28, -375, -1015);
+        const event8ShrinePos = _eventShrinePositions[8];
         const distToShrine = smoothCamPos.distanceTo(event8ShrinePos);
 
         if (distToShrine > 65) {
@@ -3980,7 +4161,7 @@ export default function Scene() {
       }
       // Event 09 (Dance) Slowdown Zone
       else if (camState.z <= -1050 && camState.z > -1150) {
-        const event9ShrinePos = new THREE.Vector3(-28, -415, -1115);
+        const event9ShrinePos = _eventShrinePositions[9];
         const distToShrine = smoothCamPos.distanceTo(event9ShrinePos);
 
         if (distToShrine > 65) {
@@ -4006,7 +4187,7 @@ export default function Scene() {
       }
       // Event 10 (Photography & Videography) Slowdown Zone
       else if (camState.z <= -1150) {
-        const event10ShrinePos = new THREE.Vector3(8, -455, -1215);
+        const event10ShrinePos = _eventShrinePositions[10];
         const distToShrine = smoothCamPos.distanceTo(event10ShrinePos);
 
         if (distToShrine > 65) {
@@ -4028,7 +4209,7 @@ export default function Scene() {
       // Position spring lerp for smooth, liquid camera movement
       const basePosLerp = isMobile ? 0.10 : 0.07;
       const effectivePosLerp = basePosLerp * eventSpeedScale;
-      smoothCamPos.lerp(new THREE.Vector3(camState.x + event1RightArcOffset, camState.y, camState.z), effectivePosLerp);
+      smoothCamPos.lerp(_smoothCamTarget.set(camState.x + event1RightArcOffset, camState.y, camState.z), effectivePosLerp);
 
       // Surface-to-Portal & Event Landmark focus:
       // GSAP keyframes define precise look-at targets (targetX, targetY, targetZ) for cinematic reveals.
@@ -4115,15 +4296,108 @@ export default function Scene() {
     }
     animate();
 
-    function handleResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
+    // --- CRITICAL ASSET PRELOAD -> PREPARE -> FIRST FRAME -> REVEAL ---
+    // Progress reflects real transferred bytes. The loader is only dismissed once
+    // every critical asset is decoded, applied to the scene, and a complete frame
+    // has actually been rendered — which is what prevents texture/model pop-in.
+    (async () => {
+      try {
+        const { results, failures } = await loadAssets(
+          CRITICAL_ASSETS,
+          (pct) => setProgress(pct),
+          abortController.signal
+        );
+
+        if (sceneDisposed) return;
+
+        if (failures.length > 0) {
+          failures.forEach((f) =>
+            console.error("[Aquasaga] failed:", f.asset.url, f.error)
+          );
+          // Only block the experience if something the first frame truly needs is missing.
+          const fatal = failures.some((f) => f.asset.kind === "texture");
+          if (fatal) {
+            setLoadError(
+              `${failures.length} ocean asset${failures.length > 1 ? "s" : ""} could not be loaded.`
+            );
+            return;
+          }
+        }
+
+        // Decode and apply textures (no second network request — decoded from bytes).
+        if (results.waterNormals) {
+          const tex = await blobToTexture(THREE, results.waterNormals, { srgb: false });
+          tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+          waterNormals.image = tex.image;
+          waterNormals.needsUpdate = true;
+        }
+
+        await Promise.all(
+          fishTextureKeys.map(async (key, i) => {
+            if (!results[key]) return;
+            const tex = await blobToTexture(THREE, results[key], {
+              anisotropy: maxAnisotropy,
+            });
+            fishTextures[i].image = tex.image;
+            fishTextures[i].colorSpace = tex.colorSpace;
+            fishTextures[i].needsUpdate = true;
+          })
+        );
+
+        if (results.dolphin) {
+          await buildDolphinsFromBuffer(await results.dolphin.arrayBuffer());
+        }
+
+        if (sceneDisposed) return;
+
+        // Force a full render so every material/shader is compiled and uploaded
+        // BEFORE the curtain lifts, rather than hitching on the first visible frame.
+        renderer.compile(scene, camera);
+        renderer.render(scene, camera);
+
+        // Hand the browser two frames to actually present that work, then reveal.
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (sceneDisposed) return;
+            setProgress(100);
+            setLoading(false);
+            // Scene is live and interactive — only now pull the heavy HDRI.
+            loadHdriEnvironment();
+          });
+        });
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+        console.error("[Aquasaga] preload failed:", err);
+        if (!sceneDisposed) setLoadError("Could not load the ocean environment.");
+      }
+    })();
+
+    let resizeRafId = null;
+    function applyResize() {
+      resizeRafId = null;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+      renderer.setSize(w, h);
+    }
+    function handleResize() {
+      // Coalesce bursts of resize/orientation events (drag-resize, DPI change,
+      // mobile browser chrome show/hide) into a single update per frame.
+      if (resizeRafId !== null) return;
+      resizeRafId = requestAnimationFrame(applyResize);
     }
     window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
 
     return () => {
+      sceneDisposed = true;
+      abortController.abort();
+      pmremGenerator.dispose();
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+      if (resizeRafId !== null) cancelAnimationFrame(resizeRafId);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("click", handlePortalClick);
       if (isMobile) {
@@ -4190,9 +4464,12 @@ export default function Scene() {
       kelpGeo.dispose();
       kelpMat.dispose();
       fishGeo.dispose();
+      for (const g of fishSwarmGeos) g.dispose();
+      for (const tex of fishTextures) tex.dispose();
       // fish materials are handled elsewhere or small enough not to leak noticeably
     };
-  }, []);
+    // retryToken lets the Retry button tear down and rebuild the whole scene.
+  }, [retryToken]);
 
   const hudVisible = scrollProgress >= 4;
   const isInsideNewWorld = scrollProgress > 42;
@@ -4200,7 +4477,17 @@ export default function Scene() {
   return (
     <div ref={wrapperRef} style={{ height: "1600vh", position: "relative", backgroundColor: "#011728" }}>
       {/* Custom Loader */}
-      <Loader loading={loading} progress={progress} />
+      <Loader
+        loading={loading}
+        progress={progress}
+        error={loadError}
+        onRetry={() => {
+          setLoadError(null);
+          setProgress(0);
+          setLoading(true);
+          setRetryToken((n) => n + 1);
+        }}
+      />
 
 
       {/* 3D Canvas Container */}

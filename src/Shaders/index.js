@@ -379,12 +379,8 @@ void main() {
   float shimmer = sin(uTime * 2.0 + vParticleType * 100.0) * 0.15 + 0.85;
   alpha *= shimmer;
 
-<<<<<<< HEAD:src/Shaders/index.js
   gl_FragColor = vec4(uColor, alpha * vSurfaceFade);
-=======
-  gl_FragColor = vec4(uColor, alpha);
   #include <fog_fragment>
->>>>>>> f2a14e43e3019c33a09554478d9815c6d61d20cb:src/Shaders/index.ts
 }
 `;
 

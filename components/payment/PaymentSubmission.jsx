@@ -317,12 +317,8 @@ export default function PaymentSubmission() {
               name="amount"
               id="amount"
               value={amount}
-<<<<<<< HEAD
-              className="block w-full py-3.5 bg-transparent text-cyan-950/70 cursor-not-allowed focus:outline-none focus:ring-0 font-medium sm:text-sm placeholder-cyan-800/40"
-=======
               onChange={(e) => setAmount(e.target.value)}
               className="block w-full py-3.5 bg-transparent text-white focus:outline-none focus:ring-0 font-medium sm:text-sm placeholder-gray-600"
->>>>>>> 73e1105de0587b0f877fbae8dbd4401128e8648a
               placeholder="0.00"
               min="0"
               step="any"

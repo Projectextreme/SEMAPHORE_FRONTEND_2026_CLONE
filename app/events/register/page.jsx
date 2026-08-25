@@ -656,7 +656,7 @@ const styles = {
     fontFamily: 'system-ui, -apple-system, sans-serif',
   },
   container: {
-    maxWidth: 1000,
+    maxWidth: 1200,
     margin: '0 auto',
   },
   header: {

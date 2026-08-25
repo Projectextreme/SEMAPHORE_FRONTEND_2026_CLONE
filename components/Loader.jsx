@@ -1,26 +1,57 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-export default function Loader({ loading, progress }) {
+export default function Loader({ loading, progress, error, onRetry }) {
   const [displayProgress, setDisplayProgress] = useState(0);
   const [shouldHide, setShouldHide] = useState(false);
-  useEffect(() => {
-    const target = loading ? progress : 100;
 
-    if (displayProgress < target) {
-      const timeout = setTimeout(() => {
-        setDisplayProgress(prev => prev + 1);
-      }, 10);
-      return () => clearTimeout(timeout);
-    }
-  }, [progress, displayProgress, loading]);
+  // Drive the counter from elapsed time on a single rAF loop rather than chaining
+  // one +1 increment per React re-render. The old approach needed 100 sequential
+  // renders to reach 100%, each waiting on a 10ms timer AND competing with the
+  // Three.js render loop for the main thread — so on a busy scene the overlay
+  // could linger long after every asset had actually finished loading.
+  const targetRef = useRef(0);
+  const valueRef = useRef(0);
+
   useEffect(() => {
+    targetRef.current = loading ? progress : 100;
+  }, [loading, progress]);
+
+  useEffect(() => {
+    let rafId;
+    let last = performance.now();
+
+    const tick = (now) => {
+      const dt = Math.min((now - last) / 1000, 0.1);
+      last = now;
+
+      const target = targetRef.current;
+      const gap = target - valueRef.current;
+
+      if (gap > 0.01) {
+        // Close the remaining gap exponentially, with a floor so it always keeps
+        // visibly moving. Converges in a few frames instead of a hundred renders.
+        const step = Math.max(gap * dt * 6.0, dt * 45.0);
+        valueRef.current = Math.min(target, valueRef.current + step);
+
+        const rounded = Math.floor(valueRef.current);
+        setDisplayProgress((prev) => (prev !== rounded ? rounded : prev));
+      }
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
+  useEffect(() => {
+    if (error) return; // hold the curtain up so the retry affordance stays reachable
     if (!loading && displayProgress === 100) {
       const timer = setTimeout(() => {
         setShouldHide(true);
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [loading, displayProgress]);
+  }, [loading, displayProgress, error]);
 
   return (
     <div
@@ -51,6 +82,23 @@ export default function Loader({ loading, progress }) {
           </h1>
         </div>
 
+        {error ? (
+          <div className="text-center">
+            <p className="text-[11px] md:text-xs tracking-[0.25em] uppercase text-[#c8b9a6] mb-3">
+              {error}
+            </p>
+            <p className="text-[10px] tracking-[0.2em] uppercase text-[#6f6a64] mb-6">
+              Check your connection and try again.
+            </p>
+            <button
+              onClick={onRetry}
+              className="px-8 py-2.5 text-[10px] md:text-xs tracking-[0.3em] uppercase text-[#eae5de] border border-[#3d3832] hover:border-[#eae5de] hover:bg-[#eae5de]/5 transition-all duration-500"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <>
         <div className="w-full h-[1px] bg-[#2f2c28] mb-6">
           <div
             className="h-full bg-[#eae5de] transition-all duration-300 ease-out"
@@ -65,6 +113,8 @@ export default function Loader({ loading, progress }) {
             {displayProgress}%
           </span>
         </div>
+          </>
+        )}
       </div>
     </div>
   );
