@@ -188,13 +188,6 @@ if (list.length > 0) setCollegeName(list[0]);
                 />
               )}
 
-              <button 
-                type="button" 
-                onClick={() => setIsCustom((v) => !v)} 
-                className="text-cyan-400 hover:text-cyan-300 text-xs tracking-wide transition-colors duration-200 text-left w-full"
-              >
-                {isCustom ? '← Choose from list instead' : "Can't find your college? Type custom name"}
-              </button>
             </div>
 
             <div className="w-full space-y-4 pt-4 border-t border-white/10">
