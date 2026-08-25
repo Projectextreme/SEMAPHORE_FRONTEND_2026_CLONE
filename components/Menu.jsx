@@ -28,6 +28,7 @@ import {
 const menuItems = [
   { label: 'Home', icon: Home, href: '/' },
   { label: 'Login', icon: FileEdit, href: '/user/register' },
+  { label: 'Info', icon: BookOpen, href: '/info' },
   { label: 'Brochure', icon: BookOpen, href: '#' },
   { label: 'Developers', icon: Code, href: '/developer' },
   { label: 'Contact', icon: Contact, href: '/contact' },
