@@ -28,6 +28,7 @@ import {
 const menuItems = [
   { label: 'Home', icon: Home, href: '/' },
   { label: 'Login', icon: FileEdit, href: '/user/register' },
+  { label: 'Info', icon: BookOpen, href: '/info' },
   { label: 'Brochure', icon: BookOpen, href: '#' },
   { label: 'Developers', icon: Code, href: '/developer' },
   { label: 'Contact', icon: Contact, href: '/contact' },
@@ -44,21 +45,22 @@ export default function Menu() {
   }, []);
 
   return (
-    <Drawer showSwipeHandle>
-      <div className="fixed top-2 right-2 z-[100]">
+    <Drawer swipeDirection="right" direction="right" showSwipeHandle>
+      <div className="fixed top-6 right-6 md:top-8 md:right-10 z-[100]">
         <DrawerTrigger render={
           <Button
             variant="secondary"
-            className="bg-[#0d1424]/80 hover:bg-[#0d1424]/90 aria-expanded:bg-[#0d1424]/90 aria-expanded:text-white text-white rounded-md px-5 py-5 flex items-center gap-2 font-medium text-lg transition-colors border-none"
+            className="bg-[#021020]/80 hover:bg-cyan-950/80 border border-cyan-400/50 hover:border-cyan-400 aria-expanded:bg-cyan-950/80 aria-expanded:text-cyan-300 text-cyan-400 rounded-md w-14 h-14 flex items-center justify-center transition-all backdrop-blur-sm shadow-none"
           >
-            Menu
-            <MenuIcon className="w-8  h-8 text-white" />
+            <MenuIcon className="w-8 h-8" />
           </Button>
         } />
       </div>
-      <DrawerContent className="bg-black/40 backdrop-blur border-t border-white/10 text-white p-4">
-        <DrawerHeader className="text-center pt-2 pb-6">
-          <DrawerTitle className="text-2xl font-bold text-white">Semaphore 2K26</DrawerTitle>
+      <DrawerContent className="bg-black/80 backdrop-blur-xl border-l border-cyan-400/20 text-white p-6 shadow-[-10px_0_30px_rgba(0,255,255,0.05)] !flex-col">
+        <DrawerHeader className="text-center md:text-left pt-6 pb-10">
+          <DrawerTitle className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 tracking-wider">
+            SEMAPHORE
+          </DrawerTitle>
         </DrawerHeader>
         <div className="flex flex-col gap-2 max-w-sm mx-auto w-full overflow-y-auto max-h-[70vh] no-scrollbar">
           {menuItems.filter(item => !(isLoggedIn && item.label === 'Login')).map((item, index) => {

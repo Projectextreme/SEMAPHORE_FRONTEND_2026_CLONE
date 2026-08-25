@@ -1,0 +1,112 @@
+[
+  {
+    "id": "abyssal_algorithm",
+    "name": "Abyssal Algorithm",
+    "category": "Coding",
+    "description": "Enter the tagline/description here",
+    "rules": [
+      "Rule 1 here",
+      "Rule 2 here"
+    ],
+    "heads": ["Head Name 1", "Head Name 2"]
+  },
+  {
+    "id": "tidal_weaver",
+    "name": "Tidal Weaver",
+    "category": "Web Design",
+    "description": "Enter the tagline/description here",
+    "rules": [
+      "Rule 1 here",
+      "Rule 2 here"
+    ],
+    "heads": ["Head Name 1", "Head Name 2"]
+  },
+  {
+    "id": "oceanic_oracle",
+    "name": "Oceanic Oracle",
+    "category": "IT Quiz",
+    "description": "Enter the tagline/description here",
+    "rules": [
+      "Rule 1 here",
+      "Rule 2 here"
+    ],
+    "heads": ["Head Name 1", "Head Name 2"]
+  },
+  {
+    "id": "neptunes_arena",
+    "name": "Neptune's Arena",
+    "category": "Gaming",
+    "description": "Enter the tagline/description here",
+    "rules": [
+      "Rule 1 here",
+      "Rule 2 here"
+    ],
+    "heads": ["Head Name 1", "Head Name 2"]
+  },
+  {
+    "id": "sonar_symposium",
+    "name": "Sonar Symposium",
+    "category": "Paper Presentation",
+    "description": "Enter the tagline/description here",
+    "rules": [
+      "Rule 1 here",
+      "Rule 2 here"
+    ],
+    "heads": ["Head Name 1", "Head Name 2"]
+  },
+  {
+    "id": "bermuda_enigma",
+    "name": "Bermuda Enigma",
+    "category": "Treasure Hunt",
+    "description": "Enter the tagline/description here",
+    "rules": [
+      "Rule 1 here",
+      "Rule 2 here"
+    ],
+    "heads": ["Head Name 1", "Head Name 2"]
+  },
+  {
+    "id": "trident_command",
+    "name": "Trident Command",
+    "category": "Tech Event",
+    "description": "Enter the tagline/description here",
+    "rules": [
+      "Rule 1 here",
+      "Rule 2 here"
+    ],
+    "heads": ["Head Name 1", "Head Name 2"]
+  },
+  {
+    "id": "aqua_venture",
+    "name": "Aqua Venture",
+    "category": "Tech Event",
+    "description": "Enter the tagline/description here",
+    "rules": [
+      "Rule 1 here",
+      "Rule 2 here"
+    ],
+    "heads": ["Head Name 1", "Head Name 2"]
+  },
+  {
+    "id": "luminescent_lens",
+    "name": "Luminescent Lens",
+    "category": "Photography",
+    "description": "Enter the tagline/description here",
+    "rules": [
+      "Rule 1 here",
+      "Rule 2 here"
+    ],
+    "heads": ["Head Name 1", "Head Name 2"]
+  },
+  {
+    "id": "synchronized_swarm",
+    "name": "Synchronized Swarm",
+    "category": "Cultural Event",
+    "description": "Enter the tagline/description here",
+    "rules": [
+      "Rule 1 here",
+      "Rule 2 here"
+    ],
+    "heads": ["Head Name 1", "Head Name 2"]
+  }
+]
