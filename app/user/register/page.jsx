@@ -116,7 +116,7 @@ if (list.length > 0) setCollegeName(list[0]);
           dropRadius={25}
           perturbance={0.03}
           resolution={512}
-          className="absolute inset-0 w-full h-full opacity-60"
+          className="absolute inset-0 w-full h-full opacity-60 bg-no-repeat bg-cover bg-center"
         >
           {() => <div className="w-full h-full" />}
         </WaterWave>
@@ -125,18 +125,6 @@ if (list.length > 0) setCollegeName(list[0]);
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#020714]/80 via-transparent to-[#020714]/95" />
       </div>
 
-      {/* FLOATING ACTION BUTTON: BACK TO SURFACE */}
-      <div className="fixed top-4 left-4 sm:left-6 z-50">
-        <Link
-          href="/"
-          className="inline-flex items-center space-x-2 text-[10px] font-mono font-bold tracking-widest text-cyan-300 hover:text-white px-4 py-2 rounded-full border border-white/10 border-t-white/20 bg-white/5 hover:bg-white/10 backdrop-blur-xl transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.5)] hover:shadow-[0_8px_25px_rgba(0,219,233,0.3)] focus:outline-none focus:ring-2 focus:ring-cyan-400 group"
-        >
-          <svg className="w-3 h-3 transform group-hover:-translate-x-0.5 transition-transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-          </svg>
-          <span>BACK TO SURFACE</span>
-        </Link>
-      </div>
 
       <main className="relative z-10 w-full max-w-lg mx-auto px-4 py-12 flex-grow flex items-center justify-center">
         <div className="w-full relative p-8 sm:p-12 rounded-[2rem] bg-white/5 border border-white/10 border-t-white/20 border-l-white/20 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_0_40px_rgba(255,255,255,0.02)] overflow-hidden">
