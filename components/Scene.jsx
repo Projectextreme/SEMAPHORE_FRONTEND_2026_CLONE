@@ -854,8 +854,8 @@ export default function Scene() {
       textureHeight: 512,
       waterNormals: waterNormals,
       sunDirection: new THREE.Vector3(0.7, 0.5, 0.6).normalize(),
-      sunColor: 0xffffff,
-      waterColor: 0x001e0f,
+      sunColor: 0xccddff, // Moonlight reflection color
+      waterColor: 0x001838, // Deep blue night ocean color
       distortionScale: 3.7,
       fog: true,
     });
@@ -975,12 +975,91 @@ export default function Scene() {
     }
 
     // --- DEEP UNDERGROUND OCEAN LIGHTING ---
-    const sunLight = new THREE.DirectionalLight(0xffffff, 2.8);
-    sunLight.position.set(0, 10, 5);
+    const sunLight = new THREE.DirectionalLight(0xcceeff, 2.0); // Pale blue moonlight
+    // Position the light exactly where the moon is to create a realistic reflection path on the water
+    sunLight.position.set(0, 130, -600);
     scene.add(sunLight);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
     scene.add(ambientLight);
+
+    // --- NIGHT SKY (MOON & STARS) ---
+    const skyGroup = new THREE.Group();
+    
+    // Moon
+    const moonTexture = new THREE.TextureLoader().load('/textures/moon.jpg');
+    const moonGeo = new THREE.SphereGeometry(60, 64, 64);
+    const moonMat = new THREE.MeshBasicMaterial({
+      map: moonTexture,
+      color: 0xffffff,
+    });
+    const moonMesh = new THREE.Mesh(moonGeo, moonMat);
+    // Center it above the horizon line in the distance
+    moonMesh.position.set(0, 130, -600);
+    // Rotate moon so a nice crater pattern faces us
+    moonMesh.rotation.y = -Math.PI / 2;
+    skyGroup.add(moonMesh);
+
+    // Moon Glow (Halo)
+    const glowCanvas = document.createElement('canvas');
+    glowCanvas.width = 256;
+    glowCanvas.height = 256;
+    const glowCtx = glowCanvas.getContext('2d');
+    const glowGradient = glowCtx.createRadialGradient(128, 128, 50, 128, 128, 128);
+    glowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+    glowGradient.addColorStop(0.2, 'rgba(200, 220, 255, 0.5)');
+    glowGradient.addColorStop(0.5, 'rgba(100, 150, 255, 0.2)');
+    glowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    glowCtx.fillStyle = glowGradient;
+    glowCtx.fillRect(0, 0, 256, 256);
+    
+    const glowTexture = new THREE.CanvasTexture(glowCanvas);
+    const glowMaterial = new THREE.SpriteMaterial({
+      map: glowTexture,
+      color: 0xccddff,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      opacity: 0.6,
+      depthWrite: false,
+    });
+    const glowSprite = new THREE.Sprite(glowMaterial);
+    glowSprite.scale.set(220, 220, 1);
+    glowSprite.position.set(0, 130, -610); // Slightly behind the moon
+    skyGroup.add(glowSprite);
+
+    // Circular Texture for Stars
+    const starCanvas = document.createElement('canvas');
+    starCanvas.width = 32;
+    starCanvas.height = 32;
+    const starCtx = starCanvas.getContext('2d');
+    starCtx.beginPath();
+    starCtx.arc(16, 16, 16, 0, Math.PI * 2);
+    starCtx.fillStyle = 'white';
+    starCtx.fill();
+    const starTexture = new THREE.CanvasTexture(starCanvas);
+
+    // Stars
+    const starGeo = new THREE.BufferGeometry();
+    const starCount = 2000;
+    const starPositions = new Float32Array(starCount * 3);
+    for(let i=0; i<starCount; i++) {
+      starPositions[i*3] = (Math.random() - 0.5) * 1500; // x
+      starPositions[i*3+1] = 20 + Math.random() * 800; // y
+      starPositions[i*3+2] = (Math.random() - 0.5) * 1000 - 300; // z
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    const starMat = new THREE.PointsMaterial({ 
+      color: 0xffffff, 
+      size: 1.5, 
+      map: starTexture,
+      transparent: true,
+      alphaTest: 0.5,
+      opacity: 0.8 
+    });
+    const starPoints = new THREE.Points(starGeo, starMat);
+    skyGroup.add(starPoints);
+
+    scene.add(skyGroup);
 
     const tealUnderwaterLight = new THREE.DirectionalLight(0x00a8e8, 5.5);
     tealUnderwaterLight.position.set(0, 50, -100);
@@ -3724,44 +3803,42 @@ export default function Scene() {
       }
 
       // 2. HDRI Sky, Background & Fog Crossfade
-      // Ease the sky back to full intensity after the real HDRI replaces the stand-in
-      if (envSwapFade < 1.0) {
-        envSwapFade = Math.min(1.0, envSwapFade + delta * 0.9);
-      }
-
       if (underwaterBlend === 0.0) {
-        // === PURE SURFACE VIEW ===
+        // === PURE SURFACE VIEW (DARK THEME) ===
+        scene.background = new THREE.Color(0x041024); // Deep blue night sky matching reference
         if (exrEnvironmentTexture) {
-          scene.background = exrEnvironmentTexture;
-          scene.environment = exrEnvironmentTexture;
-          scene.backgroundIntensity = envSwapFade;
+          scene.environment = exrEnvironmentTexture; // Keep environment for water reflections
         }
+        
+        renderer.setClearColor(0x041024, 1.0);
         scene.fog = null;
-        sunLight.intensity = 2.5;
-        ambientLight.color.setHex(0xffffff);
-        ambientLight.intensity = 1.0;
+
+        sunLight.intensity = 1.0; // Dimmer sun for night time
+        ambientLight.color.setHex(0x0a1526); // Darker ambient light
+        ambientLight.intensity = 0.5;
 
         // Elements remain visible always — do not close/hide them when coming backward
+        skyGroup.visible = true;
         waterCeilingMesh.visible = true;
         waterCeilingMat.opacity = 0.0;
         waterUnderside.visible = true;
         caveMesh.visible = true;
         caveMaterial.transparent = true;
         caveMaterial.opacity = 0.4;
-
-        sideCliffGroup.visible = true;
         bgMountainsGroup.visible = true;
+        sideCliffGroup.visible = true;
+
         if (lastSurfaceStateKey !== "surface") {
           setMaterialsOpacity(sideCliffMaterials, 0.4);
           setMaterialsOpacity(bgMountainMaterials, 0.4);
+          portalBackdropMat.color.copy(caveFogColor);
           lastSurfaceStateKey = "surface";
         }
       } else if (underwaterBlend < 1.0) {
         // === BLENDED TRANSITION ZONE (y: 0 to y: -40) ===
+        scene.background = new THREE.Color(0x041024).lerp(caveFogColor, underwaterBlend);
         if (exrEnvironmentTexture) {
-          scene.background = exrEnvironmentTexture;
           scene.environment = exrEnvironmentTexture;
-          scene.backgroundIntensity = (1.0 - underwaterBlend) * envSwapFade;
         }
         renderer.setClearColor(caveFogColor, 1.0);
 
@@ -3775,9 +3852,9 @@ export default function Scene() {
           scene.fog = null;
         }
 
-        sunLight.intensity = THREE.MathUtils.lerp(2.5, Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6)), underwaterBlend);
+        sunLight.intensity = THREE.MathUtils.lerp(1.0, Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6)), underwaterBlend);
         // Use pre-allocated scratch color to avoid per-frame `new Color()` allocations
-        _ambientScratch.setHex(0xffffff).lerp(_ambientUnderwaterTarget, underwaterBlend);
+        _ambientScratch.setHex(0x0a1526).lerp(_ambientUnderwaterTarget, underwaterBlend);
         ambientLight.color.copy(_ambientScratch);
         ambientLight.intensity = THREE.MathUtils.lerp(1.0, 1.6, underwaterBlend);
 
@@ -3785,6 +3862,7 @@ export default function Scene() {
         const rockOpacity = THREE.MathUtils.lerp(0.4, 1.0, underwaterBlend);
 
         // Meshes always remain visible
+        skyGroup.visible = true;
         waterCeilingMesh.visible = true;
         waterCeilingMat.opacity = underwaterBlend;
         waterUnderside.visible = true;
@@ -3812,6 +3890,7 @@ export default function Scene() {
         ambientLight.color.setHex(0x006699).lerp(_deepAmbientColor, depthFactor);
         ambientLight.intensity = 1.6 * (1.0 - depthFactor * 0.2);
 
+        skyGroup.visible = false;
         waterCeilingMesh.visible = true;
         waterCeilingMat.opacity = 1.0;
         waterUnderside.visible = true;
@@ -4541,6 +4620,7 @@ export default function Scene() {
   const isInsideNewWorld = scrollProgress > 42;
 
   return (
+    <>
     <div ref={wrapperRef} style={{ height: "1600vh", position: "relative", backgroundColor: "#011728" }}>
       {/* Custom Loader */}
       <Loader
@@ -4700,7 +4780,33 @@ export default function Scene() {
           onClose={() => setSelectedEvent(null)} 
         />
       )}
+
+      {/* Final End Screen after the event scroll (Fades in at the very bottom) */}
+      <div 
+        className={`fixed inset-0 bg-black flex flex-col items-center justify-center z-[100] transition-opacity duration-1000 ${
+          scrollProgress >= 99 ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <div className="absolute inset-0 bg-[url('/textures/waternormals.jpg')] opacity-5 bg-cover bg-center mix-blend-overlay pointer-events-none" />
+        
+        <h1 className="text-white text-5xl md:text-8xl font-black mb-6 tracking-[0.25em] drop-shadow-[0_0_20px_rgba(0,255,255,0.6)] text-center z-10">
+          SEMAPHORE<br/>2K26
+        </h1>
+        
+        <p className="text-cyan-200 text-lg md:text-xl font-mono mb-12 tracking-widest uppercase z-10 text-center px-4">
+          Ready to dive into the ultimate tech experience?
+        </p>
+        
+        <a 
+          href="/events/register" 
+          className="z-10 px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white font-mono font-bold tracking-widest rounded-lg transition-all duration-300 shadow-[0_0_20px_rgba(0,255,255,0.4)] hover:shadow-[0_0_40px_rgba(0,255,255,0.8)] hover:-translate-y-1 text-lg md:text-xl"
+        >
+          REGISTER NOW
+        </a>
+      </div>
+
       </div>
     </div>
+    </>
   );
 }
