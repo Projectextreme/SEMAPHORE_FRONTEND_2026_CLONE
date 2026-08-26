@@ -26,7 +26,7 @@ export default function DeveloperPage() {
           dropRadius={25}
           perturbance={0.03}
           resolution={512}
-          className="absolute inset-0 w-full h-full opacity-60"
+          className="absolute inset-0 w-full h-full opacity-60 bg-no-repeat bg-cover bg-center"
         >
           {() => <div className="w-full h-full" />}
         </WaterWave>
