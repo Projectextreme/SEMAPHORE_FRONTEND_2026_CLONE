@@ -77,21 +77,21 @@ export default function MyRegistrationPage() {
       {/* Decorative noise/texture overlay for the background */}
       <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none z-0"></div>
 
-      {/* Water Wave Effect (Darkened via overlay) */}
+      {/* Water Wave Effect */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-auto">
         <WaterWave
-          imageUrl="/water.jpg"
+          imageUrl="/profile_bg.jpg"
           dropRadius={25}
           perturbance={0.03}
-          resolution={512}
-          className="absolute inset-0 w-full h-full opacity-90 bg-cover bg-center"
+          resolution={1024}
+          className="absolute inset-0 w-full h-full opacity-100 bg-cover bg-center"
           style={{ backgroundSize: 'cover', backgroundPosition: 'center' }}
         >
-          {() => <div className="w-full h-full bg-black/80 pointer-events-none" />}
+          {() => <div className="w-full h-full pointer-events-none" />}
         </WaterWave>
       </div>
 
-      <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row gap-8 flex-grow">
+      <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row gap-8 flex-grow pb-24">
         <ProfileSidebar user={user} />
         <div className="flex-1 flex flex-col">
           <SetTeamCard user={user} onUserUpdate={handleUserUpdate} />
@@ -99,7 +99,7 @@ export default function MyRegistrationPage() {
         </div>
       </div>
 
-      <div className="mt-16 w-full z-20 relative mt-auto">
+      <div className="w-full z-20 relative mt-auto">
         <Footer />
       </div>
     </main>
