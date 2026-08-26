@@ -1398,6 +1398,8 @@ export default function Scene() {
     let dolphinLinePositions = null;
     let dolphinLineColors = null;
 
+    let allFishSchools = [];
+
     const dolphinMaterial = new THREE.MeshPhysicalMaterial({
       color: 0x102232,
       emissive: 0x020a12,
@@ -1487,6 +1489,44 @@ export default function Scene() {
       return dolphinObj;
     }
 
+    function setupFishSchoolInstance(parentGroup, gltf, x, y, z, scale = 1.5, phaseOffset = 0) {
+      const fGroup = new THREE.Group();
+      fGroup.position.set(x, y, z);
+      parentGroup.add(fGroup);
+
+      const direction = Math.random() > 0.5 ? 1 : -1;
+      const baseRotY = direction > 0 ? (Math.PI / 2) : (-Math.PI / 2);
+
+      let fModel;
+      if (cloneSkeleton) {
+        fModel = cloneSkeleton(gltf.scene);
+      } else {
+        fModel = gltf.scene.clone(true);
+      }
+      fModel.scale.setScalar(scale);
+      fModel.rotation.y = baseRotY;
+      fGroup.add(fModel);
+
+      let fMixer = null;
+      if (gltf.animations && gltf.animations.length > 0) {
+        fMixer = new THREE.AnimationMixer(fModel);
+        const action = fMixer.clipAction(gltf.animations[0]);
+        action.time = phaseOffset * 2.5;
+        action.play();
+      }
+
+      allFishSchools.push({
+        group: fGroup,
+        mixer: fMixer,
+        baseY: y,
+        baseZ: z,
+        direction: direction,
+        baseRotY: baseRotY,
+        speed: 5.0 + Math.random() * 5.0,
+        offset: Math.random() * Math.PI * 2
+      });
+    }
+
     // Parsed from the already-downloaded buffer (no second network request), and the
     // single parsed gltf is reused for all three pod members rather than re-loaded.
     function buildDolphinsFromBuffer(arrayBuffer) {
@@ -1511,6 +1551,107 @@ export default function Scene() {
           (err) => {
             console.error("[Aquasaga] dolphin model parse failed:", err);
             resolve(false); // scene stays usable without the pod
+          }
+        );
+      });
+    }
+
+    function buildFishSchoolFromBuffer(arrayBuffer) {
+      return new Promise((resolve) => {
+        if (!GLTFLoaderClass || !arrayBuffer) return resolve(false);
+        const gltfLoader = new GLTFLoaderClass(manager);
+        if (DRACOLoaderClass) {
+          const dracoLoader = new DRACOLoaderClass();
+          dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
+          gltfLoader.setDRACOLoader(dracoLoader);
+        }
+        gltfLoader.parse(
+          arrayBuffer,
+          "",
+          (gltf) => {
+            // Fix untextured meshes due to deprecated KHR_materials_pbrSpecularGlossiness
+            const textureLoader = new THREE.TextureLoader(manager);
+            const texPaths = [
+              "/assets/models/textures/gltf_embedded_0.png",
+              "/assets/models/textures/gltf_embedded_5.png",
+              "/assets/models/textures/gltf_embedded_9.png",
+              "/assets/models/textures/gltf_embedded_13.png"
+            ];
+            const textures = texPaths.map(path => {
+              const tex = textureLoader.load(path);
+              tex.flipY = true;
+              tex.colorSpace = THREE.SRGBColorSpace;
+              return tex;
+            });
+
+            let meshIndex = 0;
+            gltf.scene.traverse((child) => {
+              if (child.isMesh && textures[meshIndex]) {
+                child.material = new THREE.MeshStandardMaterial({
+                  map: textures[meshIndex],
+                  roughness: 0.7,
+                  metalness: 0.1,
+                  transparent: true,
+                  alphaTest: 0.1,
+                  side: THREE.DoubleSide
+                });
+                meshIndex++;
+              }
+            });
+
+            // Generate 5 fish schools for the upper ocean (visible immediately)
+            for (let i = 0; i < 5; i++) {
+              const startZ = -20 - Math.random() * 120;
+              const startX = -60 + Math.random() * 120;
+              const startY = -25 - Math.random() * 30;
+              const scale = 0.3 + Math.random() * 0.5;
+              const phase = Math.random() * 5;
+              setupFishSchoolInstance(scene, gltf, startX, startY, startZ, scale, phase);
+            }
+
+            // Generate 5 fish schools specifically around the portal ring (z = -155)
+            for (let i = 0; i < 5; i++) {
+              const startZ = -140 - Math.random() * 30;
+              const startX = -40 + Math.random() * 80;
+              const startY = -30 - Math.random() * 40;
+              const scale = 0.4 + Math.random() * 0.6;
+              const phase = Math.random() * 5;
+              setupFishSchoolInstance(scene, gltf, startX, startY, startZ, scale, phase);
+            }
+
+            // Generate 20 fish schools specifically around the 10 event nodes
+            // Event nodes span from y: -65 to -245, z: -250 to -950
+            const eventCenters = [
+              {y: -65, z: -250}, {y: -85, z: -350}, {y: -105, z: -450}, {y: -125, z: -550}, {y: -145, z: -650},
+              {y: -165, z: -750}, {y: -185, z: -850}, {y: -205, z: -950}, {y: -225, z: -950}, {y: -245, z: -950}
+            ];
+            
+            eventCenters.forEach(pos => {
+              for (let i = 0; i < 2; i++) {
+                const startZ = pos.z - 20 + Math.random() * 40;
+                const startX = -50 + Math.random() * 100;
+                const startY = pos.y - 10 + Math.random() * 20; // Hovering right near the platform height
+                const scale = 0.4 + Math.random() * 0.6;
+                const phase = Math.random() * 5;
+                setupFishSchoolInstance(newWorldGroup, gltf, startX, startY, startZ, scale, phase);
+              }
+            });
+
+            // Generate 5 fish schools for the deepest ocean floor (z = -950 to -1250)
+            for (let i = 0; i < 5; i++) {
+              const startZ = -950 - Math.random() * 300;
+              const startX = -40 + Math.random() * 80;
+              const startY = -250 - Math.random() * 200; // deepest Y
+              const scale = 0.4 + Math.random() * 0.6;
+              const phase = Math.random() * 5;
+              setupFishSchoolInstance(newWorldGroup, gltf, startX, startY, startZ, scale, phase);
+            }
+
+            resolve(true);
+          },
+          (err) => {
+            console.error("[Aquasaga] fish school model parse failed:", err);
+            resolve(false);
           }
         );
       });
@@ -2355,144 +2496,6 @@ export default function Scene() {
 
     const floatingParticlesMesh = new THREE.Points(floatingParticlesGeo, floatingParticlesMat);
     scene.add(floatingParticlesMesh);
-
-    // --- DISTANT SMALL FISH SCHOOLS ---
-    const fishCount = isMobile ? 70 : 150;
-
-    const fishSwarms = [];
-    const fishSwarmGeos = [];
-    const fishData = [];
-    const dummyObj = new THREE.Object3D();
-
-    const maxAnisotropy = isMobile ? 1 : renderer.capabilities.getMaxAnisotropy();
-    // Placeholders; real pixels are supplied from the preloaded blobs before reveal.
-    const fishTextures = [new THREE.Texture(), new THREE.Texture(), new THREE.Texture()];
-    const fishTextureKeys = ["fishOrange", "fishBlue", "fishYellow"];
-    fishTextures.forEach((tex) => {
-      tex.anisotropy = maxAnisotropy;
-    });
-
-    const fishGeo = new THREE.PlaneGeometry(3.0, 3.0);
-    fishGeo.rotateY(-Math.PI / 2);
-
-    fishTextures.forEach((tex, tIndex) => {
-      const fishMat = new THREE.ShaderMaterial({
-        uniforms: THREE.UniformsUtils.merge([
-          THREE.UniformsLib["fog"],
-          {
-            tDiffuse: { value: tex },
-            uTime: { value: 0 }
-          }
-        ]),
-        vertexShader: `
-          #include <fog_pars_vertex>
-          varying vec2 vUv;
-          uniform float uTime;
-          // Per-instance so every fish beats its tail on its own clock and at a rate
-          // proportional to how fast it is actually swimming — a single shared uTime
-          // made the whole school flick in unison, which reads as mechanical.
-          attribute float aPhase;
-          attribute float aBeat;
-          void main() {
-            vUv = uv;
-            vec3 transformed = vec3(position);
-            // Realistic fish swimming wobble (stronger at the tail)
-            // Since lookAt is reversed, +Z points to the tail.
-            float tailFactor = max(0.0, (transformed.z + 1.5) / 3.0);
-            tailFactor = tailFactor * tailFactor; // bias the sway toward the tail tip
-            float beat = sin(transformed.z * 6.0 - uTime * aBeat + aPhase);
-            transformed.x += beat * 0.22 * tailFactor;
-            vec4 mvPosition = viewMatrix * modelMatrix * instanceMatrix * vec4(transformed, 1.0);
-            gl_Position = projectionMatrix * mvPosition;
-            #include <fog_vertex>
-          }
-        `,
-        fragmentShader: `
-          #include <fog_pars_fragment>
-          uniform sampler2D tDiffuse;
-          varying vec2 vUv;
-          void main() {
-            vec4 color = texture2D(tDiffuse, vUv);
-            // Calculate luminance to create an alpha mask from the black background
-            float lum = dot(color.rgb, vec3(0.299, 0.587, 0.114));
-            float mask = smoothstep(0.02, 0.15, lum);
-            if (mask < 0.05) discard; // discard transparent pixels
-            
-            gl_FragColor = vec4(color.rgb, mask);
-            #include <fog_fragment>
-          }
-        `,
-        transparent: true,
-        blending: THREE.NormalBlending,
-        depthWrite: true, // Allow fish to occlude each other realistically
-        side: THREE.DoubleSide,
-        fog: true
-      });
-
-      const swarmCount = Math.floor(fishCount / 3);
-      // Each swarm needs its own geometry: the per-instance beat/phase attributes are
-      // stored on the geometry, so sharing one instance across all three swarms would
-      // let the last one written clobber the others.
-      const swarmGeo = fishGeo.clone();
-      fishSwarmGeos.push(swarmGeo);
-      const swarm = new THREE.InstancedMesh(swarmGeo, fishMat, swarmCount);
-      dummyObj.rotation.order = "YXZ";
-
-      const beatArray = new Float32Array(swarmCount);
-      const phaseArray = new Float32Array(swarmCount);
-
-      for (let i = 0; i < swarmCount; i++) {
-        const s = 1.0 + Math.random() * 0.8;
-        dummyObj.scale.set(s, s, s);
-
-        const isLeft = Math.random() > 0.5;
-        const baseX = isLeft ? -40 + (Math.random() - 0.5) * 40 : 40 + (Math.random() - 0.5) * 40;
-
-        const zPos = -60 - Math.random() * 1350;
-        const expectedY = (zPos / -1218) * -470;
-        const startY = Math.min(-10.0, expectedY + (Math.random() - 0.5) * 120);
-        dummyObj.position.set(baseX, startY, zPos);
-        dummyObj.updateMatrix();
-        swarm.setMatrixAt(i, dummyObj.matrix);
-
-        // Smaller fish beat their tails faster than larger ones, as in life.
-        beatArray[i] = (16.0 / s) * (0.85 + Math.random() * 0.3);
-        phaseArray[i] = Math.random() * Math.PI * 2;
-
-        const cruise = 2.4 + Math.random() * 3.6;
-        fishData.push({
-          swarmIndex: tIndex,
-          localIndex: i,
-          // Live integrated state — position is advanced along a heading each frame
-          // rather than being read back out of the instance matrix.
-          x: baseX,
-          y: startY,
-          z: zPos,
-          homeX: baseX,
-          homeY: startY,
-          homeZ: zPos,
-          heading: Math.random() * Math.PI * 2,
-          pitch: 0,
-          roll: 0,
-          turnRate: 0,
-          speed: cruise,
-          cruise,
-          // Independent slow oscillators keep each fish off every other fish's rhythm
-          wanderPhase: Math.random() * Math.PI * 2,
-          wanderRate: 0.16 + Math.random() * 0.3,
-          bobPhase: Math.random() * Math.PI * 2,
-          bobRate: 0.35 + Math.random() * 0.5,
-          dartCooldown: 3.0 + Math.random() * 12.0,
-          dartBoost: 0,
-          scale: s,
-        });
-      }
-
-      swarmGeo.setAttribute("aBeat", new THREE.InstancedBufferAttribute(beatArray, 1));
-      swarmGeo.setAttribute("aPhase", new THREE.InstancedBufferAttribute(phaseArray, 1));
-      fishSwarms.push(swarm);
-      scene.add(swarm);
-    });
 
     // --- RAYCASTER FOR PORTAL RING, PIN MARKER & 3D BANNER INTERACTIVITY ---
     const raycaster = new THREE.Raycaster();
@@ -3788,6 +3791,30 @@ export default function Scene() {
       const podRight = _podRight.crossVectors(podForward, _worldUp).normalize();
       const podUp = _podUp.crossVectors(podRight, podForward).normalize();
 
+      allFishSchools.forEach((school) => {
+        if (school.mixer) school.mixer.update(delta);
+        if (school.group) {
+          // Slight wobble to look alive, instead of continuously spinning
+          school.group.rotation.y = Math.sin(t * 0.5 + school.offset) * 0.1;
+          
+          school.group.position.y = school.baseY + Math.sin(t * 1.5 + school.offset) * 4.0;
+          
+          // Move horizontally (X axis)
+          school.group.position.x += school.direction * school.speed * delta;
+          
+          // Loop horizontally across the cavern width (tighter bounds so they don't hide inside rocks)
+          if (school.direction > 0 && school.group.position.x > 60) {
+            school.group.position.x = -60;
+            school.group.position.y = school.baseY + (Math.random() - 0.5) * 20;
+            school.group.position.z = school.baseZ + (Math.random() - 0.5) * 20;
+          } else if (school.direction < 0 && school.group.position.x < -60) {
+            school.group.position.x = 60;
+            school.group.position.y = school.baseY + (Math.random() - 0.5) * 20;
+            school.group.position.z = school.baseZ + (Math.random() - 0.5) * 20;
+          }
+        }
+      });
+
       allDolphins.forEach((dolphin, idx) => {
         if (dolphin.mixer) {
           dolphin.mixer.update(delta);
@@ -3888,81 +3915,6 @@ export default function Scene() {
       }
 
       // --- FISH SCHOOLS: steered swimming rather than fixed oscillation ---
-      // Each fish integrates a heading and speed, wanders on its own slow clock,
-      // banks into its turns, and drifts back toward a home volume so the schools
-      // stay in their regions of the canyon without ever repeating a fixed path.
-      const fishDelta = Math.min(delta, 0.05); // clamp so a stalled tab can't fling fish away
-      for (let f = 0; f < fishData.length; f++) {
-        const data = fishData[f];
-        const swarm = fishSwarms[data.swarmIndex];
-
-        // Slow wander: two incommensurate oscillators so the turn pattern never
-        // visibly loops, unlike a single sine.
-        data.wanderPhase += fishDelta * data.wanderRate;
-        const wander =
-          Math.sin(data.wanderPhase) * 0.6 +
-          Math.sin(data.wanderPhase * 2.37 + 1.1) * 0.4;
-
-        // Steer gently back toward the home anchor when the fish strays too far.
-        const dxHome = data.homeX - data.x;
-        const dzHome = data.homeZ - data.z;
-        const homeDist = Math.hypot(dxHome, dzHome);
-        let homePull = 0;
-        if (homeDist > 26) {
-          const desired = Math.atan2(dxHome, dzHome);
-          let diff = desired - data.heading;
-          while (diff > Math.PI) diff -= Math.PI * 2;
-          while (diff < -Math.PI) diff += Math.PI * 2;
-          homePull = diff * Math.min(1.0, (homeDist - 26) / 34);
-        }
-
-        // Occasional dart: a short burst of speed, the way real fish break cruise.
-        data.dartCooldown -= fishDelta;
-        if (data.dartCooldown <= 0) {
-          data.dartBoost = 3.0 + Math.random() * 4.0;
-          data.dartCooldown = 5.0 + Math.random() * 14.0;
-        }
-        if (data.dartBoost > 0) {
-          data.dartBoost = Math.max(0, data.dartBoost - fishDelta * 3.2);
-        }
-
-        // Turn rate eases toward the desired turn so heading changes are never instant.
-        const desiredTurn = wander * 0.55 + homePull * 1.4;
-        data.turnRate += (desiredTurn - data.turnRate) * Math.min(1, fishDelta * 2.6);
-        data.heading += data.turnRate * fishDelta;
-
-        // Speed eases toward cruise (+ any dart), giving natural accel/decel.
-        const targetSpeed = data.cruise + data.dartBoost;
-        data.speed += (targetSpeed - data.speed) * Math.min(1, fishDelta * 1.7);
-
-        // Vertical drift on its own rhythm, plus a pull back toward home depth.
-        data.bobPhase += fishDelta * data.bobRate;
-        const targetY = data.homeY + Math.sin(data.bobPhase) * 7.0;
-        const dyHome = targetY - data.y;
-        const climb = THREE.MathUtils.clamp(dyHome * 0.5, -3.0, 3.0);
-
-        data.x += Math.sin(data.heading) * data.speed * fishDelta;
-        data.z += Math.cos(data.heading) * data.speed * fishDelta;
-        data.y += climb * fishDelta;
-
-        // Pitch follows the climb; roll banks into the turn, both eased.
-        const targetPitch = THREE.MathUtils.clamp(-climb / Math.max(data.speed, 0.8), -0.45, 0.45);
-        data.pitch += (targetPitch - data.pitch) * Math.min(1, fishDelta * 3.0);
-        const targetRoll = THREE.MathUtils.clamp(-data.turnRate * 0.75, -0.6, 0.6);
-        data.roll += (targetRoll - data.roll) * Math.min(1, fishDelta * 3.0);
-
-        dummyObj.position.set(data.x, data.y, data.z);
-        // The sprite's nose points along -Z, so yaw is heading + PI.
-        dummyObj.rotation.set(data.pitch, data.heading + Math.PI, data.roll);
-        dummyObj.scale.set(data.scale, data.scale, data.scale);
-        dummyObj.updateMatrix();
-        swarm.setMatrixAt(data.localIndex, dummyObj.matrix);
-      }
-      fishSwarms.forEach(swarm => {
-        swarm.material.uniforms.uTime.value = t;
-        swarm.instanceMatrix.needsUpdate = true;
-      });
-
       // Natural Subtle Underwater Floating Buoyancy Effect
       const floatY = Math.sin(t * 0.4) * 0.35;
       const floatX = Math.cos(t * 0.3) * 0.25;
@@ -4333,20 +4285,12 @@ export default function Scene() {
           waterNormals.needsUpdate = true;
         }
 
-        await Promise.all(
-          fishTextureKeys.map(async (key, i) => {
-            if (!results[key]) return;
-            const tex = await blobToTexture(THREE, results[key], {
-              anisotropy: maxAnisotropy,
-            });
-            fishTextures[i].image = tex.image;
-            fishTextures[i].colorSpace = tex.colorSpace;
-            fishTextures[i].needsUpdate = true;
-          })
-        );
-
         if (results.dolphin) {
           await buildDolphinsFromBuffer(await results.dolphin.arrayBuffer());
+        }
+
+        if (results.fishSchool) {
+          await buildFishSchoolFromBuffer(await results.fishSchool.arrayBuffer());
         }
 
         if (sceneDisposed) return;
@@ -4464,10 +4408,8 @@ export default function Scene() {
       floatingParticlesMat.dispose();
       kelpGeo.dispose();
       kelpMat.dispose();
-      fishGeo.dispose();
-      for (const g of fishSwarmGeos) g.dispose();
-      for (const tex of fishTextures) tex.dispose();
-      // fish materials are handled elsewhere or small enough not to leak noticeably
+      renderer.dispose();
+      renderer.forceContextLoss();
     };
     // retryToken lets the Retry button tear down and rebuild the whole scene.
   }, [retryToken]);
