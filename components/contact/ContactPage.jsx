@@ -98,7 +98,7 @@ export default function ContactPage() {
             </div>
 
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black font-sans tracking-[0.15em] text-transparent bg-clip-text bg-gradient-to-b from-white to-cyan-200 uppercase drop-shadow-[0_0_20px_rgba(0,219,233,0.5)]">
-              HEADQUARTERS
+              HEADQUARTER
             </h2>
 
             <a

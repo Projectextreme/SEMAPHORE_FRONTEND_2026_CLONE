@@ -136,9 +136,12 @@ export default function Footer() {
           </div>
 
           {/* Centered Copyright Text */}
-          <div className="flex flex-col md:flex-row items-center justify-center w-full gap-2 text-[10px] text-cyan-100/40 tracking-widest uppercase">
+          <div className="flex items-center justify-center w-full text-[10px] text-cyan-100/40 tracking-widest uppercase">
             <p>© 2026 SEMAPHORE 2K26. ALL RIGHTS RESERVED.</p>
-            <span className="hidden md:inline text-cyan-500/30">|</span>
+          </div>
+
+          {/* Right aligned Department Text */}
+          <div className="flex items-center justify-center md:justify-end md:absolute md:right-0 mt-4 md:mt-0 z-10 text-[10px] tracking-widest uppercase">
             <p className="text-cyan-400/80">DEPARTMENT OF MCA • NMAMIT NITTE</p>
           </div>
         </div>
