@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader.js";
 import { Water } from "three/examples/jsm/objects/Water.js";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -825,9 +825,9 @@ export default function Scene() {
 
     let sceneDisposed = false;
     function loadHdriEnvironment() {
-      const rgbeLoader = new RGBELoader();
-      rgbeLoader.load("/hdri/spiaggia_di_mondello_1k.hdr", (texture) => {
-        // The effect may have torn down while this 1.5MB download was in flight
+      const exrLoader = new EXRLoader();
+      exrLoader.load("/hdri/spiaggia_di_mondello_4k.exr", (texture) => {
+        // The effect may have torn down while this 19MB download was in flight
         if (sceneDisposed) {
           texture.dispose();
           return;
@@ -1450,7 +1450,16 @@ export default function Scene() {
     // Small faceted base rocks & details surrounding the foundation perimeter
     for (let r = 0; r < 10; r++) {
       const rAngle = (r / 10) * Math.PI * 2;
-      // Base Rocks removed to clear the path as per user request
+      const rDist = 28 + Math.random() * 12;
+      const rx = Math.cos(rAngle) * rDist;
+      const rz = Math.sin(rAngle) * rDist;
+      const rScale = 2.0 + Math.random() * 2.5;
+
+      const baseRockGeo = new THREE.DodecahedronGeometry(rScale, 0);
+      const baseRockMesh = new THREE.Mesh(baseRockGeo, archRockMat);
+      baseRockMesh.position.set(rx, -43 + Math.random() * 4, rz);
+      baseRockMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+      portalGroup.add(baseRockMesh);
     }
 
     // Large Circular Stone Portal Ring (Radius 14, Tube 2.5)
@@ -1717,10 +1726,10 @@ export default function Scene() {
             // Fix untextured meshes due to deprecated KHR_materials_pbrSpecularGlossiness
             const textureLoader = new THREE.TextureLoader(manager);
             const texPaths = [
-              "/assets/models/textures/gltf_embedded_0.webp",
-              "/assets/models/textures/gltf_embedded_5.webp",
-              "/assets/models/textures/gltf_embedded_9.webp",
-              "/assets/models/textures/gltf_embedded_13.webp"
+              "/assets/models/textures/gltf_embedded_0.png",
+              "/assets/models/textures/gltf_embedded_5.png",
+              "/assets/models/textures/gltf_embedded_9.png",
+              "/assets/models/textures/gltf_embedded_13.png"
             ];
             const textures = texPaths.map(path => {
               const tex = textureLoader.load(path);
@@ -2651,7 +2660,6 @@ export default function Scene() {
       targetZ: -50,
       rx: 0,
       ry: 0,
-      rz: 0,
       fov: isMobile ? 65 : 75,
       fogDensity: 0.0,
     };
@@ -2723,21 +2731,21 @@ export default function Scene() {
             setScrollProgress(currentProgress);
           }
 
-          // PORTAL GATE: Stop user right in front of portal entrance (~7.0% - 7.11%) until button is clicked
+          // PORTAL GATE: Stop user right in front of portal entrance (~6.5% - 6.9%) until button is clicked
           if (!hasPassedPortalRef.current && !isWarpingRef.current) {
-            if (self.progress >= 0.07) {
+            if (self.progress >= 0.065) {
               setShowPortalGate(true);
             } else {
               setShowPortalGate(false);
             }
 
-            // Hard stop at 0.0711 right in front of portal (~4m before)
-            if (self.progress > 0.0711) {
+            // Hard stop at 0.069 right in front of portal
+            if (self.progress > 0.069) {
               const maxScroll = ScrollTrigger.maxScroll(window);
               if (maxScroll) {
-                window.scrollTo(0, maxScroll * 0.0711);
+                window.scrollTo(0, maxScroll * 0.069);
                 if (window.__lenis) {
-                  window.__lenis.scrollTo(maxScroll * 0.0711, { immediate: true });
+                  window.__lenis.scrollTo(maxScroll * 0.069, { immediate: true });
                 }
               }
             }
@@ -2849,9 +2857,6 @@ export default function Scene() {
         targetZ: -260,
         rx: 0,
         ry: 0,
-        rz: Math.PI * 2, // Realistic warp spinning motion
-        fov: 105,        // Warp speed FOV stretch
-
         fogDensity: 0.015,
         duration: 1.0,
         ease: "power1.inOut",
@@ -4391,19 +4396,13 @@ export default function Scene() {
         }
       }
 
-      // Smooth underwater steadicam look-ahead gaze with micro-banking roll and warp roll
+      // Smooth underwater steadicam look-ahead gaze with micro-banking roll
       camera.lookAt(
         currentLookAt.x + mouse.x * (isMobile ? 0.6 : 1.2),
         currentLookAt.y + mouse.y * (isMobile ? 0.6 : 1.2),
         currentLookAt.z
       );
-      camera.rotation.z = floatRotZ + currentBank + (camState.rz || 0);
-
-      // Apply dynamic FOV for warp stretch effect
-      if (Math.abs(camera.fov - (camState.fov || 75)) > 0.1) {
-        camera.fov = camState.fov || 75;
-        camera.updateProjectionMatrix();
-      }
+      camera.rotation.z = floatRotZ + currentBank;
 
       renderer.render(scene, camera);
 
@@ -4716,28 +4715,32 @@ export default function Scene() {
         {/* Cybernetic Portal Gate Interactive Entry Button */}
         {showPortalGate && !isWarping && (
           <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center pointer-events-none p-6 animate-fadeIn">
-            <button 
-              onClick={handleEnterPortal}
-              className="flex flex-col items-center gap-5 text-center w-full max-w-[280px] bg-[#010c18]/90 border border-cyan-400/50 p-6 rounded-2xl backdrop-blur-lg shadow-[0_0_50px_rgba(0,255,255,0.3)] pointer-events-auto cursor-pointer hover:border-cyan-300 hover:shadow-[0_0_60px_rgba(0,255,255,0.6)] hover:-translate-y-1 transition-all duration-300 group"
-            >
-              {/* The Logo Image */}
-              <div className="relative w-28 h-28 flex items-center justify-center rounded-full bg-cyan-950/40 border border-cyan-500/30 group-hover:border-cyan-400/80 transition-colors">
-                <img 
-                  src="/logo.png" 
-                  alt="Enter Portal" 
-                  className="w-20 h-auto object-contain drop-shadow-[0_0_15px_rgba(0,255,255,0.8)] animate-pulse"
-                />
+            <div className="flex flex-col items-center gap-4 text-center max-w-md bg-[#010c18]/85 border border-cyan-400/60 p-8 rounded-2xl backdrop-blur-xl shadow-[0_0_60px_rgba(0,255,255,0.4)] pointer-events-auto">
+              <div className="w-12 h-12 rounded-full border border-cyan-400/80 flex items-center justify-center shadow-[0_0_20px_rgba(0,255,255,0.6)] animate-pulse">
+                <svg className="w-6 h-6 fill-cyan-300" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z" />
+                </svg>
               </div>
 
               <div className="flex flex-col gap-1">
-                <h3 className="font-mono text-lg font-black tracking-widest text-white group-hover:text-cyan-100 transition-colors">
-                  ENTER PORTAL
-                </h3>
-                <span className="font-mono text-[10px] tracking-[0.2em] text-cyan-400/70 uppercase font-bold">
-                  Click to Warp
+                <span className="font-mono text-[10px] md:text-xs tracking-[0.35em] text-cyan-400 uppercase font-bold">
+                  PORTAL STARGATE REACHED
                 </span>
+                <h3 className="font-mono text-xl md:text-2xl font-black tracking-wider text-white drop-shadow-[0_0_20px_rgba(0,255,255,0.7)]">
+                  ENTER THE PORTAL
+                </h3>
+                <p className="text-xs text-cyan-200/70 tracking-wide font-sans">
+                  Click to activate warp drive and transition inside the event realm.
+                </p>
               </div>
-            </button>
+
+              <button
+                onClick={handleEnterPortal}
+                className="group relative w-full mt-2 py-3.5 px-8 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-mono font-bold text-sm tracking-[0.25em] uppercase shadow-[0_0_30px_rgba(0,255,255,0.6)] hover:shadow-[0_0_50px_rgba(0,255,255,0.9)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer"
+              >
+                WARP THROUGH →
+              </button>
+            </div>
           </div>
         )}
 
