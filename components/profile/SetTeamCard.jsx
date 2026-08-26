@@ -91,14 +91,6 @@ export default function SetTeamCard({ user, onUserUpdate }) {
           </div>
         </div>
 
-        {existingTeamName && !isEditing && (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="text-xs font-bold text-cyan-400 hover:text-white bg-cyan-500/10 hover:bg-cyan-500/20 px-3 py-1.5 rounded-xl transition-all border border-cyan-500/30 self-start sm:self-auto"
-          >
-            Change Team
-          </button>
-        )}
       </div>
 
       {error && (

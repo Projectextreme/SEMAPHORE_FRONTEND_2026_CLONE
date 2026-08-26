@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from 'next/navigation';
+import { User, Phone } from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 
@@ -357,11 +358,23 @@ export default function MyRegistration({ user: initialUser }) {
                             <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                               Registered Participants ({participants.length}):
                             </span>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-col gap-2 w-fit">
                               {participants.map((p, pIdx) => (
-                                <span key={pIdx} className="text-xs bg-white/5 border border-white/10 text-gray-300 px-2.5 py-1 rounded-lg font-medium break-all sm:break-normal flex-1 sm:flex-none">
-                                  👤 {p.name || `Participant ${pIdx + 1}`} {p.phone ? `• 📞 ${p.phone}` : ''}
-                                </span>
+                                <div key={pIdx} className="flex flex-wrap items-center gap-3 text-xs bg-white/5 border border-white/10 text-gray-300 px-4 py-2.5 rounded-lg font-medium">
+                                  <div className="flex items-center gap-1.5">
+                                    <User className="text-cyan-400/80 w-3 h-3" />
+                                    <span>{p.name || `Participant ${pIdx + 1}`}</span>
+                                  </div>
+                                  {p.phone && (
+                                    <>
+                                      <span className="text-white/20 hidden sm:inline">•</span>
+                                      <div className="flex items-center gap-1.5 text-gray-400">
+                                        <Phone className="text-pink-400/80 w-3 h-3" />
+                                        <span>{p.phone}</span>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
                               ))}
                             </div>
                           </div>
@@ -417,11 +430,23 @@ export default function MyRegistration({ user: initialUser }) {
                     <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                       Registered Participants ({participants.length}):
                     </span>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-col gap-2 w-fit">
                       {participants.map((p, pIdx) => (
-                        <span key={pIdx} className="text-xs bg-white/5 border border-white/10 text-gray-300 px-2.5 py-1 rounded-lg font-medium break-all sm:break-normal flex-1 sm:flex-none">
-                          👤 {p.name || `Participant ${pIdx + 1}`} {p.phone ? `• 📞 ${p.phone}` : ''}
-                        </span>
+                        <div key={pIdx} className="flex flex-wrap items-center gap-3 text-xs bg-white/5 border border-white/10 text-gray-300 px-4 py-2.5 rounded-lg font-medium">
+                          <div className="flex items-center gap-1.5">
+                            <User className="text-cyan-400/80 w-3 h-3" />
+                            <span>{p.name || `Participant ${pIdx + 1}`}</span>
+                          </div>
+                          {p.phone && (
+                            <>
+                              <span className="text-white/20 hidden sm:inline">•</span>
+                              <div className="flex items-center gap-1.5 text-gray-400">
+                                <Phone className="text-pink-400/80 w-3 h-3" />
+                                <span>{p.phone}</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>
