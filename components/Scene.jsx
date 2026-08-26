@@ -584,6 +584,10 @@ export default function Scene() {
 
   const [progress, setProgress] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [showPortalGate, setShowPortalGate] = useState(false);
+  const [isWarping, setIsWarping] = useState(false);
+  const hasPassedPortalRef = useRef(false);
+  const isWarpingRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [retryToken, setRetryToken] = useState(0);
@@ -676,6 +680,70 @@ export default function Scene() {
       audio.pause();
       setIsAudioPlaying(false);
     }
+  };
+
+  // Cinematic Portal Traversal: Disables manual scrolling and smoothly flies camera inside portal
+  const handleEnterPortal = () => {
+    if (isWarpingRef.current) return;
+    isWarpingRef.current = true;
+    setIsWarping(true);
+    setShowPortalGate(false);
+
+    // Lock manual scrolling via Lenis
+    if (window.__lenis) {
+      window.__lenis.stop();
+    }
+
+    // Block all manual input events (wheel, touch, keyboard)
+    const preventScroll = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    const preventKeys = (e) => {
+      if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Space", "Home", "End"].includes(e.code)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    window.addEventListener("wheel", preventScroll, { passive: false });
+    window.addEventListener("touchmove", preventScroll, { passive: false });
+    window.addEventListener("keydown", preventKeys, { passive: false });
+
+    const maxScroll = ScrollTrigger.maxScroll(window) || (document.documentElement.scrollHeight - window.innerHeight);
+    const startScroll = maxScroll * 0.069;
+    const targetScroll = maxScroll * 0.078; // Takes camera through stargate and into open event waters
+
+    const scrollObj = { y: startScroll };
+
+    // Smooth, cinematic slow traversal through the portal
+    gsap.to(scrollObj, {
+      y: targetScroll,
+      duration: 3.5, // Cinematic traversal duration
+      ease: "power2.inOut",
+      onUpdate: () => {
+        window.scrollTo(0, scrollObj.y);
+        if (window.__lenis) {
+          window.__lenis.scrollTo(scrollObj.y, { immediate: true });
+        }
+        ScrollTrigger.update();
+      },
+      onComplete: () => {
+        hasPassedPortalRef.current = true;
+        isWarpingRef.current = false;
+        setIsWarping(false);
+
+        // Remove input block listeners
+        window.removeEventListener("wheel", preventScroll);
+        window.removeEventListener("touchmove", preventScroll);
+        window.removeEventListener("keydown", preventKeys);
+
+        // Re-enable smooth manual scrolling
+        if (window.__lenis) {
+          window.__lenis.start();
+        }
+      },
+    });
   };
 
   useEffect(() => {
@@ -793,6 +861,7 @@ export default function Scene() {
     });
     water.rotation.x = -Math.PI / 2;
     water.position.y = -2;
+    water.renderOrder = 0; // Surface water layer — rendered first
     scene.add(water);
 
     // --- UNDERWATER CEILING CAUSTICS PLANE (VIEWED FROM BELOW WATER) ---
@@ -813,7 +882,8 @@ export default function Scene() {
     const waterCeilingMesh = new THREE.Mesh(waterCeilingGeo, waterCeilingMat);
     waterCeilingMesh.rotation.x = Math.PI / 2;
     waterCeilingMesh.position.y = -2.05;
-    waterCeilingMesh.visible = false;
+    waterCeilingMesh.visible = true;
+    waterCeilingMesh.renderOrder = 2; // Caustic ceiling above water underside
     scene.add(waterCeilingMesh);
 
     const waterUnderside = new THREE.Mesh(
@@ -829,6 +899,8 @@ export default function Scene() {
     );
     waterUnderside.rotation.x = -Math.PI / 2;
     waterUnderside.position.y = -2.01;
+    waterUnderside.visible = true;
+    waterUnderside.renderOrder = 1; // Water underside — just below caustics
     scene.add(waterUnderside);
 
     // --- SURFACE GLACIAL ICEBERGS & ROCKS ---
@@ -993,6 +1065,7 @@ export default function Scene() {
       createSideCliffWall(-66, false, zDepth, yPos); // Left Cliff Wall (Inward at x = -66 for high visibility)
       createSideCliffWall(66, true, zDepth, yPos);   // Right Cliff Wall (Inward at x = +66 for high visibility)
     }
+    sideCliffGroup.renderOrder = 4; // Side cliffs above cave walls
     scene.add(sideCliffGroup);
 
     // --- LAYER 3 & 4: DISTANT UNDERWATER MOUNTAIN PEAKS & CAVERN WALLS ---
@@ -1020,12 +1093,13 @@ export default function Scene() {
     });
     const caveMesh = new THREE.Mesh(caveGeometry, caveMaterial);
     caveMesh.position.set(0, -335, -380);
-    caveMesh.visible = false;
+    caveMesh.visible = true;
+    caveMesh.renderOrder = 3; // Cave walls between water and cliffs
     scene.add(caveMesh);
 
     // Large Distant Underwater Mountains
     const bgMountainsGroup = new THREE.Group();
-    bgMountainsGroup.visible = false;
+    bgMountainsGroup.visible = true;
 
     const mountainMaterial = new THREE.MeshStandardMaterial({
       color: 0x031420,
@@ -1383,6 +1457,7 @@ export default function Scene() {
     portalBlurMesh.position.set(0, 0, -0.3);
     portalGroup.add(portalBlurMesh);
 
+    portalGroup.renderOrder = 5; // Portal above cliffs
     scene.add(portalGroup);
 
     let dolphinMixer = null;
@@ -2568,49 +2643,87 @@ export default function Scene() {
         trigger: wrapper,
         start: "top top",
         end: "bottom bottom",
-        scrub: isMobile ? 2.2 : 1.4,
-        snap: {
-          snapTo: (progress, self) => {
-            // Surface (0%) <-> Cave Entrance (5% / Image 2): Automatic smooth snap without stopping/pausing midway
-            if (progress > 0 && progress < 0.05) {
-              if (self && self.direction === -1) {
-                return 0.0; // Auto snap up to surface hero view (Image 1)
-              }
-              return 0.05; // Auto snap down to cave entrance view (Image 2)
-            }
-            return progress;
-          },
-          duration: (snapValue) => {
-            if (snapValue === 0) return { min: 0.05, max: 0.12 };
-            if (snapValue === 0.05) return { min: 0.05, max: 0.15 };
-            return { min: 0.1, max: 0.25 };
-          },
-          delay: 0.0,
-          ease: "power2.out",
-        },
+        scrub: isMobile ? 1.0 : 0.8,
         onUpdate: (self) => {
           const currentProgress = Math.floor(self.progress * 100);
-          setScrollProgress(currentProgress);
+          // PERF: Only trigger React re-render when integer value actually changes
+          if (currentProgress !== lastScrollInt) {
+            lastScrollInt = currentProgress;
+            setScrollProgress(currentProgress);
+          }
 
-          // PRE-PORTAL FAST-SCROLL PROTECTION & PORTAL ENTRY SAFETY (progress <= 0.40)
-          if (self.progress <= 0.40) {
-            const rawVelocity = self.getVelocity();
-            const absVelocity = Math.abs(rawVelocity);
+          // PORTAL GATE: Stop user right in front of portal entrance (~6.5% - 6.9%) until button is clicked
+          if (!hasPassedPortalRef.current && !isWarpingRef.current) {
+            if (self.progress >= 0.065) {
+              setShowPortalGate(true);
+            } else {
+              setShowPortalGate(false);
+            }
 
-            // Proximity Dampening Zone: As progress approaches 0.40 (near portal threshold),
-            // smoothly reduce allowable velocity (sensitivity 1.0 down to 0.25)
-            const distanceToPortalThreshold = 0.40 - self.progress;
-            const proximityFactor = THREE.MathUtils.clamp(distanceToPortalThreshold / 0.20, 0.25, 1.0);
-
-            // Clamp max velocity in pre-portal section to prevent fast-scroll overshooting
-            const maxAllowablePrePortalVelocity = 1400 * proximityFactor;
-
-            if (absVelocity > maxAllowablePrePortalVelocity && self.scroll) {
-              const clampedVel = Math.sign(rawVelocity) * maxAllowablePrePortalVelocity;
-              const targetScroll = self.scroll() + (clampedVel * 0.016);
-              self.scroll(targetScroll);
+            // Hard stop at 0.069 right in front of portal
+            if (self.progress > 0.069) {
+              const maxScroll = ScrollTrigger.maxScroll(window);
+              if (maxScroll) {
+                window.scrollTo(0, maxScroll * 0.069);
+                if (window.__lenis) {
+                  window.__lenis.scrollTo(maxScroll * 0.069, { immediate: true });
+                }
+              }
+            }
+          } else if (hasPassedPortalRef.current) {
+            setShowPortalGate(false);
+            // If user scrolls back up to surface (progress < 0.04), reset portal gate state
+            if (self.progress < 0.04) {
+              hasPassedPortalRef.current = false;
             }
           }
+
+          // --- COMPREHENSIVE SCROLL LOGGER ---
+          const p = self.progress;
+          let currentSection = "Surface Hero Ocean View (0% - 2.5%)";
+          if (p >= 0.025 && p < 0.065) currentSection = "Underwater Cave Descent (2.5% - 6.5%)";
+          else if (p >= 0.065 && p < 0.069) currentSection = "Pre-Portal Stargate Gate (6.5% - 6.9%)";
+          else if (p >= 0.069 && p < 0.078) currentSection = "Stargate Singularity Warp Transition (6.9% - 7.8%)";
+          else if (p >= 0.50 && p < 0.55) currentSection = "Event 01: Coding Platform (50% - 55%)";
+          else if (p >= 0.55 && p < 0.60) currentSection = "Event 02: Web Design Platform (55% - 60%)";
+          else if (p >= 0.60 && p < 0.65) currentSection = "Event 03: IT Quiz Platform (60% - 65%)";
+          else if (p >= 0.65 && p < 0.70) currentSection = "Event 04: Gaming Platform (65% - 70%)";
+          else if (p >= 0.70 && p < 0.75) currentSection = "Event 05: Tech Talk Platform (70% - 75%)";
+          else if (p >= 0.75 && p < 0.80) currentSection = "Event 06: Surprise Platform (75% - 80%)";
+          else if (p >= 0.80 && p < 0.85) currentSection = "Event 07: IT Manager Platform (80% - 85%)";
+          else if (p >= 0.85 && p < 0.90) currentSection = "Event 08: Startup Platform (85% - 90%)";
+          else if (p >= 0.90 && p < 0.95) currentSection = "Event 09: Dance Platform (90% - 95%)";
+          else if (p >= 0.95) currentSection = "Event 10: Photography & Finale (95% - 100%)";
+
+          console.log(
+            `%c[SCROLL] ${(p * 100).toFixed(1)}% | ${self.direction === 1 ? "FORWARD ↓" : "BACKWARD ↑"} | ${currentSection}`,
+            "color: #00ffff; font-weight: bold; background: #011728; padding: 2px 6px; border-radius: 3px;",
+            {
+              section: currentSection,
+              scrollProgress: `${(p * 100).toFixed(2)}%`,
+              direction: self.direction === 1 ? "FORWARD ↓" : "BACKWARD ↑",
+              velocity: self.getVelocity ? Math.round(self.getVelocity()) : 0,
+              cameraPosition: {
+                x: +(camState.x || 0).toFixed(1),
+                y: +(camState.y || 0).toFixed(1),
+                z: +(camState.z || 0).toFixed(1),
+              },
+              elements: {
+                "Water Surface": { visible: water ? water.visible : true, hidden: water ? !water.visible : false },
+                "Water Ceiling": { visible: waterCeilingMesh ? waterCeilingMesh.visible : true, hidden: waterCeilingMesh ? !waterCeilingMesh.visible : false, opacity: +(waterCeilingMat?.opacity || 0).toFixed(2) },
+                "Water Underside": { visible: waterUnderside ? waterUnderside.visible : true, hidden: waterUnderside ? !waterUnderside.visible : false },
+                "Cave Walls (caveMesh)": { visible: caveMesh ? caveMesh.visible : true, hidden: caveMesh ? !caveMesh.visible : false, opacity: +(caveMaterial?.opacity || 1).toFixed(2) },
+                "Side Cliff Walls": { visible: sideCliffGroup ? sideCliffGroup.visible : true, hidden: sideCliffGroup ? !sideCliffGroup.visible : false },
+                "Background Mountains": { visible: bgMountainsGroup ? bgMountainsGroup.visible : true, hidden: bgMountainsGroup ? !bgMountainsGroup.visible : false },
+                "Portal Stargate": { visible: portalGroup ? portalGroup.visible : true, hidden: portalGroup ? !portalGroup.visible : false },
+                "Event World (newWorldGroup)": { visible: newWorldGroup ? newWorldGroup.visible : false, hidden: newWorldGroup ? !newWorldGroup.visible : true },
+                "Portal Backdrop": { visible: portalBackdropMesh ? portalBackdropMesh.visible : true, hidden: portalBackdropMesh ? !portalBackdropMesh.visible : false },
+                "Hero UI Overlay": { visible: heroUiRef.current ? parseFloat(heroUiRef.current.style.opacity || "1") > 0.05 : true, opacity: heroUiRef.current?.style.opacity || "1.0" },
+                "Portal Stop Button": { visible: self.progress >= 0.065 && !hasPassedPortalRef.current, hidden: !(self.progress >= 0.065 && !hasPassedPortalRef.current) },
+                "Warping State": { active: isWarpingRef.current }
+              }
+            }
+          );
         },
       },
     });
@@ -3528,12 +3641,18 @@ export default function Scene() {
     let lastSurfaceStateKey = null; // tracks which fixed-opacity branch (surface/blended/underwater) was last applied
     let lastPortalApproachBlend = -1;
 
+    // --- PERF: Pre-allocated persistent fog to avoid per-frame `new FogExp2()` allocations ---
+    const _persistentFog = new THREE.FogExp2(0x052a42, 0.0);
+    let lastScrollInt = -1; // throttle setScrollProgress to only fire on integer change
+
     // --- PERF: Reusable scratch vectors/quaternions/colors so the animate loop
     // allocates ~0 objects per frame (avoids GC-driven stutter). ---
     const _caveFogColorA = new THREE.Color(0x052a42);
     const _caveFogColorB = new THREE.Color(0x011728);
     const _caveFogColor = new THREE.Color();
     const _deepAmbientColor = new THREE.Color(0x002e4d);
+    const _ambientScratch = new THREE.Color();
+    const _ambientUnderwaterTarget = new THREE.Color(0x006699);
     const _podForward = new THREE.Vector3();
     const _podRight = new THREE.Vector3();
     const _podUp = new THREE.Vector3();
@@ -3591,8 +3710,9 @@ export default function Scene() {
       const depthFactor = Math.min(1.0, Math.abs(camState.y) / 470);
       const caveFogColor = _caveFogColor.copy(_caveFogColorA).lerp(_caveFogColorB, depthFactor);
 
-      // Single Shared Blend Factor: y: 0.0 (surface hero view: 0.0) -> y: -10.0 (cave entrance view: 1.0)
-      const rawBlend = THREE.MathUtils.clamp((0.0 - camState.y) / 10.0, 0.0, 1.0);
+      // Single Shared Blend Factor: y: 0.0 (surface hero view: 0.0) -> y: -40.0 (fully underwater: 1.0)
+      // Widened from 10 to 40 Y-units for a gradual, smooth crossfade that works cleanly in both directions
+      const rawBlend = THREE.MathUtils.clamp((0.0 - camState.y) / 40.0, 0.0, 1.0);
       const underwaterBlend = THREE.MathUtils.smoothstep(rawBlend, 0.0, 1.0);
 
       // 1. Hero UI text opacity: 100% visible from surface (y: 2.0) down to cave entrance (y: -40.0), fading out past portal entry (y: -40.0 -> -75.0)
@@ -3610,6 +3730,7 @@ export default function Scene() {
       }
 
       if (underwaterBlend === 0.0) {
+        // === PURE SURFACE VIEW ===
         if (exrEnvironmentTexture) {
           scene.background = exrEnvironmentTexture;
           scene.environment = exrEnvironmentTexture;
@@ -3620,8 +3741,10 @@ export default function Scene() {
         ambientLight.color.setHex(0xffffff);
         ambientLight.intensity = 1.0;
 
-        waterCeilingMesh.visible = false;
-        waterUnderside.visible = false;
+        // Elements remain visible always — do not close/hide them when coming backward
+        waterCeilingMesh.visible = true;
+        waterCeilingMat.opacity = 0.0;
+        waterUnderside.visible = true;
         caveMesh.visible = true;
         caveMaterial.transparent = true;
         caveMaterial.opacity = 0.4;
@@ -3634,6 +3757,7 @@ export default function Scene() {
           lastSurfaceStateKey = "surface";
         }
       } else if (underwaterBlend < 1.0) {
+        // === BLENDED TRANSITION ZONE (y: 0 to y: -40) ===
         if (exrEnvironmentTexture) {
           scene.background = exrEnvironmentTexture;
           scene.environment = exrEnvironmentTexture;
@@ -3641,23 +3765,29 @@ export default function Scene() {
         }
         renderer.setClearColor(caveFogColor, 1.0);
 
+        // Use pre-allocated fog object to avoid per-frame allocations
         const targetFogDensity = camState.fogDensity * 0.5 * underwaterBlend;
         if (targetFogDensity > 0.0001) {
-          scene.fog = new THREE.FogExp2(caveFogColor, targetFogDensity);
+          _persistentFog.color.copy(caveFogColor);
+          _persistentFog.density = targetFogDensity;
+          scene.fog = _persistentFog;
         } else {
           scene.fog = null;
         }
 
         sunLight.intensity = THREE.MathUtils.lerp(2.5, Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6)), underwaterBlend);
-        ambientLight.color.copy(new THREE.Color(0xffffff).lerp(new THREE.Color(0x006699), underwaterBlend));
+        // Use pre-allocated scratch color to avoid per-frame `new Color()` allocations
+        _ambientScratch.setHex(0xffffff).lerp(_ambientUnderwaterTarget, underwaterBlend);
+        ambientLight.color.copy(_ambientScratch);
         ambientLight.intensity = THREE.MathUtils.lerp(1.0, 1.6, underwaterBlend);
 
-        // 3. Soft Underwater Rock Blur & Opacity Crossfade
+        // Smooth opacity crossfade: 0.4 at surface -> 1.0 fully underwater
         const rockOpacity = THREE.MathUtils.lerp(0.4, 1.0, underwaterBlend);
 
-        waterCeilingMesh.visible = (camState.y < -0.5);
+        // Meshes always remain visible
+        waterCeilingMesh.visible = true;
         waterCeilingMat.opacity = underwaterBlend;
-        waterUnderside.visible = (camState.y < -2.0);
+        waterUnderside.visible = true;
 
         caveMesh.visible = true;
         caveMaterial.transparent = true;
@@ -3671,8 +3801,12 @@ export default function Scene() {
 
         portalBackdropMat.color.copy(caveFogColor);
       } else {
+        // === FULLY UNDERWATER ===
         scene.background = caveFogColor;
-        scene.fog = new THREE.FogExp2(caveFogColor, camState.fogDensity * 0.5);
+        // Use pre-allocated fog object
+        _persistentFog.color.copy(caveFogColor);
+        _persistentFog.density = camState.fogDensity * 0.5;
+        scene.fog = _persistentFog;
 
         sunLight.intensity = Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6));
         ambientLight.color.setHex(0x006699).lerp(_deepAmbientColor, depthFactor);
@@ -4271,8 +4405,23 @@ export default function Scene() {
 
         // Force a full render so every material/shader is compiled and uploaded
         // BEFORE the curtain lifts, rather than hitching on the first visible frame.
+        // Pre-warm underwater shaders by temporarily making all geometry visible
+        // so renderer.compile() catches every shader program, preventing first-scroll hitch.
+        const preWarmTargets = [
+          { obj: caveMesh, was: caveMesh.visible },
+          { obj: sideCliffGroup, was: sideCliffGroup.visible },
+          { obj: bgMountainsGroup, was: bgMountainsGroup.visible },
+          { obj: waterCeilingMesh, was: waterCeilingMesh.visible },
+          { obj: waterUnderside, was: waterUnderside.visible },
+          { obj: newWorldGroup, was: newWorldGroup.visible },
+        ];
+        for (const t of preWarmTargets) t.obj.visible = true;
+
         renderer.compile(scene, camera);
         renderer.render(scene, camera);
+
+        // Restore original visibility state
+        for (const t of preWarmTargets) t.obj.visible = t.was;
 
         // Hand the browser two frames to actually present that work, then reveal.
         requestAnimationFrame(() => {
@@ -4480,7 +4629,49 @@ export default function Scene() {
             </div>
           </div>
 
-        </div>
+        {/* Cybernetic Portal Gate Interactive Entry Button */}
+        {showPortalGate && !isWarping && (
+          <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center pointer-events-none p-6 animate-fadeIn">
+            <div className="flex flex-col items-center gap-4 text-center max-w-md bg-[#010c18]/85 border border-cyan-400/60 p-8 rounded-2xl backdrop-blur-xl shadow-[0_0_60px_rgba(0,255,255,0.4)] pointer-events-auto">
+              <div className="w-12 h-12 rounded-full border border-cyan-400/80 flex items-center justify-center shadow-[0_0_20px_rgba(0,255,255,0.6)] animate-pulse">
+                <svg className="w-6 h-6 fill-cyan-300" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z" />
+                </svg>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <span className="font-mono text-[10px] md:text-xs tracking-[0.35em] text-cyan-400 uppercase font-bold">
+                  PORTAL STARGATE REACHED
+                </span>
+                <h3 className="font-mono text-xl md:text-2xl font-black tracking-wider text-white drop-shadow-[0_0_20px_rgba(0,255,255,0.7)]">
+                  ENTER THE PORTAL
+                </h3>
+                <p className="text-xs text-cyan-200/70 tracking-wide font-sans">
+                  Click to activate warp drive and transition inside the event realm.
+                </p>
+              </div>
+
+              <button
+                onClick={handleEnterPortal}
+                className="group relative w-full mt-2 py-3.5 px-8 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-mono font-bold text-sm tracking-[0.25em] uppercase shadow-[0_0_30px_rgba(0,255,255,0.6)] hover:shadow-[0_0_50px_rgba(0,255,255,0.9)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer"
+              >
+                WARP THROUGH →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Warping Status HUD Overlay */}
+        {isWarping && (
+          <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[95] pointer-events-none flex flex-col items-center gap-2 bg-[#010c18]/90 border border-cyan-400 px-8 py-3 rounded-full backdrop-blur-xl shadow-[0_0_40px_rgba(0,255,255,0.7)] animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
+              <span className="font-mono text-xs md:text-sm font-bold tracking-[0.35em] text-cyan-300 uppercase">
+                WARPING THROUGH STARGATE...
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Minimal Top-Left Speaker Audio Toggle Icon */}
@@ -4509,6 +4700,7 @@ export default function Scene() {
           onClose={() => setSelectedEvent(null)} 
         />
       )}
+      </div>
     </div>
   );
 }
