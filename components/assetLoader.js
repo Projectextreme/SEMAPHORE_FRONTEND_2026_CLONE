@@ -24,10 +24,8 @@ export const ASSET_VERSION = "v1";
  */
 export const CRITICAL_ASSETS = [
   { key: "waterNormals", url: "/textures/waternormals.jpg", kind: "texture", bytes: 249000 },
-  { key: "fishOrange", url: "/fishes/fish_orange.png", kind: "texture", bytes: 460000 },
-  { key: "fishBlue", url: "/fishes/fish_blue.png", kind: "texture", bytes: 492000 },
-  { key: "fishYellow", url: "/fishes/fish_yellow.png", kind: "texture", bytes: 553000 },
   { key: "dolphin", url: "/assets/models/dolphin_anim.glb", kind: "buffer", bytes: 146000 },
+  { key: "fishSchool", url: "/assets/models/source/school%20of%20fish.glb", kind: "buffer", bytes: 34565856 },
 ];
 
 /** Heavy, non-first-frame assets streamed in after the scene is already interactive. */
