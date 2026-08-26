@@ -4657,14 +4657,17 @@ export default function Scene() {
         >
 
 
-          <main className="flex flex-col items-center justify-center text-center my-auto">
-            <h2 className="font-mono text-4xl md:text-8xl font-extrabold tracking-[0.35em] text-transparent bg-clip-text bg-gradient-to-b from-white to-white/40 drop-shadow-[0_4px_30px_rgba(0,0,0,0.5)] select-none">
+          <main className="relative flex flex-col items-center justify-center text-center my-auto w-full py-20">
+            {/* Dark gradient behind text to ensure readability against the bright moon */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(2,6,23,0.85)_0%,_rgba(0,0,0,0)_70%)] -z-10 pointer-events-none" />
+            
+            <h1 className="font-mono text-5xl md:text-[7rem] font-black tracking-[0.2em] text-white drop-shadow-[0_0_30px_rgba(0,255,255,0.9)] mb-2 select-none leading-none">
               SEMAPHORE
-            </h2>
-            <h1 className="font-mono text-6xl md:text-9xl font-black tracking-[0.25em] text-white drop-shadow-[0_0_40px_rgba(0,200,255,0.6)] my-2 select-none">
-              2 K 2 6
             </h1>
-            <span className="font-mono text-xs md:text-sm tracking-[0.35em] text-cyan-200 uppercase font-bold">
+            <h2 className="font-mono text-xl md:text-3xl font-extrabold tracking-[0.4em] text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] mb-6 select-none ml-2">
+              2 K 2 6
+            </h2>
+            <span className="font-mono text-xs md:text-sm tracking-[0.3em] text-cyan-50 uppercase font-bold drop-shadow-[0_2px_5px_rgba(0,0,0,1)]">
               NATIONAL LEVEL MCA TECH FEST - NMAMIT NITTE
             </span>
           </main>
