@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader.js";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { Water } from "three/examples/jsm/objects/Water.js";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -584,10 +584,6 @@ export default function Scene() {
 
   const [progress, setProgress] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [showPortalGate, setShowPortalGate] = useState(false);
-  const [isWarping, setIsWarping] = useState(false);
-  const hasPassedPortalRef = useRef(false);
-  const isWarpingRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [retryToken, setRetryToken] = useState(0);
@@ -618,16 +614,35 @@ export default function Scene() {
     };
   }, []);
 
+  const isPlayPendingRef = useRef(false);
+
   // Automatically play audio by default when first entering the ocean on user scroll gesture, and pause outside ocean
   useEffect(() => {
     if (!audioRef.current) return;
 
     const handleInitialOceanScroll = () => {
-      if (scrollProgress >= 4 && !userMutedRef.current && audioRef.current && audioRef.current.paused) {
+      if (
+        scrollProgress >= 4 &&
+        !userMutedRef.current &&
+        audioRef.current &&
+        audioRef.current.paused &&
+        !isPlayPendingRef.current
+      ) {
+        console.log("[Performance] Triggering Audio Play...");
+        console.time("[Performance] Audio Play Promise");
+        isPlayPendingRef.current = true;
         audioRef.current
           .play()
-          .then(() => setIsAudioPlaying(true))
-          .catch(() => { });
+          .then(() => {
+            console.timeEnd("[Performance] Audio Play Promise");
+            setIsAudioPlaying(true);
+            isPlayPendingRef.current = false;
+          })
+          .catch((err) => {
+            console.timeEnd("[Performance] Audio Play Promise");
+            console.warn("Audio autoplay blocked or failed:", err);
+            isPlayPendingRef.current = false;
+          });
       }
     };
 
@@ -682,69 +697,7 @@ export default function Scene() {
     }
   };
 
-  // Cinematic Portal Traversal: Disables manual scrolling and smoothly flies camera inside portal
-  const handleEnterPortal = () => {
-    if (isWarpingRef.current) return;
-    isWarpingRef.current = true;
-    setIsWarping(true);
-    setShowPortalGate(false);
 
-    // Lock manual scrolling via Lenis
-    if (window.__lenis) {
-      window.__lenis.stop();
-    }
-
-    // Block all manual input events (wheel, touch, keyboard)
-    const preventScroll = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-    const preventKeys = (e) => {
-      if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Space", "Home", "End"].includes(e.code)) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
-    window.addEventListener("wheel", preventScroll, { passive: false });
-    window.addEventListener("touchmove", preventScroll, { passive: false });
-    window.addEventListener("keydown", preventKeys, { passive: false });
-
-    const maxScroll = ScrollTrigger.maxScroll(window) || (document.documentElement.scrollHeight - window.innerHeight);
-    const startScroll = maxScroll * 0.069;
-    const targetScroll = maxScroll * 0.078; // Takes camera through stargate and into open event waters
-
-    const scrollObj = { y: startScroll };
-
-    // Smooth, cinematic slow traversal through the portal
-    gsap.to(scrollObj, {
-      y: targetScroll,
-      duration: 3.5, // Cinematic traversal duration
-      ease: "power2.inOut",
-      onUpdate: () => {
-        window.scrollTo(0, scrollObj.y);
-        if (window.__lenis) {
-          window.__lenis.scrollTo(scrollObj.y, { immediate: true });
-        }
-        ScrollTrigger.update();
-      },
-      onComplete: () => {
-        hasPassedPortalRef.current = true;
-        isWarpingRef.current = false;
-        setIsWarping(false);
-
-        // Remove input block listeners
-        window.removeEventListener("wheel", preventScroll);
-        window.removeEventListener("touchmove", preventScroll);
-        window.removeEventListener("keydown", preventKeys);
-
-        // Re-enable smooth manual scrolling
-        if (window.__lenis) {
-          window.__lenis.start();
-        }
-      },
-    });
-  };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -818,30 +771,11 @@ export default function Scene() {
     // The animate loop reads `exrEnvironmentTexture` fresh each frame, so pointing it at
     // the fallback now and reassigning it later swaps the sky with no further wiring.
     let exrEnvironmentTexture = fallbackEnvTarget.texture;
-    let envSwapFade = 1.0;
     scene.background = exrEnvironmentTexture;
     scene.environment = exrEnvironmentTexture;
     fallbackSkySource.dispose();
 
     let sceneDisposed = false;
-    function loadHdriEnvironment() {
-      const exrLoader = new EXRLoader();
-      exrLoader.load("/hdri/spiaggia_di_mondello_4k.exr", (texture) => {
-        // The effect may have torn down while this 19MB download was in flight
-        if (sceneDisposed) {
-          texture.dispose();
-          return;
-        }
-        texture.mapping = THREE.EquirectangularReflectionMapping;
-        const exrCubeRenderTarget = pmremGenerator.fromEquirectangular(texture);
-        exrEnvironmentTexture = exrCubeRenderTarget.texture;
-        scene.background = exrCubeRenderTarget.texture;
-        scene.environment = exrCubeRenderTarget.texture;
-        envSwapFade = 0.72; // ramps back to 1.0 in the animate loop
-        fallbackEnvTarget.dispose();
-        texture.dispose();
-      });
-    }
 
     // --- SURFACE OCEAN WATER ---
     const waterGeometry = new THREE.PlaneGeometry(10000, 10000);
@@ -1081,7 +1015,7 @@ export default function Scene() {
 
     // --- LEFT & RIGHT JAGGED CLIFF WALLS ---
     const sideCliffGroup = new THREE.Group();
-    sideCliffGroup.visible = false;
+    sideCliffGroup.visible = true;
 
     const cliffWallMat = new THREE.MeshStandardMaterial({
       color: 0x051d2c,
@@ -1219,251 +1153,397 @@ export default function Scene() {
     }
     scene.add(bgMountainsGroup);
 
-    // --- CENTRAL ANCIENT CIRCULAR PORTAL RING (MAIN ENTRANCE STARGATE AT y: -110, z: -160) ---
+    // --- CENTRAL ANCIENT CIRCULAR PORTAL RING (MAIN ENTRANCE STARGATE AT y: -110, z: -190) ---
+
+    // ── Materials ────────────────────────────────────────────────────────────────
     const ruinStoneMat = new THREE.MeshStandardMaterial({
-      color: 0x07283c,
-      roughness: 0.4,
-      metalness: 0.6,
+      color: 0x04141f,
+      roughness: 0.88,
+      metalness: 0.22,
       flatShading: true,
     });
 
     const ruinGlowMat = new THREE.MeshStandardMaterial({
-      color: 0x005577,
+      color: 0x003a55,
       emissive: 0x00e5ff,
-      emissiveIntensity: 0.9,
-      roughness: 0.2,
-      metalness: 0.4,
+      emissiveIntensity: 2.4,
+      roughness: 0.1,
+      metalness: 0.5,
     });
 
-    const portalGroup = new THREE.Group();
-    portalGroup.position.set(0, -110, -190);
-
     const archRockMat = new THREE.MeshStandardMaterial({
-      color: 0x051d2c,
-      emissive: 0x010b14,
-      emissiveIntensity: 0.15,
-      roughness: 0.85,
-      metalness: 0.15,
+      color: 0x030e19,
+      emissive: 0x000810,
+      emissiveIntensity: 0.06,
+      roughness: 0.96,
+      metalness: 0.07,
       flatShading: true,
     });
 
-    // Outer Natural Cavern Rock Arch framing the entire Stargate Structure (Matching semaphore-f8b4.onrender.com 1:1)
-    const mainArchGeo = new THREE.TorusGeometry(26, 4.2, 10, 24, Math.PI);
-    const archPos = mainArchGeo.attributes.position;
-    const aVec = new THREE.Vector3();
-    for (let i = 0; i < archPos.count; i++) {
-      aVec.fromBufferAttribute(archPos, i);
-      const noise = Math.sin(aVec.x * 0.18) * Math.cos(aVec.y * 0.18) * 2.2;
-      aVec.x += noise;
-      aVec.y += noise;
-      archPos.setXYZ(i, aVec.x, aVec.y, aVec.z);
+    const wetStoneMat = new THREE.MeshStandardMaterial({
+      color: 0x061a27,
+      roughness: 0.55,
+      metalness: 0.45,
+      flatShading: true,
+    });
+
+    // ── Portal group (world position unchanged) ──────────────────────────────────
+    const portalGroup = new THREE.Group();
+    portalGroup.position.set(0, -110, -190);
+
+    // ── Helper: procedurally deform a geometry to look rocky ────────────────────
+    function deformGeo(geo, strength, seed) {
+      const pos = geo.attributes.position;
+      const v = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i);
+        const n =
+          Math.sin(v.x * 0.14 + seed) * Math.cos(v.y * 0.17 + seed * 0.7) * strength +
+          Math.cos(v.z * 0.12 + seed * 1.3) * strength * 0.6;
+        v.x += n;
+        v.z += n * 0.8;
+        pos.setXYZ(i, v.x, v.y, v.z);
+      }
+      geo.computeVertexNormals();
+      return geo;
     }
-    mainArchGeo.computeVertexNormals();
+
+    // ── MASSIVE CAVERN ROCK ARCH ─────────────────────────────────────────────────
+
+    // Main overhead half-arch (wide, heavy, irregular)
+    const caveTopGeo = deformGeo(new THREE.TorusGeometry(44, 13, 8, 20, Math.PI), 3.5, 1.2);
+    const caveTopMesh = new THREE.Mesh(caveTopGeo, archRockMat);
+    caveTopMesh.position.set(0, 18, -6);
+    portalGroup.add(caveTopMesh);
+
+    // Left cavern wall slab
+    const leftWallGeo = deformGeo(new THREE.BoxGeometry(26, 88, 20), 4.2, 2.1);
+    const leftWallMesh = new THREE.Mesh(leftWallGeo, archRockMat);
+    leftWallMesh.position.set(-54, -10, -8);
+    leftWallMesh.rotation.y = 0.22;
+    portalGroup.add(leftWallMesh);
+
+    // Right cavern wall slab
+    const rightWallGeo = deformGeo(new THREE.BoxGeometry(26, 88, 20), 4.0, 3.3);
+    const rightWallMesh = new THREE.Mesh(rightWallGeo, archRockMat);
+    rightWallMesh.position.set(54, -10, -8);
+    rightWallMesh.rotation.y = -0.22;
+    portalGroup.add(rightWallMesh);
+
+    // Left inner shoulder rock
+    const leftShoulderGeo = deformGeo(new THREE.CylinderGeometry(8, 14, 55, 7), 3.0, 0.8);
+    const leftShoulderMesh = new THREE.Mesh(leftShoulderGeo, archRockMat);
+    leftShoulderMesh.position.set(-36, -5, -5);
+    leftShoulderMesh.rotation.z = 0.18;
+    portalGroup.add(leftShoulderMesh);
+
+    // Right inner shoulder rock
+    const rightShoulderGeo = deformGeo(new THREE.CylinderGeometry(8, 14, 55, 7), 2.8, 1.7);
+    const rightShoulderMesh = new THREE.Mesh(rightShoulderGeo, archRockMat);
+    rightShoulderMesh.position.set(36, -5, -5);
+    rightShoulderMesh.rotation.z = -0.18;
+    portalGroup.add(rightShoulderMesh);
+
+    // Overhead lintel / rock ledge
+    const lintelGeo = deformGeo(new THREE.BoxGeometry(78, 11, 16), 2.5, 4.4);
+    const lintelMesh = new THREE.Mesh(lintelGeo, archRockMat);
+    lintelMesh.position.set(0, 40, -7);
+    portalGroup.add(lintelMesh);
+
+    // Left lower cavern chunk (jagged)
+    const leftChunkGeo = deformGeo(new THREE.DodecahedronGeometry(18, 1), 5.0, 5.5);
+    const leftChunkMesh = new THREE.Mesh(leftChunkGeo, archRockMat);
+    leftChunkMesh.position.set(-48, -36, -2);
+    leftChunkMesh.rotation.set(0.3, 0.5, 0.1);
+    portalGroup.add(leftChunkMesh);
+
+    // Right lower cavern chunk
+    const rightChunkGeo = deformGeo(new THREE.DodecahedronGeometry(17, 1), 4.5, 6.6);
+    const rightChunkMesh = new THREE.Mesh(rightChunkGeo, archRockMat);
+    rightChunkMesh.position.set(48, -36, -2);
+    rightChunkMesh.rotation.set(0.2, -0.6, -0.1);
+    portalGroup.add(rightChunkMesh);
+
+    // Background cavern wall (occluder)
+    const backWallGeo = deformGeo(new THREE.PlaneGeometry(160, 100, 6, 5), 2.5, 7.7);
+    const backWallMesh = new THREE.Mesh(backWallGeo, archRockMat);
+    backWallMesh.position.set(0, 5, -22);
+    portalGroup.add(backWallMesh);
+
+    // Stalactite spikes hanging from lintel
+    const stalactiteData = [
+      { x: -30, y: 34, s: 3.5 }, { x: -16, y: 36, s: 4.2 },
+      { x: -4,  y: 37, s: 3.0 }, { x:  8,  y: 36, s: 4.8 },
+      { x:  20, y: 35, s: 3.2 }, { x:  32, y: 34, s: 3.8 },
+    ];
+    for (const st of stalactiteData) {
+      const sGeo = new THREE.ConeGeometry(st.s * 0.35, st.s * 2.8, 5);
+      const sMesh = new THREE.Mesh(sGeo, archRockMat);
+      sMesh.position.set(st.x, st.y, -5);
+      sMesh.rotation.z = Math.PI;
+      portalGroup.add(sMesh);
+    }
+
+    // ── 3-D AQUASAGA TITLE (built from Box / Torus geometry) ───────────────────
+    const letterStoneMat = new THREE.MeshStandardMaterial({
+      color: 0x03111e,
+      roughness: 0.9,
+      metalness: 0.25,
+      flatShading: true,
+    });
+    const letterGlowMat = new THREE.MeshStandardMaterial({
+      color: 0x002a44,
+      emissive: 0x00c8ff,
+      emissiveIntensity: 3.5,
+      roughness: 0.05,
+      metalness: 0.6,
+    });
+
+    const titleGroup = new THREE.Group();
+    titleGroup.position.set(0, 52, -3);
+    portalGroup.add(titleGroup);
+
+    const LH = 9;   // letter height
+    const LT = 2.2; // letter depth
+    const SW = 1.8; // stroke width
+
+    function mkBar(w, h, x, y) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, LT), letterStoneMat);
+      m.position.set(x, y, 0);
+      return m;
+    }
+    function mkGlowBar(w, h, x, y) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, LT * 0.4), letterGlowMat);
+      m.position.set(x, y, LT * 0.55);
+      return m;
+    }
+
+    function mkLetterA(withCrown) {
+      const g = new THREE.Group();
+      const legL = new THREE.Mesh(new THREE.BoxGeometry(SW, LH * 0.85, LT), letterStoneMat);
+      legL.position.set(-3.0, -LH * 0.07, 0); legL.rotation.z = 0.32; g.add(legL);
+      const legR = new THREE.Mesh(new THREE.BoxGeometry(SW, LH * 0.85, LT), letterStoneMat);
+      legR.position.set( 3.0, -LH * 0.07, 0); legR.rotation.z = -0.32; g.add(legR);
+      g.add(mkBar(4.5, SW, 0, -0.8));
+      if (withCrown) {
+        const crGeo = new THREE.OctahedronGeometry(1.6, 0);
+        const crMat = new THREE.MeshStandardMaterial({ color: 0x001830, emissive: 0x00f0ff, emissiveIntensity: 4.5, roughness: 0.05, flatShading: true });
+        const cr = new THREE.Mesh(crGeo, crMat);
+        cr.position.set(0, LH * 0.46, 0); cr.rotation.y = 0.4; g.add(cr);
+        const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.6, 2.8, 4), letterGlowMat);
+        sp.position.set(0, LH * 0.28, 0); g.add(sp);
+      }
+      const glL = new THREE.Mesh(new THREE.BoxGeometry(SW * 0.5, LH * 0.85, LT * 0.4), letterGlowMat);
+      glL.position.set(-3.0, -LH * 0.07, LT * 0.7); glL.rotation.z = 0.32; g.add(glL);
+      const glR = new THREE.Mesh(new THREE.BoxGeometry(SW * 0.5, LH * 0.85, LT * 0.4), letterGlowMat);
+      glR.position.set( 3.0, -LH * 0.07, LT * 0.7); glR.rotation.z = -0.32; g.add(glR);
+      return g;
+    }
+    function mkLetterQ() {
+      const g = new THREE.Group();
+      g.add(new THREE.Mesh(new THREE.TorusGeometry(3.2, SW * 0.7, 6, 16), letterStoneMat));
+      const tail = new THREE.Mesh(new THREE.BoxGeometry(SW, 3.5, LT), letterStoneMat);
+      tail.position.set(2.2, -2.5, 0); tail.rotation.z = -0.5; g.add(tail);
+      const gRing = new THREE.Mesh(new THREE.TorusGeometry(3.2, SW * 0.28, 6, 16), letterGlowMat);
+      gRing.position.z = LT * 0.7; g.add(gRing);
+      return g;
+    }
+    function mkLetterU() {
+      const g = new THREE.Group();
+      g.add(mkBar(SW, LH, -3.0, 0)); g.add(mkBar(SW, LH, 3.0, 0));
+      g.add(mkBar(7.5, SW, 0, -LH / 2 + SW / 2));
+      g.add(mkGlowBar(SW * 0.5, LH, -3.0, 0)); g.add(mkGlowBar(SW * 0.5, LH, 3.0, 0));
+      g.add(mkGlowBar(7.5, SW * 0.5, 0, -LH / 2 + SW / 2));
+      return g;
+    }
+    function mkLetterS() {
+      const g = new THREE.Group();
+      g.add(mkBar(7, SW, 0,  LH / 2 - SW / 2));
+      g.add(mkBar(7, SW, 0,  0));
+      g.add(mkBar(7, SW, 0, -LH / 2 + SW / 2));
+      g.add(mkBar(SW, LH / 2, -3.2,  LH / 4));
+      g.add(mkBar(SW, LH / 2,  3.2, -LH / 4));
+      g.add(mkGlowBar(7, SW * 0.5, 0,  LH / 2 - SW / 2));
+      g.add(mkGlowBar(7, SW * 0.5, 0,  0));
+      g.add(mkGlowBar(7, SW * 0.5, 0, -LH / 2 + SW / 2));
+      return g;
+    }
+    function mkLetterG() {
+      const g = new THREE.Group();
+      g.add(mkBar(7, SW,   0,  LH / 2 - SW / 2));
+      g.add(mkBar(7, SW,   0, -LH / 2 + SW / 2));
+      g.add(mkBar(SW, LH, -3.2, 0));
+      g.add(mkBar(SW, LH / 2, 3.2, -LH / 4));
+      g.add(mkBar(4,  SW,  1.6, 0));
+      g.add(mkGlowBar(7, SW * 0.5,  0,  LH / 2 - SW / 2));
+      g.add(mkGlowBar(7, SW * 0.5,  0, -LH / 2 + SW / 2));
+      g.add(mkGlowBar(SW * 0.5, LH, -3.2, 0));
+      return g;
+    }
+
+    // A  Q  U  A  S  A  G  A
+    const titleLetters = [
+      { make: () => mkLetterA(true),  x: -33.25 },
+      { make: mkLetterQ,              x: -23.75 },
+      { make: mkLetterU,              x: -14.25 },
+      { make: () => mkLetterA(false), x:  -4.75 },
+      { make: mkLetterS,              x:   4.75 },
+      { make: () => mkLetterA(false), x:  14.25 },
+      { make: mkLetterG,              x:  23.75 },
+      { make: () => mkLetterA(false), x:  33.25 },
+    ];
+    for (const def of titleLetters) {
+      const lg = def.make();
+      lg.position.x = def.x;
+      titleGroup.add(lg);
+    }
+
+    // Stone backing slab behind the letters
+    const titleSlabGeo = deformGeo(new THREE.BoxGeometry(84, LH + 6, LT + 2), 1.0, 9.9);
+    titleGroup.add(new THREE.Mesh(titleSlabGeo, archRockMat)).position.z = -LT;
+
+    // Cyan glow rim under the title slab
+    const titleRim = new THREE.Mesh(new THREE.BoxGeometry(86, 0.6, 1.0), ruinGlowMat);
+    titleRim.position.set(0, -(LH / 2 + 3.3), 0);
+    titleGroup.add(titleRim);
+
+    // ── EXISTING OUTER ARCH / LEGS (kept, material updated) ─────────────────────
+    const mainArchGeo = deformGeo(new THREE.TorusGeometry(26, 5.5, 10, 24, Math.PI), 2.8, 11.1);
     const mainArchMesh = new THREE.Mesh(mainArchGeo, archRockMat);
     mainArchMesh.position.set(0, -5, -4);
     portalGroup.add(mainArchMesh);
 
-    // Left and Right Arch Pillar Legs anchoring cleanly down into the rock platform
-    const archLegGeo = new THREE.CylinderGeometry(4.2, 5.8, 28, 8);
-    const legPos = archLegGeo.attributes.position;
-    const lVec = new THREE.Vector3();
-    for (let i = 0; i < legPos.count; i++) {
-      lVec.fromBufferAttribute(archLegGeo.attributes.position, i);
-      const detail = Math.sin(lVec.y * 0.25) * Math.cos(lVec.x * 0.2) * 1.5;
-      lVec.x += detail;
-      lVec.z += detail;
-      legPos.setXYZ(i, lVec.x, lVec.y, lVec.z);
-    }
-    archLegGeo.computeVertexNormals();
-
+    const archLegGeo = deformGeo(new THREE.CylinderGeometry(5.0, 7.2, 32, 8), 2.2, 12.2);
     const leftLegMesh = new THREE.Mesh(archLegGeo, archRockMat);
     leftLegMesh.position.set(-26, -18, -4);
     portalGroup.add(leftLegMesh);
 
-    const rightLegMesh = new THREE.Mesh(archLegGeo, archRockMat);
+    const rightLegMesh = new THREE.Mesh(archLegGeo.clone(), archRockMat);
     rightLegMesh.position.set(26, -18, -4);
     portalGroup.add(rightLegMesh);
 
-    // Concentric Glowing Outer Energy Ring around Portal Ring
-    const outerRingGeo = new THREE.TorusGeometry(18.5, 0.4, 16, 48);
+    // Concentric glowing energy rings (two rings for depth)
+    const outerRingGeo = new THREE.TorusGeometry(18.5, 0.65, 16, 64);
     const outerRingMesh = new THREE.Mesh(outerRingGeo, ruinGlowMat);
     outerRingMesh.position.set(0, 0, -0.2);
     portalGroup.add(outerRingMesh);
 
-    // Twin Guardian Obelisks / Spires (Left & Right of Portal Ring)
-    const obeliskPositions = [
-      { x: -26, y: 3, z: 0, rotZ: 0.1 },
-      { x: 26, y: 3, z: 0, rotZ: -0.1 },
-    ];
-    for (const ob of obeliskPositions) {
-      const obGroup = new THREE.Group();
-      obGroup.position.set(ob.x, ob.y, ob.z);
-      obGroup.rotation.z = ob.rotZ;
+    const innerRingGeo = new THREE.TorusGeometry(15.8, 0.35, 12, 48);
+    const innerRingMesh = new THREE.Mesh(innerRingGeo, ruinGlowMat);
+    innerRingMesh.position.set(0, 0, -0.05);
+    portalGroup.add(innerRingMesh);
 
-      const obGeo = new THREE.CylinderGeometry(1.2, 3.2, 32, 6);
-      const obMesh = new THREE.Mesh(obGeo, ruinStoneMat);
-      obGroup.add(obMesh);
 
-      const obCapGeo = new THREE.OctahedronGeometry(2.2, 1);
-      const obCapMat = new THREE.MeshStandardMaterial({
-        color: 0x011e30,
-        emissive: 0x00f0ff,
-        emissiveIntensity: 2.2,
-        roughness: 0.1,
-      });
-      const obCap = new THREE.Mesh(obCapGeo, obCapMat);
-      obCap.position.set(0, 17, 0);
-      obGroup.add(obCap);
 
-      const obGlyphGeo = new THREE.BoxGeometry(0.5, 22, 0.5);
-      const obGlyph = new THREE.Mesh(obGlyphGeo, ruinGlowMat);
-      obGlyph.position.set(0, 0, 1.8);
-      obGroup.add(obGlyph);
-
-      portalGroup.add(obGroup);
-    }
-
-    // Bioluminescent Crystal Clusters surrounding the Stone Pedestal Steps (Matching Reference Image)
-    const pedestalCrystals = [
-      { x: -16, y: -12, z: 6, color: 0x00f0ff, scale: 1.8 },
-      { x: 16, y: -12, z: 6, color: 0x00f0ff, scale: 1.7 },
-      { x: -19, y: -15, z: 8, color: 0xa855f7, scale: 2.0 },
-      { x: 19, y: -15, z: 8, color: 0x38bdf8, scale: 1.9 },
-      { x: -23, y: -19, z: 10, color: 0x00e5ff, scale: 2.2 },
-      { x: 23, y: -19, z: 10, color: 0xa855f7, scale: 2.1 },
-      { x: -12, y: -10, z: -4, color: 0x0284c7, scale: 1.5 },
-      { x: 12, y: -10, z: -4, color: 0x00f0ff, scale: 1.5 },
-      { x: -28, y: -25, z: 12, color: 0x00f0ff, scale: 1.6 },
-      { x: 28, y: -25, z: 12, color: 0x00f0ff, scale: 1.6 },
+    // ── ANCIENT RUIN APPROACH — scattered irregular stone slabs (replaces uniform staircase) ──
+    // Dark flat slabs at varying angles/heights — like a collapsed underwater temple floor
+    const ruinSlabData = [
+      { w: 28, h: 2.2, d: 14, x:  0,    y: -13, z:  2,  ry: 0.04  },
+      { w: 20, h: 1.8, d: 10, x: -6,    y: -15, z:  6,  ry: -0.12 },
+      { w: 22, h: 1.8, d: 10, x:  5,    y: -16, z:  5,  ry:  0.10 },
+      { w: 32, h: 2.5, d: 16, x:  0,    y: -18, z:  1,  ry:  0.02 },
+      { w: 16, h: 1.6, d:  9, x: -10,   y: -20, z:  8,  ry: -0.18 },
+      { w: 15, h: 1.6, d:  9, x:  9,    y: -21, z:  7,  ry:  0.15 },
+      { w: 36, h: 2.8, d: 18, x:  0,    y: -23, z:  0,  ry: -0.03 },
+      { w: 14, h: 1.4, d:  8, x: -14,   y: -25, z: 10,  ry: -0.22 },
+      { w: 14, h: 1.4, d:  8, x:  13,   y: -26, z:  9,  ry:  0.20 },
+      { w: 40, h: 3.0, d: 20, x:  0,    y: -28, z: -1,  ry:  0.01 },
     ];
 
-    for (const c of pedestalCrystals) {
-      const cGeo = new THREE.OctahedronGeometry(c.scale, 1);
-      const cMat = new THREE.MeshStandardMaterial({
-        color: 0x011a28,
-        emissive: c.color,
-        emissiveIntensity: 2.8,
-        roughness: 0.15,
-        flatShading: true,
-      });
-      const cMesh = new THREE.Mesh(cGeo, cMat);
-      cMesh.position.set(c.x, c.y, c.z);
-      cMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-      portalGroup.add(cMesh);
+    const ruinSlabMat = new THREE.MeshStandardMaterial({
+      color: 0x050e18,
+      roughness: 0.92,
+      metalness: 0.18,
+      flatShading: true,
+    });
+
+    for (const s of ruinSlabData) {
+      const slabGeo = new THREE.BoxGeometry(s.w, s.h, s.d);
+      // Slightly deform top face vertices for organic broken-edge look
+      const slabPos = slabGeo.attributes.position;
+      const sv = new THREE.Vector3();
+      for (let i = 0; i < slabPos.count; i++) {
+        sv.fromBufferAttribute(slabPos, i);
+        if (sv.y > 0) {
+          sv.x += (Math.random() - 0.5) * 1.4;
+          sv.z += (Math.random() - 0.5) * 1.4;
+          sv.y += (Math.random() - 0.5) * 0.4;
+          slabPos.setXYZ(i, sv.x, sv.y, sv.z);
+        }
+      }
+      slabGeo.computeVertexNormals();
+      const slabMesh = new THREE.Mesh(slabGeo, ruinSlabMat);
+      slabMesh.position.set(s.x, s.y, s.z);
+      slabMesh.rotation.y = s.ry;
+      portalGroup.add(slabMesh);
     }
 
-    // Raised Stone Staircase Pedestal
-    const stepDimensions = [
-      { w: 22, h: 3.0, d: 16, y: -14 },
-      { w: 26, h: 3.0, d: 18, y: -17 },
-      { w: 30, h: 3.0, d: 20, y: -20 },
-      { w: 35, h: 3.0, d: 22, y: -23 },
-      { w: 42, h: 3.0, d: 25, y: -26 },
+    // Tumbled boulder clusters flanking the ruin approach
+    const flankBoulderData = [
+      { x: -18, y: -18, z: 10, r: 3.5 }, { x: -22, y: -22, z: 12, r: 4.2 },
+      { x: -14, y: -25, z:  8, r: 2.8 }, { x: -26, y: -15, z:  6, r: 3.0 },
+      { x:  18, y: -18, z: 10, r: 3.5 }, { x:  22, y: -22, z: 12, r: 4.0 },
+      { x:  15, y: -25, z:  8, r: 2.9 }, { x:  26, y: -15, z:  6, r: 3.1 },
+      { x: -10, y: -28, z: 14, r: 2.4 }, { x:  10, y: -28, z: 14, r: 2.4 },
     ];
-    const stepGeos = [];
-    for (const step of stepDimensions) {
-      const stepGeo = new THREE.BoxGeometry(step.w, step.h, step.d);
-      stepGeos.push(stepGeo);
-      const stepMesh = new THREE.Mesh(stepGeo, ruinStoneMat);
-      stepMesh.position.set(0, step.y, 0);
-      portalGroup.add(stepMesh);
+    for (const b of flankBoulderData) {
+      const bGeo = deformGeo(new THREE.DodecahedronGeometry(b.r, 1), b.r * 0.28, b.x * 0.07);
+      const bMesh = new THREE.Mesh(bGeo, archRockMat);
+      bMesh.position.set(b.x, b.y, b.z);
+      bMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+      portalGroup.add(bMesh);
     }
 
-    // --- SUB-PORTAL UNDERWATER STRUCTURAL FOUNDATION BASE (Directly underneath portal steps) ---
+    // ── FOUNDATION BASE — solid irregular stone mounds (no glowing rims) ────────
     const portalBaseTiers = [
-      { rTop: 24, rBot: 28, h: 6.0, y: -29 },
-      { rTop: 28, rBot: 34, h: 7.0, y: -35 },
-      { rTop: 34, rBot: 42, h: 10.0, y: -42 },
+      { rTop: 22, rBot: 30, h:  8.0, y: -32 },
+      { rTop: 30, rBot: 40, h: 10.0, y: -40 },
     ];
-
-    for (let i = 0; i < portalBaseTiers.length; i++) {
-      const tier = portalBaseTiers[i];
-      const tierGeo = new THREE.CylinderGeometry(tier.rTop, tier.rBot, tier.h, 12);
+    for (const tier of portalBaseTiers) {
+      const tierGeo = new THREE.CylinderGeometry(tier.rTop, tier.rBot, tier.h, 9);
       const tPos = tierGeo.attributes.position;
       const tv = new THREE.Vector3();
       for (let p = 0; p < tPos.count; p++) {
         tv.fromBufferAttribute(tierGeo.attributes.position, p);
-        const detail = Math.sin(tv.y * 0.4 + tv.x * 0.2) * 1.8 + Math.cos(tv.z * 0.3) * 1.5;
-        tv.x += detail;
-        tv.z += detail;
+        const d = Math.sin(tv.y * 0.35 + tv.x * 0.18) * 3.0 + Math.cos(tv.z * 0.28) * 2.2;
+        tv.x += d; tv.z += d;
         tPos.setXYZ(p, tv.x, tv.y, tv.z);
       }
       tierGeo.computeVertexNormals();
-
       const tierMesh = new THREE.Mesh(tierGeo, archRockMat);
       tierMesh.position.set(0, tier.y, 0);
       portalGroup.add(tierMesh);
     }
 
-    // Glowing Cyan Stepped Circuit Trim Lines on the Front Terrace Edges (Matching Reference Image)
-    const circuitPointsLeft = [
-      { x: -14, y: -23, z: 12 },
-      { x: -18, y: -23, z: 12 },
-      { x: -22, y: -26, z: 10 },
-      { x: -26, y: -26, z: 8 },
-      { x: -30, y: -29, z: 6 },
-    ];
-    const circuitPointsRight = [
-      { x: 14, y: -23, z: 12 },
-      { x: 18, y: -23, z: 12 },
-      { x: 22, y: -26, z: 10 },
-      { x: 26, y: -26, z: 8 },
-      { x: 30, y: -29, z: 6 },
-    ];
-
-    [circuitPointsLeft, circuitPointsRight].forEach((pts) => {
-      for (let i = 0; i < pts.length - 1; i++) {
-        const p1 = pts[i];
-        const p2 = pts[i + 1];
-        const dx = p2.x - p1.x;
-        const dy = p2.y - p1.y;
-        const dz = p2.z - p1.z;
-        const len = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        const stripGeo = new THREE.BoxGeometry(0.5, 0.5, len);
-        const stripMesh = new THREE.Mesh(stripGeo, ruinGlowMat);
-        stripMesh.position.set((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
-        stripMesh.lookAt(p2.x, p2.y, p2.z);
-        portalGroup.add(stripMesh);
-      }
-    });
-
-    // Dark Underwater Kelp / Seaweed Strands decorating base flanks (Matching Reference Image)
-    for (let k = 0; k < 16; k++) {
-      const isRight = k >= 8;
-      const kx = (isRight ? 28 : -28) + (Math.random() - 0.5) * 10;
-      const kz = (Math.random() - 0.5) * 16;
+    // ── KELP / SEAWEED STRANDS ───────────────────────────────────────────────────
+    for (let k = 0; k < 18; k++) {
+      const isRight = k >= 9;
+      const kx = (isRight ? 30 : -30) + (Math.random() - 0.5) * 12;
+      const kz = (Math.random() - 0.5) * 18;
       const ky = -32 + Math.random() * 8;
-      const kelpHeight = 8 + Math.random() * 10;
-
-      const kelpGeo = new THREE.CylinderGeometry(0.2, 0.6, kelpHeight, 5);
-      const kelpMat = new THREE.MeshStandardMaterial({
-        color: 0x011c2e,
-        roughness: 0.8,
-        flatShading: true,
-      });
-      const kelpMesh = new THREE.Mesh(kelpGeo, kelpMat);
+      const kelpHeight = 8 + Math.random() * 12;
+      const kelpMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.7, kelpHeight, 5),
+        new THREE.MeshStandardMaterial({ color: 0x011c2e, roughness: 0.85, flatShading: true })
+      );
       kelpMesh.position.set(kx, ky + kelpHeight / 2, kz);
-      kelpMesh.rotation.set((Math.random() - 0.5) * 0.3, Math.random() * Math.PI, isRight ? 0.3 : -0.3);
+      kelpMesh.rotation.set((Math.random() - 0.5) * 0.3, Math.random() * Math.PI, isRight ? 0.28 : -0.28);
       portalGroup.add(kelpMesh);
     }
 
-    // Small faceted base rocks & details surrounding the foundation perimeter
-    for (let r = 0; r < 10; r++) {
-      const rAngle = (r / 10) * Math.PI * 2;
-      const rDist = 28 + Math.random() * 12;
-      const rx = Math.cos(rAngle) * rDist;
-      const rz = Math.sin(rAngle) * rDist;
-      const rScale = 2.0 + Math.random() * 2.5;
-
-      const baseRockGeo = new THREE.DodecahedronGeometry(rScale, 0);
-      const baseRockMesh = new THREE.Mesh(baseRockGeo, archRockMat);
-      baseRockMesh.position.set(rx, -43 + Math.random() * 4, rz);
+    // ── BASE ROCKS around foundation perimeter ───────────────────────────────────
+    for (let r = 0; r < 14; r++) {
+      const rAngle = (r / 14) * Math.PI * 2;
+      const rDist = 32 + Math.random() * 14;
+      const rScale = 2.5 + Math.random() * 3.5;
+      const baseRockMesh = new THREE.Mesh(new THREE.DodecahedronGeometry(rScale, 0), archRockMat);
+      baseRockMesh.position.set(Math.cos(rAngle) * rDist, -43 + Math.random() * 5, Math.sin(rAngle) * rDist);
       baseRockMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
       portalGroup.add(baseRockMesh);
     }
 
-    // Large Circular Stone Portal Ring (Radius 14, Tube 2.5)
-    const portalRingGeo = new THREE.TorusGeometry(14, 2.5, 16, 48);
+    // ── PORTAL RING (enhanced tube radius) ──────────────────────────────────────
+    const portalRingGeo = new THREE.TorusGeometry(14, 2.8, 16, 48);
     const portalRingMesh = new THREE.Mesh(portalRingGeo, ruinStoneMat);
     portalRingMesh.position.set(0, 0, 0);
     portalGroup.add(portalRingMesh);
@@ -1478,17 +1558,14 @@ export default function Scene() {
     keystoneGlyph.position.set(0, 14.5, 1.8);
     portalGroup.add(keystoneGlyph);
 
-    // Occlusion Backdrop Disc inside Portal Ring (Blocks background rock geometry shadows from showing inside portal circle)
+    // Occlusion backdrop disc inside ring
     const portalBackdropGeo = new THREE.CircleGeometry(11.7, 48);
-    const portalBackdropMat = new THREE.MeshBasicMaterial({
-      color: 0x0e5a8a,
-      side: THREE.DoubleSide,
-    });
+    const portalBackdropMat = new THREE.MeshBasicMaterial({ color: 0x04253a, side: THREE.DoubleSide });
     const portalBackdropMesh = new THREE.Mesh(portalBackdropGeo, portalBackdropMat);
     portalBackdropMesh.position.set(0, 0, -0.15);
     portalGroup.add(portalBackdropMesh);
 
-    // Custom Swirling Energy Vortex Shader Disc inside Portal Ring
+    // Swirling energy vortex shader disc (UNCHANGED)
     const portalDiscGeo = new THREE.CircleGeometry(11.8, 48);
     const portalDiscMat = new THREE.ShaderMaterial({
       vertexShader: portalVortexVertex,
@@ -1506,24 +1583,18 @@ export default function Scene() {
     portalDisc.position.set(0, 0, -0.1);
     portalGroup.add(portalDisc);
 
-    // Soft Energy Blur Aura Disc specifically for ONLY the Portal Energy Core
-    const portalBlurGeo = new THREE.CircleGeometry(16.5, 48);
+    // Soft energy blur aura disc
+    const portalBlurGeo = new THREE.CircleGeometry(17.5, 48);
     const portalBlurMat = new THREE.ShaderMaterial({
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
+      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
       fragmentShader: `
         varying vec2 vUv;
         void main() {
           vec2 center = vUv - vec2(0.5);
           float dist = length(center) * 2.0;
           float alpha = smoothstep(1.0, 0.0, dist);
-          alpha = pow(alpha, 1.8) * 0.75;
-          vec3 blurColor = mix(vec3(0.0, 0.92, 1.0), vec3(0.01, 0.12, 0.35), dist);
+          alpha = pow(alpha, 1.6) * 0.85;
+          vec3 blurColor = mix(vec3(0.0, 0.92, 1.0), vec3(0.01, 0.08, 0.35), dist);
           gl_FragColor = vec4(blurColor, alpha);
         }
       `,
@@ -1536,7 +1607,7 @@ export default function Scene() {
     portalBlurMesh.position.set(0, 0, -0.3);
     portalGroup.add(portalBlurMesh);
 
-    portalGroup.renderOrder = 5; // Portal above cliffs
+    portalGroup.renderOrder = 5;
     scene.add(portalGroup);
 
     let dolphinMixer = null;
@@ -1726,10 +1797,10 @@ export default function Scene() {
             // Fix untextured meshes due to deprecated KHR_materials_pbrSpecularGlossiness
             const textureLoader = new THREE.TextureLoader(manager);
             const texPaths = [
-              "/assets/models/textures/gltf_embedded_0.png",
-              "/assets/models/textures/gltf_embedded_5.png",
-              "/assets/models/textures/gltf_embedded_9.png",
-              "/assets/models/textures/gltf_embedded_13.png"
+              "/assets/models/textures/gltf_embedded_0.webp",
+              "/assets/models/textures/gltf_embedded_5.webp",
+              "/assets/models/textures/gltf_embedded_9.webp",
+              "/assets/models/textures/gltf_embedded_13.webp"
             ];
             const textures = texPaths.map(path => {
               const tex = textureLoader.load(path);
@@ -1833,7 +1904,7 @@ export default function Scene() {
     // --- THE NEW WORLD BEYOND THE MAIN STARGATE: INVISIBLE UNTIL ENTERING STARGATE (z < -155) ---
     // Features 10 DISTINCT DESCENDING ROCK PLATFORMS, PORTALS & 3D EVENT BANNERS
     const newWorldGroup = new THREE.Group();
-    newWorldGroup.visible = false; // Strictly hidden until passing inside the stargate (z < -155)!
+    newWorldGroup.visible = true; // Kept visible always to ensure assets compile/render from start
     scene.add(newWorldGroup);
 
     const cliffRockMat = new THREE.MeshStandardMaterial({
@@ -2724,38 +2795,19 @@ export default function Scene() {
         end: "bottom bottom",
         scrub: isMobile ? 1.0 : 0.8,
         onUpdate: (self) => {
+          const updateStart = performance.now();
           const currentProgress = Math.floor(self.progress * 100);
           // PERF: Only trigger React re-render when integer value actually changes
           if (currentProgress !== lastScrollInt) {
             lastScrollInt = currentProgress;
             setScrollProgress(currentProgress);
           }
-
-          // PORTAL GATE: Stop user right in front of portal entrance (~6.5% - 6.9%) until button is clicked
-          if (!hasPassedPortalRef.current && !isWarpingRef.current) {
-            if (self.progress >= 0.065) {
-              setShowPortalGate(true);
-            } else {
-              setShowPortalGate(false);
-            }
-
-            // Hard stop at 0.069 right in front of portal
-            if (self.progress > 0.069) {
-              const maxScroll = ScrollTrigger.maxScroll(window);
-              if (maxScroll) {
-                window.scrollTo(0, maxScroll * 0.069);
-                if (window.__lenis) {
-                  window.__lenis.scrollTo(maxScroll * 0.069, { immediate: true });
-                }
-              }
-            }
-          } else if (hasPassedPortalRef.current) {
-            setShowPortalGate(false);
-            // If user scrolls back up to surface (progress < 0.04), reset portal gate state
-            if (self.progress < 0.04) {
-              hasPassedPortalRef.current = false;
-            }
+          const updateTime = performance.now() - updateStart;
+          if (updateTime > 8) {
+            console.warn(`[Performance] Slow ScrollTrigger onUpdate: ${updateTime.toFixed(2)}ms (progress: ${currentProgress}%)`);
           }
+
+
 
           // --- COMPREHENSIVE SCROLL LOGGER ---
           const p = self.progress;
@@ -2797,9 +2849,7 @@ export default function Scene() {
                 "Portal Stargate": { visible: portalGroup ? portalGroup.visible : true, hidden: portalGroup ? !portalGroup.visible : false },
                 "Event World (newWorldGroup)": { visible: newWorldGroup ? newWorldGroup.visible : false, hidden: newWorldGroup ? !newWorldGroup.visible : true },
                 "Portal Backdrop": { visible: portalBackdropMesh ? portalBackdropMesh.visible : true, hidden: portalBackdropMesh ? !portalBackdropMesh.visible : false },
-                "Hero UI Overlay": { visible: heroUiRef.current ? parseFloat(heroUiRef.current.style.opacity || "1") > 0.05 : true, opacity: heroUiRef.current?.style.opacity || "1.0" },
-                "Portal Stop Button": { visible: self.progress >= 0.065 && !hasPassedPortalRef.current, hidden: !(self.progress >= 0.065 && !hasPassedPortalRef.current) },
-                "Warping State": { active: isWarpingRef.current }
+                "Hero UI Overlay": { visible: heroUiRef.current ? parseFloat(heroUiRef.current.style.opacity || "1") > 0.05 : true, opacity: heroUiRef.current?.style.opacity || "1.0" }
               }
             }
           );
@@ -3741,6 +3791,8 @@ export default function Scene() {
     const _dolphinTargetQuat = new THREE.Quaternion();
     const _dolphinRollQuat = new THREE.Quaternion();
     const _smoothCamTarget = new THREE.Vector3();
+
+
     const _eventShrinePositions = {
       1: new THREE.Vector3(-22, -106, -318),
       2: new THREE.Vector3(22, -186, -430),
@@ -3926,7 +3978,7 @@ export default function Scene() {
         caveMesh.visible = false;
         portalBackdropMesh.visible = false;
       } else {
-        newWorldGroup.visible = false;
+        newWorldGroup.visible = true;
         portalBackdropMesh.visible = true;
       }
 
@@ -4404,7 +4456,12 @@ export default function Scene() {
       );
       camera.rotation.z = floatRotZ + currentBank;
 
+      const renderStart = performance.now();
       renderer.render(scene, camera);
+      const renderTime = performance.now() - renderStart;
+      if (renderTime > 16.6 && scrollProgress > 0) {
+        console.warn(`[Performance] Slow frame render inside animate loop: ${renderTime.toFixed(2)}ms`);
+      }
 
       // Active Event state determination based on camera Z position depth
       let currentActiveId = null;
@@ -4482,25 +4539,64 @@ export default function Scene() {
 
         if (sceneDisposed) return;
 
+        // Load the HDR environment map so it is active BEFORE compiling shaders
+        const loadHdrEnvPromise = () => {
+          return new Promise((resolve) => {
+            const rgbeLoader = new RGBELoader(manager);
+            rgbeLoader.load(
+              "/hdri/spiaggia_di_mondello_1k.hdr",
+              (texture) => {
+                if (sceneDisposed) {
+                  texture.dispose();
+                  resolve();
+                  return;
+                }
+                texture.mapping = THREE.EquirectangularReflectionMapping;
+                const cubeRenderTarget = pmremGenerator.fromEquirectangular(texture);
+                exrEnvironmentTexture = cubeRenderTarget.texture;
+                scene.background = cubeRenderTarget.texture;
+                scene.environment = cubeRenderTarget.texture;
+                fallbackEnvTarget.dispose();
+                texture.dispose();
+                resolve();
+              },
+              undefined,
+              (err) => {
+                console.warn("Failed to load HDR environment, using fallback gradient.", err);
+                resolve();
+              }
+            );
+          });
+        };
+
+        await loadHdrEnvPromise();
+
+        if (sceneDisposed) return;
+
         // Force a full render so every material/shader is compiled and uploaded
         // BEFORE the curtain lifts, rather than hitching on the first visible frame.
         // Pre-warm underwater shaders by temporarily making all geometry visible
-        // so renderer.compile() catches every shader program, preventing first-scroll hitch.
-        const preWarmTargets = [
-          { obj: caveMesh, was: caveMesh.visible },
-          { obj: sideCliffGroup, was: sideCliffGroup.visible },
-          { obj: bgMountainsGroup, was: bgMountainsGroup.visible },
-          { obj: waterCeilingMesh, was: waterCeilingMesh.visible },
-          { obj: waterUnderside, was: waterUnderside.visible },
-          { obj: newWorldGroup, was: newWorldGroup.visible },
-        ];
-        for (const t of preWarmTargets) t.obj.visible = true;
+        // and disabling frustum culling so renderer.compile() and renderer.render()
+        // catch and upload every shader program and texture, preventing first-scroll hitch.
+        scene.traverse((child) => {
+          if (child.isMesh || child.isPoints || child.isLine) {
+            child._wasVisible = child.visible;
+            child._wasFrustumCulled = child.frustumCulled;
+            child.visible = true;
+            child.frustumCulled = false;
+          }
+        });
 
         renderer.compile(scene, camera);
         renderer.render(scene, camera);
 
-        // Restore original visibility state
-        for (const t of preWarmTargets) t.obj.visible = t.was;
+        // Restore original visibility and frustum culling states
+        scene.traverse((child) => {
+          if (child.isMesh || child.isPoints || child.isLine) {
+            if (child._wasVisible !== undefined) child.visible = child._wasVisible;
+            if (child._wasFrustumCulled !== undefined) child.frustumCulled = child._wasFrustumCulled;
+          }
+        });
 
         // Hand the browser two frames to actually present that work, then reveal.
         requestAnimationFrame(() => {
@@ -4508,8 +4604,6 @@ export default function Scene() {
             if (sceneDisposed) return;
             setProgress(100);
             setLoading(false);
-            // Scene is live and interactive — only now pull the heavy HDRI.
-            loadHdriEnvironment();
           });
         });
       } catch (err) {
@@ -4569,7 +4663,7 @@ export default function Scene() {
       cliffWallMat.dispose();
       ruinStoneMat.dispose();
       ruinGlowMat.dispose();
-      for (const s of stepGeos) s.dispose();
+
       portalRingGeo.dispose();
       keystoneGeo.dispose();
       portalDiscGeo.dispose();
@@ -4642,7 +4736,7 @@ export default function Scene() {
 
         {/* Hovered Event Tooltip in 3D View */}
         {hoveredNode && (
-          <div className="pointer-events-none fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-black/80 border border-cyan-400/80 px-6 py-2 rounded-full backdrop-blur-md shadow-[0_0_25px_rgba(0,255,255,0.4)] animate-pulse">
+          <div className="pointer-events-none fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-black/95 border border-cyan-400/80 px-6 py-2 rounded-full shadow-[0_0_25px_rgba(0,255,255,0.4)] animate-pulse">
             <span className="font-mono text-xs md:text-sm font-bold text-cyan-300 tracking-widest uppercase">
               CLICK TO ENTER PORTAL // {hoveredNode}
             </span>
@@ -4687,7 +4781,7 @@ export default function Scene() {
             className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none transition-all duration-500 font-mono select-none ${scrollProgress < 10 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
               }`}
           >
-            <div className="relative w-6 h-10 rounded-full border-2 border-cyan-400/80 shadow-[0_0_15px_rgba(0,255,255,0.4)] flex justify-center pt-2 bg-[#010c18]/60 backdrop-blur-sm">
+            <div className="relative w-6 h-10 rounded-full border-2 border-cyan-400/80 shadow-[0_0_15px_rgba(0,255,255,0.4)] flex justify-center pt-2 bg-[#010c18]/90">
               <div className="w-1.5 h-3 rounded-full bg-cyan-300 animate-bounce shadow-[0_0_8px_rgba(0,255,255,0.9)]" />
             </div>
             <div className="flex items-center gap-1 text-[11px] font-bold tracking-[0.25em] text-cyan-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] uppercase">
@@ -4711,51 +4805,7 @@ export default function Scene() {
               <span className="text-[10px] text-cyan-400/80">M/S</span>
             </div>
           </div>
-
-        {/* Cybernetic Portal Gate Interactive Entry Button */}
-        {showPortalGate && !isWarping && (
-          <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center pointer-events-none p-6 animate-fadeIn">
-            <div className="flex flex-col items-center gap-4 text-center max-w-md bg-[#010c18]/85 border border-cyan-400/60 p-8 rounded-2xl backdrop-blur-xl shadow-[0_0_60px_rgba(0,255,255,0.4)] pointer-events-auto">
-              <div className="w-12 h-12 rounded-full border border-cyan-400/80 flex items-center justify-center shadow-[0_0_20px_rgba(0,255,255,0.6)] animate-pulse">
-                <svg className="w-6 h-6 fill-cyan-300" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z" />
-                </svg>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <span className="font-mono text-[10px] md:text-xs tracking-[0.35em] text-cyan-400 uppercase font-bold">
-                  PORTAL STARGATE REACHED
-                </span>
-                <h3 className="font-mono text-xl md:text-2xl font-black tracking-wider text-white drop-shadow-[0_0_20px_rgba(0,255,255,0.7)]">
-                  ENTER THE PORTAL
-                </h3>
-                <p className="text-xs text-cyan-200/70 tracking-wide font-sans">
-                  Click to activate warp drive and transition inside the event realm.
-                </p>
-              </div>
-
-              <button
-                onClick={handleEnterPortal}
-                className="group relative w-full mt-2 py-3.5 px-8 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-mono font-bold text-sm tracking-[0.25em] uppercase shadow-[0_0_30px_rgba(0,255,255,0.6)] hover:shadow-[0_0_50px_rgba(0,255,255,0.9)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer"
-              >
-                WARP THROUGH →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Warping Status HUD Overlay */}
-        {isWarping && (
-          <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[95] pointer-events-none flex flex-col items-center gap-2 bg-[#010c18]/90 border border-cyan-400 px-8 py-3 rounded-full backdrop-blur-xl shadow-[0_0_40px_rgba(0,255,255,0.7)] animate-pulse">
-            <div className="flex items-center gap-3">
-              <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
-              <span className="font-mono text-xs md:text-sm font-bold tracking-[0.35em] text-cyan-300 uppercase">
-                WARPING THROUGH STARGATE...
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
 
       {/* Minimal Top-Left Speaker Audio Toggle Icon */}
       <button
