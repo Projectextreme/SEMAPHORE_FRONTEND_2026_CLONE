@@ -86,7 +86,7 @@ export default function PaymentPage() {
           
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-cyan-500/30 mb-6 relative group cursor-pointer transition-all hover:scale-105">
             <Image 
-              src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=semaphore@upi&pn=Semaphore&cu=INR" 
+              src="/QR_code.png" 
               alt="Payment QR Code" 
               width={224}
               height={224}
@@ -95,12 +95,54 @@ export default function PaymentPage() {
             />
           </div>
           
-          <div className="w-full bg-cyan-500/10 p-4 rounded-xl border border-cyan-500/30 text-center">
-              <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">UPI ID</p>
-              <p className="text-lg font-bold text-cyan-400 tracking-wider font-mono">semaphore@upi</p>
+          <div className="w-full bg-cyan-500/10 p-5 rounded-xl border border-cyan-500/30 space-y-4 text-sm text-left">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Name of the Account</span>
+              <span className="font-bold text-cyan-300">Nitte Deemed to be University</span>
+            </div>
+            
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Account No</span>
+              <span className="font-bold text-cyan-300 font-mono tracking-widest text-lg">02452200058171</span>
+            </div>
+            
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Bank & Branch</span>
+              <span className="font-bold text-cyan-300 leading-relaxed">Canara Bank, ABSMIDS Branch, Deralakatte</span>
+            </div>
+            
+            <div className="flex flex-row flex-wrap gap-4">
+              <div className="flex-1 min-w-[120px] flex flex-col gap-1">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">IFSC Code</span>
+                <span className="font-bold text-cyan-300 font-mono">CNRB0010245</span>
+              </div>
+              <div className="flex-1 min-w-[120px] flex flex-col gap-1">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">MICR Code</span>
+                <span className="font-bold text-cyan-300 font-mono">575015123</span>
+              </div>
+            </div>
+            
+            <div className="flex flex-row flex-wrap gap-4">
+              <div className="flex-1 min-w-[120px] flex flex-col gap-1">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">NDU GST No</span>
+                <span className="font-bold text-cyan-300 font-mono text-[13px]">29AABTN0060A1Z5</span>
+              </div>
+              <div className="flex-1 min-w-[120px] flex flex-col gap-1">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">NDU PAN</span>
+                <span className="font-bold text-cyan-300 font-mono text-[13px]">AABTN0060A</span>
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-1 pt-1 border-t border-cyan-500/20">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-2">Email</span>
+              <a href="mailto:cb10245@canarabank.com" className="font-bold text-cyan-400 hover:text-cyan-300 hover:underline transition-colors">
+                cb10245@canarabank.com
+              </a>
+            </div>
           </div>
+          
           <p className="text-sm text-gray-400 font-medium text-center mt-6">
-            Scan the QR code using any UPI app to pay for your registered events. After successful payment, enter the exact amount and the UTR transaction number in the form.
+            Scan the QR code or use the account details to pay for your registered events. After successful payment, enter the exact amount and the UTR transaction number in the form.
           </p>
         </div>
 
