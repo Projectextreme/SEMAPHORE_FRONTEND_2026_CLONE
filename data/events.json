@@ -8,7 +8,8 @@
       "Rule 1 here",
       "Rule 2 here"
     ],
-    "heads": ["Shashidhar", "Havyas"]
+    "heads": ["Havyas U - 7483989780", "Shashidhara K - 7760770725"],
+    "participants": 2
   },
   {
     "id": "Coral Canvas",
@@ -16,10 +17,15 @@
     "category": "Web Design",
     "description": "Where every pixel shapes a Reef",
     "rules": [
-      "Rule 1 here",
-      "Rule 2 here"
+      "No of participants -2",
+      "No of rounds -3",
+"Participants must have knowledge in HTML, CSS, and JavaScript",
+"The rounds and design tasks will be provided on the spot.",
+ "Electronic gadgets are not allowed"
+
     ],
-    "heads": ["Swasthik NJ", "Udith R Poojary"]
+    "heads": ["Swasthik NJ - 8951192848", "Udith R Poojary - 8088575178"],
+    "participants": 2
   },
   {
     "id": "Aqua Byte",
@@ -27,10 +33,14 @@
     "category": "IT Quiz",
     "description": "Where knowledge meets the Unknown",
     "rules": [
-      "Rule 1 here",
-      "Rule 2 here"
+      "Each team shall consist of 2 participants",
+      "The questions will cover General Knowledge, Technical Knowledge, Programming,Information Technology, Computer Science, and other IT-related topics",
+      "The use of mobile phones, smartwatches, or any electronic gadgets is strictly prohibited during the event",
+      "The decision of the judges shall be final and binding",
+      "Any malpractice or violation of the quiz rules will lead to disqualification"
     ],
-    "heads": ["Thushar R Poojary", "Prathiksha"]
+    "heads": ["Thushar R Poojary- 7019512573", "Prathiksha - 6363428734"],
+    "participants": 2
   },
   {
     "id": "Abyss Arena",
@@ -38,75 +48,112 @@
     "category": "Gaming",
     "description": "Battle beyond the Depths",
     "rules": [
-      "Rule 1 here",
-      "Rule 2 here"
+      "A team must consist of 4 players",
+      "Use of emulators, iPads and triggers is not allowed",
+      "Players must bring their own mobile devices, chargers, finger sleeves and earphones",
+      "Players should ensure their devices are compatible with the game and that they have the latest version installed",
+      "All required maps must be downloaded before the event",
+      "Players must have their own internet connection available as a backup",
+      "Any misconduct or unfair play will result in disqualification",
+      "Organizers' decisions will be final and binding"
     ],
-    "heads": ["Jithesh", "Keerthan"]
+    "heads": ["Jithesh Kotian - 7619168599", "Keerthan Kulal - 8792839166"],
+    "participants": 4
   },
   {
-    "id": "sonar_symposium",
-    "name": "Sonar Symposium",
-    "category": "Paper Presentation",
-    "description": "Enter the tagline/description here",
+    "id": "AquaVerse",
+    "name": "AquaVerse",
+    "category": "Tech Talk",
+    "description": "Only the boldest minds can conquer the future",
     "rules": [
-      "Rule 1 here",
-      "Rule 2 here"
+      "The topic for each round will be disclosed a few minutes before the round begins",
+      "Judges decisions are final and binding. No objections or disputes will be entertained",
+      "Participants must always maintain a respectful and professional demeanour",
+      "Use of offensive language, inappropriate content, cheating, or disrespectful behaviour will result in immediate disqualification"
     ],
-    "heads": ["Head Name 1", "Head Name 2"]
+    "heads": ["Krupa - 8296612368", "Hruthika - 9353480749"],
+    "participants": 1
   },
   {
-    "id": "bermuda_enigma",
-    "name": "Bermuda Enigma",
-    "category": "Treasure Hunt",
-    "description": "Enter the tagline/description here",
+    "id": "Ocean Enigma",
+    "name": "Ocean Enigma",
+    "category": "Surprise Event",
+    "description": "The Ultimate Surprise Challenge",
     "rules": [
-      "Rule 1 here",
-      "Rule 2 here"
+      "Each team shall consists of 2 participants",
+"Mystery will be revealed only at the event",
+"Surprise bonus challenges may appear anytime",
+"Use your brain, not gadgets, electronic devices are not allowed.",
+"Some tasks will be time-based",
+"Judges' decisions are final and binding.",
+"Maintain fair play and sportsmanship throughout the event"
+
     ],
-    "heads": ["Head Name 1", "Head Name 2"]
+    "heads": ["Sameeksha Jain - 7676292225", "Dheemanth Bhatta - 9480463974"],
+    "participants": 2
   },
   {
-    "id": "trident_command",
-    "name": "Trident Command",
-    "category": "Tech Event",
-    "description": "Enter the tagline/description here",
+    "id": "Leviathan",
+    "name": "Leviathan",
+    "category": "IT Manager",
+    "description": "Only one can rule the depths",
     "rules": [
-      "Rule 1 here",
-      "Rule 2 here"
+      "This is a solo event, and each participant will compete individually",
+"The competition will consist of 4 rounds",
+"Participants are expected to maintain professional and respectful conduct throughout the event",
+"Participants must follow the instructions given by the organizers during each round",
+"Any form of cheating, unfair practice, or misconduct will result in disqualification",
+"The decision of the judges and organizers will be final"
+
     ],
-    "heads": ["Head Name 1", "Head Name 2"]
+    "heads": ["Jathin - 6364058375", "Hasth - 7338371775"],
+    "participants": 1
   },
   {
-    "id": "aqua_venture",
-    "name": "Aqua Venture",
-    "category": "Tech Event",
-    "description": "Enter the tagline/description here",
+    "id": "The Meg Pitch",
+    "name": "The Meg Pitch",
+    "category": "StartUp",
+    "description": "The Deep Sea of Innovation",
     "rules": [
-      "Rule 1 here",
-      "Rule 2 here"
+      "Round 1 (Tech Battle Royale), teams pick one technology – AI, Cyber Security, IoT, or Blockchain – and prepare exactly 5 slides pitching a startup idea, incorporating any challenge cards given during the round.",
+"Round 2 (One-Slide Mastery), qualifying teams prepare a single slide that builds on their Round 1 idea, including logo, brief explanation, business model, and funding needs",
+"Each round has a strict presentation time of 5 minutes (4 minutes presenting + 1 minute for questions)",
+"The decision of the judges shall be final and binding"
+
     ],
-    "heads": ["Head Name 1", "Head Name 2"]
+    "heads": ["Sumanth Acharya - 8748059243", "Shahavez - 7349342520"],
+    "participants": 2
   },
   {
-    "id": "luminescent_lens",
-    "name": "Luminescent Lens",
+    "id": "Submarine",
+    "name": "Submarine",
     "category": "Photography",
     "description": "Enter the tagline/description here",
     "rules": [
       "Rule 1 here",
       "Rule 2 here"
     ],
-    "heads": ["Head Name 1", "Head Name 2"]
+    "heads": ["Goutam Hegde - 9242288471", "Bhargavi Pai - 9632081787"],
+    "participants": 1
   },
   {
-    "id": "synchronized_swarm",
-    "name": "Synchronized Swarm",
-    "category": "Cultural Event",
-    "description": "Enter the tagline/description here",
+    "id": "Narcissa",
+    "name": "Narcissa",
+    "category": "Fashin Show",
+    "description": "Only the Boldest can own the Depths",
     "rules": [
-      "Rule 1 here",
-      "Rule 2 here"
+      "Each team must consist of 2 members",
+      "Each team gets 2+1 minutes on stage",
+      "Outfits must follow a corporate/professional theme",
+      "Participants can experiment with formal wear, business casual, modern office fashion, and power dressing",
+      "Both members should have some coordination in their outfits, colours, styling, or overall concept",
+      "Confidence, posture, walking style, and presentation will be judged",
+      "Outfits must be suitable for a college event and maintain a professional appearance",
+      "Teams must submit selected ramp walk songs/music in advance",
+      "Teams must report to the venue before their assigned time",
+      "The judges decision will be final"
     ],
-    "heads": ["Head Name 1", "Head Name 2"]
+    "heads": ["Prapthi Shetty - 9632081932", "Prathiksha - 9483505763"],
+    "participants": 2
   }
 ]
