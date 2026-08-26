@@ -1,27 +1,25 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
   DrawerClose,
   DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import {
   Home,
-  KeyRound,
   User,
   FileEdit,
   BookOpen,
-  CircleDollarSign,
   Contact,
   Code,
   Calendar,
+  X,
   Menu as MenuIcon
 } from "lucide-react"
 
@@ -38,6 +36,7 @@ const menuItems = [
 
 export default function Menu() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -45,7 +44,10 @@ export default function Menu() {
   }, []);
 
   return (
-    <Drawer showSwipeHandle>
+    <Drawer
+      showSwipeHandle={isMobile}
+      swipeDirection={isMobile ? "down" : "right"}
+    >
       <div className="fixed top-2 right-2 z-[100]">
         <DrawerTrigger render={
           <Button
@@ -57,11 +59,22 @@ export default function Menu() {
           </Button>
         } />
       </div>
-      <DrawerContent className="bg-black/40 backdrop-blur border-t border-white/10 text-white p-4">
-        <DrawerHeader className="text-center pt-2 pb-6">
+      <DrawerContent className="bg-black/40 backdrop-blur border-white/10 text-white p-4">
+        <DrawerHeader className="relative pt-2 pb-6 text-center">
           <DrawerTitle className="text-2xl font-bold text-white">Semaphore 2K26</DrawerTitle>
+          {!isMobile && (
+            <DrawerClose render={
+              <Button
+                variant="ghost"
+                aria-label="Close menu"
+                className="absolute top-0 right-0 h-9 w-9 rounded-md p-0 text-gray-300 hover:bg-white/10 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            } />
+          )}
         </DrawerHeader>
-        <div className="flex flex-col gap-2 max-w-sm mx-auto w-full overflow-y-auto max-h-[70vh] no-scrollbar">
+        <nav className="flex min-h-0 flex-1 flex-col gap-2 w-full max-w-sm mx-auto overflow-y-auto no-scrollbar md:max-w-none">
           {menuItems.filter(item => !(isLoggedIn && item.label === 'Login')).map((item, index) => {
             const Icon = item.icon
             return (
@@ -75,7 +88,7 @@ export default function Menu() {
               </a>
             )
           })}
-        </div>
+        </nav>
       </DrawerContent>
     </Drawer>
   )
