@@ -1,47 +1,47 @@
 [
   {
-    "id": "abyssal_algorithm",
-    "name": "Abyssal Algorithm",
+    "id": "Code Wave",
+    "name": "Code Wave",
     "category": "Coding",
-    "description": "Enter the tagline/description here",
+    "description": "Where every line creates a Wave",
     "rules": [
       "Rule 1 here",
       "Rule 2 here"
     ],
-    "heads": ["Head Name 1", "Head Name 2"]
+    "heads": ["Shashidhar", "Havyas"]
   },
   {
-    "id": "tidal_weaver",
-    "name": "Tidal Weaver",
+    "id": "Coral Canvas",
+    "name": "Coral Canvas",
     "category": "Web Design",
-    "description": "Enter the tagline/description here",
+    "description": "Where every pixel shapes a Reef",
     "rules": [
       "Rule 1 here",
       "Rule 2 here"
     ],
-    "heads": ["Head Name 1", "Head Name 2"]
+    "heads": ["Swasthik NJ", "Udith R Poojary"]
   },
   {
-    "id": "oceanic_oracle",
-    "name": "Oceanic Oracle",
+    "id": "Aqua Byte",
+    "name": "Aqua Byte",
     "category": "IT Quiz",
-    "description": "Enter the tagline/description here",
+    "description": "Where knowledge meets the Unknown",
     "rules": [
       "Rule 1 here",
       "Rule 2 here"
     ],
-    "heads": ["Head Name 1", "Head Name 2"]
+    "heads": ["Thushar R Poojary", "Prathiksha"]
   },
   {
-    "id": "neptunes_arena",
-    "name": "Neptune's Arena",
+    "id": "Abyss Arena",
+    "name": "Abyss Arena",
     "category": "Gaming",
-    "description": "Enter the tagline/description here",
+    "description": "Battle beyond the Depths",
     "rules": [
       "Rule 1 here",
       "Rule 2 here"
     ],
-    "heads": ["Head Name 1", "Head Name 2"]
+    "heads": ["Jithesh", "Keerthan"]
   },
   {
     "id": "sonar_symposium",

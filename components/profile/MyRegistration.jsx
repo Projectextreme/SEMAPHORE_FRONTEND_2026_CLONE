@@ -45,7 +45,7 @@ export default function MyRegistration({ user: initialUser }) {
         setFetchedUserData(verifiedUserObj);
 
         const regEvents = verifiedUserObj.registeredEvents || data.registeredEvents || data.registrations || [];
-        
+
         // Fetch populated registrations from /api/registrations to ensure payment object (imageUrl, utr, status, amount) is populated
         try {
           const regRes = await fetch(`${API_BASE_URL}/api/registrations`, {
@@ -100,7 +100,7 @@ export default function MyRegistration({ user: initialUser }) {
     if (Array.isArray(p)) {
       p = p[0];
     }
-    
+
     // Check if image URL or payment details exist directly on item
     const directImageUrl = item.imageUrl || item.imageurl || item.image || item.proofUrl || item.url;
     const directUtr = item.utr || item.utrNumber;
@@ -203,11 +203,11 @@ export default function MyRegistration({ user: initialUser }) {
   return (
     <div className="flex-1 flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-1">
-        <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-wide">
+        <h1 className="text-xl md:text-2xl font-extrabold text-white tracking-wide">
           Events Registered ({events.length})
         </h1>
         {teamNameStr && (
-          <div className="inline-flex items-center gap-2 bg-white/5 border border-cyan-500/30 px-3.5 py-1.5 rounded-2xl text-xs font-bold text-cyan-400 shadow-sm">
+          <div className="inline-flex items-center gap-2 bg-black/60 backdrop-blur-md border border-cyan-500/30 px-3.5 py-1.5 rounded-2xl text-xs font-bold text-cyan-400 shadow-sm">
             <svg className="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
@@ -326,7 +326,7 @@ export default function MyRegistration({ user: initialUser }) {
                 <div className="flex flex-col gap-3">
                   {groupEvents.map((item, eIdx) => {
                     const ev = item.eventId || {};
-                    const dateStr = item.createdAt || item.addedAt 
+                    const dateStr = item.createdAt || item.addedAt
                       ? new Date(item.createdAt || item.addedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                       : null;
                     const participants = item.participants || [];
@@ -443,7 +443,7 @@ export default function MyRegistration({ user: initialUser }) {
             </span>
           </div>
         </div>
-        
+
         {totalUnpaidAmount > 0 ? (
           <button
             className="w-full py-3.5 rounded-xl border mb-5 uppercase tracking-widest text-sm shadow-inner transition-all bg-cyan-500/20 text-cyan-400 cursor-pointer hover:bg-cyan-500/30 border-cyan-500/50 font-bold"
@@ -455,7 +455,6 @@ export default function MyRegistration({ user: initialUser }) {
             }}
           >
             <span className="flex items-center justify-center gap-2 font-bold">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
               Pay Dues to Confirm Registrations (₹{totalUnpaidAmount})
             </span>
           </button>
@@ -514,11 +513,10 @@ export default function MyRegistration({ user: initialUser }) {
               {activeProofModal.status && (
                 <div className="flex justify-between items-center">
                   <span className="font-bold uppercase tracking-wider text-gray-400">Status:</span>
-                  <span className={`font-bold px-2 py-0.5 rounded text-[11px] uppercase ${
-                    ['approved', 'verified'].includes(activeProofModal.status) 
-                      ? 'bg-green-500/10 text-green-400 border border-green-500/30' 
+                  <span className={`font-bold px-2 py-0.5 rounded text-[11px] uppercase ${['approved', 'verified'].includes(activeProofModal.status)
+                      ? 'bg-green-500/10 text-green-400 border border-green-500/30'
                       : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/30'
-                  }`}>
+                    }`}>
                     {activeProofModal.status}
                   </span>
                 </div>

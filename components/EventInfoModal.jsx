@@ -35,10 +35,10 @@ export default function EventInfoModal({ event, onClose }) {
 
   // Map Scene.jsx event.num to events.json ids
   const eventMap = {
-    "01": "abyssal_algorithm",
-    "02": "tidal_weaver",
-    "03": "oceanic_oracle", // IT Quiz
-    "04": "neptunes_arena", // Gaming
+    "01": "Code Wave",//coding
+    "02": "Coral Canvas",//web design
+    "03": "Aqua Byte", // IT Quiz
+    "04": "Abyss Arena", // Gaming
     "05": "sonar_symposium",
     "06": "bermuda_enigma",
     "07": "trident_command",

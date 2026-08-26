@@ -6,6 +6,7 @@ import ProfileSidebar from '@/components/profile/ProfileSidebar';
 import MyRegistration from '@/components/profile/MyRegistration';
 import SetTeamCard from '@/components/profile/SetTeamCard';
 import WaterWave from '@/components/WaterWaveWrapper';
+import Footer from '@/components/Footer';
 
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
@@ -72,30 +73,34 @@ export default function MyRegistrationPage() {
   }
 
   return (
-    <main className="relative min-h-screen bg-black py-12 px-4 sm:px-6 lg:px-8">
+    <main className="relative min-h-screen bg-black pt-12 flex flex-col overflow-x-clip">
       {/* Decorative noise/texture overlay for the background */}
       <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none z-0"></div>
 
-      {/* Water Wave Effect (Darkened via overlay) */}
+      {/* Water Wave Effect */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-auto">
         <WaterWave
-          imageUrl="/water.jpg"
+          imageUrl="/profile_bg.jpg"
           dropRadius={25}
           perturbance={0.03}
-          resolution={512}
-          className="absolute inset-0 w-full h-full opacity-90 bg-cover bg-center"
+          resolution={1024}
+          className="absolute inset-0 w-full h-full opacity-100 bg-cover bg-center"
           style={{ backgroundSize: 'cover', backgroundPosition: 'center' }}
         >
-          {() => <div className="w-full h-full bg-black/80 pointer-events-none" />}
+          {() => <div className="w-full h-full pointer-events-none" />}
         </WaterWave>
       </div>
 
-      <div className="max-w-6xl mx-auto relative z-10 flex flex-col md:flex-row gap-8">
+      <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row gap-8 flex-grow pb-24">
         <ProfileSidebar user={user} />
         <div className="flex-1 flex flex-col">
           <SetTeamCard user={user} onUserUpdate={handleUserUpdate} />
           <MyRegistration user={user} />
         </div>
+      </div>
+
+      <div className="w-full z-20 relative mt-auto">
+        <Footer />
       </div>
     </main>
   );
