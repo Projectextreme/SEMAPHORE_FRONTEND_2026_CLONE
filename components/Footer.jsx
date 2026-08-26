@@ -9,9 +9,9 @@ export default function Footer() {
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[250px] bg-cyan-600/10 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="w-full px-6 md:px-12 pt-16 pb-8 md:pt-24 md:pb-8 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-x-8 gap-y-12 mb-16 items-start">
-          {/* Column 1: Brand & Logo */}
-          <div className="md:col-span-4 flex flex-col space-y-4">
+        <div className="flex flex-col md:flex-row justify-between gap-y-12 items-start mb-16">
+          {/* Brand & Logo */}
+          <div className="w-full md:max-w-md flex flex-col space-y-4 shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full border-2 border-cyan-400 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,255,0.4)]">
                 <div className="w-3.5 h-3.5 bg-cyan-400 rounded-full animate-pulse" />
@@ -26,65 +26,66 @@ export default function Footer() {
             <div className="pt-2 text-cyan-400 font-bold text-xs tracking-widest uppercase">
               17-18 September 2026 • NMAMIT, NITTE
             </div>
-
-
           </div>
 
-          {/* Column 2: Quick Links */}
-          <div className="md:col-span-3 flex flex-col space-y-4">
-            <h4 className="text-xs font-bold tracking-[0.3em] text-cyan-400 uppercase">
-              NAVIGATE
-            </h4>
-            <ul className="space-y-2.5 text-xs text-cyan-100/70">
-              <li><a href="#" className="hover:text-cyan-300 transition-colors">Surface Home</a></li>
-              <li><a href="#" className="hover:text-cyan-300 transition-colors">Deep Ocean Journey</a></li>
-              <li><a href="#" className="hover:text-cyan-300 transition-colors">Events & Competitions</a></li>
-              <li><a href="#" className="hover:text-cyan-300 transition-colors">About MCA Department</a></li>
-              <li>
-                <a
-                  href="#"
-                  className="hover:text-cyan-300 transition-colors text-cyan-300/90 font-bold"
-                >
-                  Contact & Support →
-                </a>
-              </li>
-            </ul>
-          </div>
+          {/* Grouped Links */}
+          <div className="w-full md:w-auto flex flex-col md:flex-row justify-end gap-16 md:gap-32 lg:gap-48 shrink-0">
+            {/* Quick Links */}
+            <div className="flex flex-col space-y-4">
+              <h4 className="text-xs font-bold tracking-[0.3em] text-cyan-400 uppercase">
+                NAVIGATE
+              </h4>
+              <ul className="space-y-2.5 text-xs text-cyan-100/70">
+                <li><a href="#" className="hover:text-cyan-300 transition-colors">Surface Home</a></li>
+                <li><a href="#" className="hover:text-cyan-300 transition-colors">Deep Ocean Journey</a></li>
+                <li><a href="#" className="hover:text-cyan-300 transition-colors">Events & Competitions</a></li>
+                <li><a href="#" className="hover:text-cyan-300 transition-colors">About MCA Department</a></li>
+                <li>
+                  <a
+                    href="#"
+                    className="hover:text-cyan-300 transition-colors text-cyan-300/90 font-bold"
+                  >
+                    Contact & Support →
+                  </a>
+                </li>
+              </ul>
+            </div>
 
-          {/* Column 3: Contact & Info */}
-          <div className="md:col-span-2 flex flex-col space-y-4">
-            <h4 className="text-xs font-bold tracking-[0.3em] text-cyan-400 uppercase">
-              CONNECT
-            </h4>
-            <ul className="space-y-2.5 text-xs text-cyan-100/70">
-              <li>NMAMIT, Nitte</li>
-              <li>Karkala Taluk, Udupi</li>
-              <li>Karnataka, India</li>
-              <li><a href="mailto:semaphore@nitte.edu.in" className="hover:text-cyan-300 transition-colors">semaphore2026@gmail.com</a></li>
-            </ul>
-          </div>
+            {/* Contact & Info */}
+            <div className="flex flex-col space-y-4">
+              <h4 className="text-xs font-bold tracking-[0.3em] text-cyan-400 uppercase">
+                CONNECT
+              </h4>
+              <ul className="space-y-2.5 text-xs text-cyan-100/70">
+                <li>NMAMIT, Nitte</li>
+                <li>Karkala Taluk, Udupi</li>
+                <li>Karnataka, India</li>
+                <li><a href="mailto:semaphore@nitte.edu.in" className="hover:text-cyan-300 transition-colors">semaphore2026@gmail.com</a></li>
+              </ul>
+            </div>
 
-          {/* Column 4: Student Coordinators */}
-          <div className="md:col-span-3 flex flex-col space-y-4">
-            <h4 className="text-xs font-bold tracking-[0.3em] text-cyan-400 uppercase">
-              COORDINATORS
-            </h4>
-            <ul className="space-y-3 text-xs text-cyan-100/70">
-              <li className="flex flex-col gap-0.5">
-                <span className="text-cyan-200 font-bold">Dr. Roshan D Suvaris</span>
-                <a href="tel:+919663484343" className="hover:text-cyan-300 transition-colors">
-                  +91 9663484343
-                </a>
-              </li>
+            {/* Student Coordinators */}
+            <div className="flex flex-col space-y-4">
+              <h4 className="text-xs font-bold tracking-[0.3em] text-cyan-400 uppercase">
+                COORDINATORS
+              </h4>
+              <ul className="space-y-3 text-xs text-cyan-100/70">
+                <li className="flex flex-col gap-0.5">
+                  <span className="text-cyan-200 font-bold">Dr. Roshan D Suvaris</span>
+                  <a href="tel:+919663484343" className="hover:text-cyan-300 transition-colors">
+                    +91 9663484343
+                  </a>
+                </li>
 
-              <li className="flex flex-col gap-0.5 pt-3 mt-1 border-t border-cyan-500/10">
-                <span className="text-cyan-400 font-bold uppercase tracking-wide text-[10px]">Student Coordinator</span>
-                <span className="text-cyan-200 font-bold">Vansh Shetty</span>
-                <a href="tel:+919019720766" className="hover:text-cyan-300 transition-colors">
-                  +91 9019720766
-                </a>
-              </li>
-            </ul>
+                <li className="flex flex-col gap-0.5 pt-3 mt-1 border-t border-cyan-500/10">
+                  <span className="text-cyan-400 font-bold uppercase tracking-wide text-[10px]">Student Coordinator</span>
+                  <span className="text-cyan-200 font-bold">Vansh Shetty</span>
+                  <a href="tel:+919019720766" className="hover:text-cyan-300 transition-colors">
+                    +91 9019720766
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -92,7 +93,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="flex flex-col md:flex-row items-center justify-between pt-4 mt-8 relative">
-          
+
           {/* Social Media Buttons (Left aligned on desktop) */}
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 md:absolute md:left-0 mb-6 md:mb-0 z-10">
             {/* Instagram SAMCA */}
