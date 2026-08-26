@@ -99,7 +99,7 @@ export default function MyRegistration({ user: initialUser }) {
 
     let p = item.paymentId || item.payment || item.paymentDetails;
     if (Array.isArray(p)) {
-      p = p[0];
+      p = p[p.length - 1];
     }
 
     // Check if image URL or payment details exist directly on item
@@ -179,6 +179,14 @@ export default function MyRegistration({ user: initialUser }) {
     return sum + (item.eventId?.registrationFee || 0);
   }, 0);
 
+  // Calculate true total due: unpaid events + events in rejected payments
+  const rejectedGroups = paidGroups.filter(g => g.payment.status === 'rejected' || g.payment.status === 'failed');
+  const rejectedEventsAmount = rejectedGroups.reduce((total, group) => {
+    return total + group.events.reduce((sum, e) => sum + (e.eventId?.registrationFee || 0), 0);
+  }, 0);
+  
+  const trueTotalUnpaidAmount = totalUnpaidAmount + rejectedEventsAmount;
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center p-12">
@@ -234,15 +242,16 @@ export default function MyRegistration({ user: initialUser }) {
             const { payment, events: groupEvents } = group;
             const isApproved = payment.status === 'approved' || payment.status === 'verified';
             const isPending = payment.status === 'pending' || payment.status === 'submitted';
+            const isRejected = payment.status === 'rejected' || payment.status === 'failed';
 
             return (
               <div
                 key={payment.id || idx}
-                className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col gap-5 relative overflow-hidden"
+                className={`bg-black/40 backdrop-blur-xl border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col gap-5 relative overflow-hidden ${isRejected ? 'border-red-500/30' : 'border-white/10'}`}
               >
                 {/* Group Header: Payment Summary & Proof CTA */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-white/10">
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-2 flex-1 w-full sm:w-auto pr-4">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-bold uppercase tracking-wider text-white">
                         Payment Transaction ({groupEvents.length} Event{groupEvents.length > 1 ? 's' : ''})
@@ -257,14 +266,19 @@ export default function MyRegistration({ user: initialUser }) {
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                           Verification Pending
                         </span>
-                      ) : (
+                      ) : isRejected ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-red-500/10 text-red-400 px-2.5 py-0.5 rounded-full border border-red-500/30">
-                          Payment Status: {payment.status}
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                          Payment Rejected
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-white/10 text-gray-300 px-2.5 py-0.5 rounded-full border border-white/20 uppercase">
+                          {payment.status}
                         </span>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs font-medium text-gray-400 flex-wrap mt-1">
+                    <div className="flex items-center gap-3 text-xs font-medium text-gray-400 flex-wrap">
                       {payment.utr && (
                         <span><strong className="text-white">UTR:</strong> <code className="bg-white/10 px-1.5 py-0.5 rounded text-cyan-400 font-mono font-bold">{payment.utr}</code></span>
                       )}
@@ -272,6 +286,16 @@ export default function MyRegistration({ user: initialUser }) {
                         <span><strong className="text-white">Amount:</strong> ₹{payment.amount}</span>
                       )}
                     </div>
+                    
+                    {isRejected && payment.message && (
+                      <div className="mt-1 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-300 flex items-start gap-2 max-w-lg">
+                        <svg className="w-4 h-4 shrink-0 mt-0.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-bold text-red-400 uppercase tracking-wider text-[10px]">Admin Remark</span>
+                          <span className="leading-relaxed">{payment.message}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Payment Image Proof Thumbnail / View Button */}
@@ -335,7 +359,7 @@ export default function MyRegistration({ user: initialUser }) {
                     return (
                       <div key={item._id || eIdx} className="bg-white/5 rounded-2xl p-4 border border-white/10 flex flex-col gap-3">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-                          <div className="flex items-center gap-3 w-full sm:w-auto">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
                             <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 font-extrabold flex items-center justify-center text-lg shrink-0 border border-cyan-500/30">
                               {ev.title ? ev.title.charAt(0).toUpperCase() : '?'}
                             </div>
@@ -403,9 +427,9 @@ export default function MyRegistration({ user: initialUser }) {
                   <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 font-extrabold text-2xl border border-cyan-500/30 shadow-inner shrink-0">
                     {ev.title ? ev.title.charAt(0).toUpperCase() : '?'}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1.5 gap-2">
-                      <h3 className="text-lg font-extrabold text-white">{ev.title || 'Unknown Event'}</h3>
+                      <h3 className="text-lg font-extrabold text-white truncate">{ev.title || 'Unknown Event'}</h3>
                       <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-red-500/10 text-red-400 px-3 py-1 rounded-full border border-red-500/30 whitespace-nowrap self-start">
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Payment Required
@@ -464,23 +488,26 @@ export default function MyRegistration({ user: initialUser }) {
           <h3 className="text-lg font-extrabold text-white mt-1">Registration Dues Summary</h3>
           <div className="flex flex-col items-start sm:items-end w-full sm:w-auto">
             <span className="text-lg font-extrabold text-cyan-400 bg-cyan-500/10 px-4 py-1.5 rounded-xl border border-cyan-500/30 shadow-sm w-full sm:w-auto text-center sm:text-right">
-              Total Due: ₹{totalUnpaidAmount}
+              Total Due: ₹{trueTotalUnpaidAmount}
             </span>
           </div>
         </div>
 
-        {totalUnpaidAmount > 0 ? (
+        {trueTotalUnpaidAmount > 0 ? (
           <button
             className="w-full py-3.5 rounded-xl border mb-5 uppercase tracking-widest text-sm shadow-inner transition-all bg-cyan-500/20 text-cyan-400 cursor-pointer hover:bg-cyan-500/30 border-cyan-500/50 font-bold"
             onClick={() => {
               const unpaidIds = unpaidEvents.map(item => item.eventId?._id || item.eventId).filter(Boolean);
-              sessionStorage.setItem('pendingPaymentAmount', totalUnpaidAmount);
-              sessionStorage.setItem('pendingEventIds', JSON.stringify(unpaidIds));
+              const rejectedIds = rejectedGroups.flatMap(g => g.events.map(e => e.eventId?._id || e.eventId)).filter(Boolean);
+              const allPendingIds = [...unpaidIds, ...rejectedIds];
+              
+              sessionStorage.setItem('pendingPaymentAmount', trueTotalUnpaidAmount);
+              sessionStorage.setItem('pendingEventIds', JSON.stringify(allPendingIds));
               router.push('/user/account/payment');
             }}
           >
             <span className="flex items-center justify-center gap-2 font-bold">
-              Pay Dues to Confirm Registrations (₹{totalUnpaidAmount})
+              Pay Dues to Confirm Registrations (₹{trueTotalUnpaidAmount})
             </span>
           </button>
         ) : (

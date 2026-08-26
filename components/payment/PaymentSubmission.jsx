@@ -70,7 +70,8 @@ export default function PaymentSubmission() {
         if (Array.isArray(regs) && regs.length > 0) {
           const unpaidEvents = regs.filter(e => {
             const payments = Array.isArray(e.paymentId) ? e.paymentId : (e.paymentId ? [e.paymentId] : []);
-            return payments.length === 0;
+            if (payments.length === 0) return true;
+            return payments.every(p => p.status === 'rejected' || p.status === 'failed');
           });
           const unpaidIds = unpaidEvents.map(e => e.eventId?._id || e.eventId).filter(Boolean);
           const titles = unpaidEvents.map(e => e.eventId?.title).filter(Boolean);
