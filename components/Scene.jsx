@@ -757,32 +757,21 @@ export default function Scene() {
 
     let sceneDisposed = false;
     function loadHdriEnvironment() {
-      return new Promise((resolve) => {
-        const exrLoader = new EXRLoader();
-        exrLoader.load(
-          "/hdri/spiaggia_di_mondello_4k.exr",
-          (texture) => {
-            if (sceneDisposed) {
-              texture.dispose();
-              resolve();
-              return;
-            }
-            texture.mapping = THREE.EquirectangularReflectionMapping;
-            const exrCubeRenderTarget = pmremGenerator.fromEquirectangular(texture);
-            exrEnvironmentTexture = exrCubeRenderTarget.texture;
-            scene.background = exrCubeRenderTarget.texture;
-            scene.environment = exrCubeRenderTarget.texture;
-            envSwapFade = 1.0;
-            fallbackEnvTarget.dispose();
-            texture.dispose();
-            resolve();
-          },
-          undefined,
-          (err) => {
-            console.warn("[Aquasaga] HDRI load failed, using fallback:", err);
-            resolve();
-          }
-        );
+      const exrLoader = new EXRLoader();
+      exrLoader.load("/hdri/spiaggia_di_mondello_4k.exr", (texture) => {
+        // The effect may have torn down while this 19MB download was in flight
+        if (sceneDisposed) {
+          texture.dispose();
+          return;
+        }
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        const exrCubeRenderTarget = pmremGenerator.fromEquirectangular(texture);
+        exrEnvironmentTexture = exrCubeRenderTarget.texture;
+        scene.background = exrCubeRenderTarget.texture;
+        scene.environment = exrCubeRenderTarget.texture;
+        envSwapFade = 0.72; // ramps back to 1.0 in the animate loop
+        fallbackEnvTarget.dispose();
+        texture.dispose();
       });
     }
 
@@ -824,7 +813,7 @@ export default function Scene() {
     const waterCeilingMesh = new THREE.Mesh(waterCeilingGeo, waterCeilingMat);
     waterCeilingMesh.rotation.x = Math.PI / 2;
     waterCeilingMesh.position.y = -2.05;
-    waterCeilingMesh.visible = true;
+    waterCeilingMesh.visible = false;
     scene.add(waterCeilingMesh);
 
     const waterUnderside = new THREE.Mesh(
@@ -941,7 +930,7 @@ export default function Scene() {
 
     // --- LEFT & RIGHT JAGGED CLIFF WALLS ---
     const sideCliffGroup = new THREE.Group();
-    sideCliffGroup.visible = true;
+    sideCliffGroup.visible = false;
 
     const cliffWallMat = new THREE.MeshStandardMaterial({
       color: 0x051d2c,
@@ -1031,12 +1020,12 @@ export default function Scene() {
     });
     const caveMesh = new THREE.Mesh(caveGeometry, caveMaterial);
     caveMesh.position.set(0, -335, -380);
-    caveMesh.visible = true;
+    caveMesh.visible = false;
     scene.add(caveMesh);
 
     // Large Distant Underwater Mountains
     const bgMountainsGroup = new THREE.Group();
-    bgMountainsGroup.visible = true;
+    bgMountainsGroup.visible = false;
 
     const mountainMaterial = new THREE.MeshStandardMaterial({
       color: 0x031420,
@@ -1610,51 +1599,25 @@ export default function Scene() {
               }
             });
 
-            // Generate 5 fish schools for the upper ocean (visible immediately)
-            for (let i = 0; i < 5; i++) {
-              const startZ = -20 - Math.random() * 120;
-              const startX = -60 + Math.random() * 120;
-              const startY = -25 - Math.random() * 30;
-              const scale = 0.3 + Math.random() * 0.5;
+            // Generate 15 fish schools for the upper ocean (visible immediately)
+            for (let i = 0; i < 15; i++) {
+              const startZ = -20 - Math.random() * 120;  // Upper ocean z spread
+              const startX = -60 + Math.random() * 120;  // Spread horizontally
+              const startY = -25 - Math.random() * 30;   // Keep them strictly underwater
+              const scale = 0.3 + Math.random() * 0.5;   // Smaller at surface
               const phase = Math.random() * 5;
+              
               setupFishSchoolInstance(scene, gltf, startX, startY, startZ, scale, phase);
             }
 
-            // Generate 5 fish schools specifically around the portal ring (z = -155)
-            for (let i = 0; i < 5; i++) {
-              const startZ = -140 - Math.random() * 30;
-              const startX = -40 + Math.random() * 80;
-              const startY = -30 - Math.random() * 40;
-              const scale = 0.4 + Math.random() * 0.6;
+            // Generate 15 fish schools for the deep canyon (visible after scrolling down)
+            for (let i = 0; i < 15; i++) {
+              const startZ = -200 - Math.random() * 800; // Spread from z: -200 to -1000
+              const startX = -40 + Math.random() * 80;   // Spread horizontally
+              const startY = -60 - Math.random() * 150;  // Deep down
+              const scale = 0.4 + Math.random() * 0.6;   // Smaller in deep
               const phase = Math.random() * 5;
-              setupFishSchoolInstance(scene, gltf, startX, startY, startZ, scale, phase);
-            }
-
-            // Generate 20 fish schools specifically around the 10 event nodes
-            // Event nodes span from y: -65 to -245, z: -250 to -950
-            const eventCenters = [
-              {y: -65, z: -250}, {y: -85, z: -350}, {y: -105, z: -450}, {y: -125, z: -550}, {y: -145, z: -650},
-              {y: -165, z: -750}, {y: -185, z: -850}, {y: -205, z: -950}, {y: -225, z: -950}, {y: -245, z: -950}
-            ];
-            
-            eventCenters.forEach(pos => {
-              for (let i = 0; i < 2; i++) {
-                const startZ = pos.z - 20 + Math.random() * 40;
-                const startX = -50 + Math.random() * 100;
-                const startY = pos.y - 10 + Math.random() * 20; // Hovering right near the platform height
-                const scale = 0.4 + Math.random() * 0.6;
-                const phase = Math.random() * 5;
-                setupFishSchoolInstance(newWorldGroup, gltf, startX, startY, startZ, scale, phase);
-              }
-            });
-
-            // Generate 5 fish schools for the deepest ocean floor (z = -950 to -1250)
-            for (let i = 0; i < 5; i++) {
-              const startZ = -950 - Math.random() * 300;
-              const startX = -40 + Math.random() * 80;
-              const startY = -250 - Math.random() * 200; // deepest Y
-              const scale = 0.4 + Math.random() * 0.6;
-              const phase = Math.random() * 5;
+              
               setupFishSchoolInstance(newWorldGroup, gltf, startX, startY, startZ, scale, phase);
             }
 
@@ -1716,7 +1679,7 @@ export default function Scene() {
     // --- THE NEW WORLD BEYOND THE MAIN STARGATE: INVISIBLE UNTIL ENTERING STARGATE (z < -155) ---
     // Features 10 DISTINCT DESCENDING ROCK PLATFORMS, PORTALS & 3D EVENT BANNERS
     const newWorldGroup = new THREE.Group();
-    newWorldGroup.visible = true;
+    newWorldGroup.visible = false; // Strictly hidden until passing inside the stargate (z < -155)!
     scene.add(newWorldGroup);
 
     const cliffRockMat = new THREE.MeshStandardMaterial({
@@ -3657,9 +3620,8 @@ export default function Scene() {
         ambientLight.color.setHex(0xffffff);
         ambientLight.intensity = 1.0;
 
-        waterCeilingMesh.visible = true;
-        waterCeilingMat.opacity = 0.0;
-        waterUnderside.visible = true;
+        waterCeilingMesh.visible = false;
+        waterUnderside.visible = false;
         caveMesh.visible = true;
         caveMaterial.transparent = true;
         caveMaterial.opacity = 0.4;
@@ -3693,9 +3655,9 @@ export default function Scene() {
         // 3. Soft Underwater Rock Blur & Opacity Crossfade
         const rockOpacity = THREE.MathUtils.lerp(0.4, 1.0, underwaterBlend);
 
-        waterCeilingMesh.visible = true;
+        waterCeilingMesh.visible = (camState.y < -0.5);
         waterCeilingMat.opacity = underwaterBlend;
-        waterUnderside.visible = true;
+        waterUnderside.visible = (camState.y < -2.0);
 
         caveMesh.visible = true;
         caveMaterial.transparent = true;
@@ -3751,7 +3713,7 @@ export default function Scene() {
         caveMesh.visible = false;
         portalBackdropMesh.visible = false;
       } else {
-        newWorldGroup.visible = true;
+        newWorldGroup.visible = false;
         portalBackdropMesh.visible = true;
       }
 
@@ -3814,15 +3776,15 @@ export default function Scene() {
           // Move horizontally (X axis)
           school.group.position.x += school.direction * school.speed * delta;
           
-          // Loop horizontally across the cavern width (tighter bounds so they don't hide inside rocks)
-          if (school.direction > 0 && school.group.position.x > 60) {
-            school.group.position.x = -60;
-            school.group.position.y = school.baseY + (Math.random() - 0.5) * 20;
-            school.group.position.z = school.baseZ + (Math.random() - 0.5) * 20;
-          } else if (school.direction < 0 && school.group.position.x < -60) {
-            school.group.position.x = 60;
-            school.group.position.y = school.baseY + (Math.random() - 0.5) * 20;
-            school.group.position.z = school.baseZ + (Math.random() - 0.5) * 20;
+          // Loop horizontally across the cavern width
+          if (school.direction > 0 && school.group.position.x > 150) {
+            school.group.position.x = -150;
+            school.group.position.y = school.baseY + (Math.random() - 0.5) * 40;
+            school.group.position.z = school.baseZ + (Math.random() - 0.5) * 40;
+          } else if (school.direction < 0 && school.group.position.x < -150) {
+            school.group.position.x = 150;
+            school.group.position.y = school.baseY + (Math.random() - 0.5) * 40;
+            school.group.position.z = school.baseZ + (Math.random() - 0.5) * 40;
           }
         }
       });
@@ -4301,35 +4263,16 @@ export default function Scene() {
           await buildDolphinsFromBuffer(await results.dolphin.arrayBuffer());
         }
 
-<<<<<<< HEAD
         if (results.fishSchool) {
           await buildFishSchoolFromBuffer(await results.fishSchool.arrayBuffer());
         }
-=======
-        // Load HDRI environment and compute PMREM cubemap BEFORE compile & reveal
-        // so pmremGenerator never blocks WebGL during interactive scrolling!
-        await loadHdriEnvironment();
->>>>>>> 600293b31c5c9468b3dea2a8a5a6611863567c25
 
         if (sceneDisposed) return;
 
-        // Force a full multi-pass compile & render so every material/shader/texture is uploaded
-        // BEFORE the curtain lifts, preventing any scroll-time shader compilation freezes.
-        newWorldGroup.visible = true;
-        sideCliffGroup.visible = true;
-        caveMesh.visible = true;
-        bgMountainsGroup.visible = true;
-        waterCeilingMesh.visible = true;
-        waterUnderside.visible = true;
-
+        // Force a full render so every material/shader is compiled and uploaded
+        // BEFORE the curtain lifts, rather than hitching on the first visible frame.
         renderer.compile(scene, camera);
         renderer.render(scene, camera);
-
-        // Pass 2: Deep world warm-up camera to force event banner textures and shaders into VRAM upfront
-        const warmUpCam = camera.clone();
-        warmUpCam.position.set(0, -120, -350);
-        warmUpCam.lookAt(0, -150, -700);
-        renderer.render(scene, warmUpCam);
 
         // Hand the browser two frames to actually present that work, then reveal.
         requestAnimationFrame(() => {
@@ -4337,6 +4280,8 @@ export default function Scene() {
             if (sceneDisposed) return;
             setProgress(100);
             setLoading(false);
+            // Scene is live and interactive — only now pull the heavy HDRI.
+            loadHdriEnvironment();
           });
         });
       } catch (err) {
