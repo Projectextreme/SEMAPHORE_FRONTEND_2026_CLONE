@@ -14,6 +14,11 @@ export default function SmoothScroll({ children }) {
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
       touchMultiplier: 1.5, // keeps mobile touch-scroll from feeling sluggish
+      // Let the wheel/touch reach inner overflow containers (e.g. the order summary
+      // list on /events/register) instead of Lenis always scrolling the page.
+      // Lenis only yields to a child that really is scrollable right now,
+      // so this stays inert where a container is flattened by a media query.
+      allowNestedScroll: true,
     });
 
     // Keep ScrollTrigger's internal scroll value in sync with Lenis on every scroll tick

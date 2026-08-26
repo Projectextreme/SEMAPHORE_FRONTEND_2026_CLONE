@@ -6,11 +6,135 @@ import WaterWave from '@/components/WaterWaveWrapper';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 
+const pageCss = `
+  /* ---------- Layout ----------
+     Anything a media query needs to change lives here rather than in the inline
+     styles object: an inline style beats a stylesheet rule, so a value set
+     inline makes the matching breakpoint silently do nothing. */
+  .reg-layout {
+    display: grid; grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 24px; align-items: start; padding-bottom: 24px;
+  }
+  /* Left column: team card + every event. It deliberately has no scroller of its
+     own — the page scrolls it, and that is what gives the sticky summary beside
+     it something to pin against. */
+  .reg-main { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+  .reg-gridwrap { min-width: 0; }
+  /* Cards share a height so each row reads as one band regardless of how long a
+     title or description runs. The card is a flex column with margin-top:auto on
+     its action button, so the extra height pushes every button onto a common
+     baseline instead of leaving a ragged edge.
+     A card must never span the full row when it opens: grid cannot keep a
+     full-row item in a half-row slot, so it would be bumped to a new row below
+     its neighbour and visibly jump down under the cursor. */
+  .reg-grid {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px; align-items: stretch; grid-auto-rows: 1fr;
+  }
+  /* An open card is legitimately far taller than the rest. Matching heights then
+     would balloon every card in its row to the height of the form, so uniform
+     heights are dropped for exactly as long as a form is open. */
+  .reg-grid.is-open { align-items: start; grid-auto-rows: auto; }
+
+  /* ---------- Progress stepper ----------
+     One pip per selectable event. At zero a single flat bar just reads as a
+     broken divider, whereas empty pips show how many slots are waiting. */
+  .reg-steps { display: flex; gap: 5px; width: 100%; }
+  .reg-step {
+    flex: 1 1 0; height: 6px; border-radius: 999px;
+    background: rgba(255,255,255,0.10);
+    transition: background .3s ease, box-shadow .3s ease;
+  }
+  .reg-step.is-done {
+    background: linear-gradient(90deg, #22d3ee, #0e7490);
+    box-shadow: 0 0 10px -1px rgba(34,211,238,0.6);
+  }
+
+  /* ---------- Sticky checkout ---------- */
+  .reg-summary { position: sticky; top: 20px; align-self: start; min-width: 0; }
+  /* The pinned card must never outgrow the viewport, or its lower half (the
+     total + checkout button) would sit permanently below the fold. */
+  .reg-summary-card { max-height: calc(100vh - 40px); overflow: hidden; }
+  .reg-summary-list {
+    flex: 1 1 auto; min-height: 0;
+    max-height: 240px; overflow-y: auto;
+    padding-right: 4px; overscroll-behavior: contain;
+  }
+
+  /* ---------- Custom scrollbars ---------- */
+  .reg-scroll { scrollbar-width: thin; scrollbar-color: rgba(34,211,238,0.55) transparent; scroll-behavior: smooth; }
+  .reg-scroll::-webkit-scrollbar { width: 9px; }
+  .reg-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.06); border-radius: 999px; }
+  .reg-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #22d3ee, #0e7490);
+    border-radius: 999px; border: 2px solid transparent; background-clip: padding-box;
+  }
+  .reg-scroll::-webkit-scrollbar-thumb:hover { background: #22d3ee; background-clip: padding-box; }
+
+  /* ---------- Cards ---------- */
+  .reg-card {
+    transition: transform .28s cubic-bezier(.34,1.4,.64,1), box-shadow .28s ease, border-color .28s ease;
+    will-change: transform;
+  }
+  .reg-card:hover { transform: translateY(-6px); box-shadow: 0 22px 44px -18px rgba(0,0,0,0.85); border-color: rgba(255,255,255,0.18); }
+  .reg-card.is-open { transform: none; box-shadow: 0 26px 50px -20px rgba(0,0,0,0.8); }
+  .reg-card.is-ready { box-shadow: 0 0 0 2px rgba(34,211,238,0.30), 0 14px 30px -16px rgba(0,0,0,0.75); }
+
+  /* ---------- Buttons ---------- */
+  .reg-btn { transition: transform .18s ease, filter .18s ease, box-shadow .18s ease; }
+  .reg-btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.08); box-shadow: 0 12px 24px -12px rgba(0,0,0,0.65); }
+  .reg-btn:active:not(:disabled) { transform: translateY(0) scale(.985); }
+  .reg-add { transition: background-color .2s ease, border-color .2s ease, color .2s ease; }
+  .reg-add:hover { background-color: rgba(34,211,238,0.10); border-color: rgba(34,211,238,0.55); color: #a5f3fc; }
+
+  /* ---------- Inputs ---------- */
+  .reg-input { transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease; }
+  .reg-input::placeholder { color: rgba(148,163,184,0.75); }
+  .reg-input:focus { border-color: rgba(34,211,238,0.65); background-color: rgba(255,255,255,0.09); box-shadow: 0 0 0 3px rgba(34,211,238,0.18); }
+  .reg-participant { transition: border-color .2s ease, background-color .2s ease; }
+  .reg-participant:focus-within { border-color: rgba(34,211,238,0.45); background-color: rgba(255,255,255,0.07); }
+
+  /* ---------- Summary items ---------- */
+  .reg-summary-item { transition: background-color .2s ease, transform .2s ease, border-color .2s ease; }
+  .reg-summary-item:hover { background-color: rgba(34,211,238,0.10); border-color: rgba(34,211,238,0.40); transform: translateX(3px); }
+
+  /* ---------- Animations ---------- */
+  @keyframes regPop { 0% { transform: scale(.82); opacity: .35; } 60% { transform: scale(1.09); } 100% { transform: scale(1); opacity: 1; } }
+  .reg-pop { display: inline-block; animation: regPop .38s cubic-bezier(.34,1.5,.64,1); }
+  @keyframes regSpin { to { transform: rotate(360deg); } }
+  .reg-spinner {
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.15); border-top-color: #22d3ee;
+    animation: regSpin .9s linear infinite; display: inline-block;
+  }
+
+  /* ---------- Responsive ---------- */
+  /* Tablet: the summary drops below the events and stops being sticky — pinning it
+     in a short column would just trap it against the fold. Both panes now scroll
+     with the page. */
+  @media (max-width: 1024px) {
+    .reg-layout { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+    .reg-main { gap: 18px; }
+    .reg-summary { position: static; }
+    .reg-summary-card { max-height: none; overflow: visible; }
+    .reg-summary-list { max-height: none; overflow: visible; }
+  }
+  @media (max-width: 720px) {
+    .reg-grid { grid-template-columns: minmax(0, 1fr); }
+    .reg-input-row { flex-direction: column; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reg-card, .reg-btn, .reg-summary-item, .reg-pop, .reg-spinner { transition: none !important; animation: none !important; }
+  }
+`;
+
 export default function EventsPage() {
   const router = useRouter();
 
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [eventsError, setEventsError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [registeredEventIds, setRegisteredEventIds] = useState([]);
   const [registeredEventMap, setRegisteredEventMap] = useState({});
@@ -110,8 +234,10 @@ export default function EventsPage() {
 
         if (res.ok) {
           setEvents(data.events || data.data || []);
+          setEventsError(null);
         } else {
           setEvents([]);
+          setEventsError(data.message || `Server responded with ${res.status}.`);
           console.error("Failed to load events", data);
         }
 
@@ -177,19 +303,21 @@ export default function EventsPage() {
           console.error("Failed to fetch registrations", err);
         }
       } catch (err) {
+        setEvents([]);
+        setEventsError(`Could not reach the server at ${API_BASE_URL}. ${err.message || ''}`.trim());
         console.error("Failed to load events", err);
       } finally {
         setLoadingEvents(false);
       }
     }
     fetchEventsAndUserData();
-  }, [router]);
+  }, [router, reloadKey]);
 
   if (!isAuthorized) {
     return (
-      <div style={styles.page}>
+      <div style={styles.page} className="bg-black">
         <div style={styles.container}>
-          <p style={{ color: '#8fb3c7', textAlign: 'center', marginTop: 40 }}>Redirecting to login...</p>
+          <p className="text-cyan-400 font-bold tracking-widest uppercase animate-pulse" style={{ textAlign: 'center', marginTop: 40 }}>Redirecting to login...</p>
         </div>
       </div>
     );
@@ -390,257 +518,451 @@ export default function EventsPage() {
     }
   };
 
+  // Smoothly bring a card into view inside the scrollable events pane
+  const scrollToEvent = (eventId) => {
+    if (typeof document === 'undefined') return;
+    const el = document.getElementById(`event-card-${eventId}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
   const totalAmount = calculateTotal();
-  const validFormsCount = getValidForms().length;
+  const readyItems = getValidForms();
+  const validFormsCount = readyItems.length;
+  const selectableCount = events.filter((e) => !registeredEventIds.includes(e._id)).length;
+  const progressPct = selectableCount > 0 ? Math.round((validFormsCount / selectableCount) * 100) : 0;
+  const checkoutDisabled = submitting || validFormsCount === 0;
 
   return (
-    <div style={styles.page} className="p-4 sm:p-6 md:p-10">
-      {/* Water Wave Background Layer */}
+    <div style={styles.page} className="relative bg-black overflow-x-clip p-4 sm:p-6 md:p-10">
+      <style>{pageCss}</style>
+
+      {/* Decorative noise/texture overlay for the background */}
+      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none z-0"></div>
+
+      {/* Water Wave Effect */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-auto">
         <WaterWave
-          imageUrl="/water.jpg"
+          imageUrl="/profile_bg.jpg"
           dropRadius={25}
           perturbance={0.03}
-          resolution={512}
-          className="absolute inset-0 w-full h-full  bg-cover bg-center"
+          resolution={1024}
+          className="absolute inset-0 w-full h-full opacity-100 bg-cover bg-center"
           style={{ backgroundSize: 'cover', backgroundPosition: 'center' }}
         >
-          {() => <div className="w-full h-full" />}
+          {() => <div className="w-full h-full pointer-events-none" />}
         </WaterWave>
       </div>
-
-      {/* Existing radial gradient as a semi-transparent overlay to preserve the theme's colors slightly */}
-      <div
-        className="fixed inset-0 z-0 pointer-events-none"
-      />
 
       <div style={{ ...styles.container, position: 'relative', zIndex: 10 }}>
         <div style={styles.header}>
           <h1 style={styles.pageTitle}>Events</h1>
           <p style={styles.pageSubtitle}>Discover and register for the latest events.</p>
         </div>
+      
+        {/* ===== MAIN LAYOUT: team + events scroll together | summary stays pinned ===== */}
+        <div className="reg-layout">
 
-        {/* Team Banner / Team Setup Card */}
-        <div className="mb-8 p-6 bg-white/90 backdrop-blur-xl border border-white/70 rounded-3xl shadow-sm">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-cyan-100/90 border border-cyan-300 flex items-center justify-center text-cyan-800 shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+          {/* -------- LEFT: team card + events, scrolled by the page -------- */}
+          <div className="reg-main">
+            {/* Team Banner / Team Setup Card — scrolls away with the events */}
+            <div className="p-6 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-lg">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-white tracking-wide">
+                      {hasTeam ? `Active Team: ${teamName || "Set"}` : "Team Registration Required"}
+                    </h3>
+                    <p className="text-xs text-gray-400 font-medium">
+                      {hasTeam
+                        ? "Your team is set. All event registrations will be grouped under this team."
+                        : "You must create or enter a Team Name before registering for events."}
+                    </p>
+                  </div>
+                </div>
+                {hasTeam && (
+                  <span className="px-3.5 py-1 bg-teal-500/10 text-teal-300 border border-teal-500/30 font-bold text-xs rounded-full shrink-0">
+                    ✓ Team Ready
+                  </span>
+                )}
               </div>
-              <div>
-                <h3 className="text-base font-extrabold text-cyan-950">
-                  {hasTeam ? `Active Team: ${teamName || "Set"}` : "Team Registration Required"}
-                </h3>
-                <p className="text-xs text-cyan-800/90 font-medium">
-                  {hasTeam
-                    ? "Your team is set. All event registrations will be grouped under this team."
-                    : "You must create or enter a Team Name before registering for events."}
-                </p>
-              </div>
+
+              {!hasTeam && (
+                <form onSubmit={handleSetTeam} className="flex flex-col sm:flex-row gap-3 mt-4 pt-4 border-t border-white/10">
+                  <input
+                    type="text"
+                    value={newTeamInput}
+                    onChange={(e) => setNewTeamInput(e.target.value)}
+                    placeholder="Enter Team Name (e.g. CyberKnights)"
+                    className="flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 focus:bg-white/10 border border-white/10 focus:border-cyan-500/50 rounded-xl text-sm font-medium text-white focus:outline-none placeholder-gray-500 transition-colors"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    disabled={settingTeam || !newTeamInput.trim()}
+                    className="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg transition-all border border-cyan-400/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {settingTeam ? "Setting Team..." : "Set Team & Continue"}
+                  </button>
+                </form>
+              )}
+
+              {teamError && <div className="mt-3 p-2.5 text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-xl font-medium">⚠ {teamError}</div>}
+              {teamSuccess && <div className="mt-3 p-2.5 text-xs text-teal-300 bg-teal-500/10 border border-teal-500/30 rounded-xl font-medium">✓ {teamSuccess}</div>}
             </div>
-            {hasTeam && (
-              <span className="px-3.5 py-1 bg-teal-100/90 text-teal-800 border border-teal-300 font-bold text-xs rounded-full shrink-0">
-                ✓ Team Ready
-              </span>
+
+            {loadingEvents ? (
+              <div style={styles.loadingBox}>
+                <span className="reg-spinner" />
+                <p style={styles.loadingText}>Loading events…</p>
+              </div>
+            ) : (
+              <section style={styles.eventsPane} className="reg-pane">
+                <div style={styles.paneHeader}>
+                  <div>
+                    <h2 style={styles.paneTitle}>Choose Your Events</h2>
+                    <p style={styles.paneHint}>Fill in participant details to add an event to your cart.</p>
+                  </div>
+                  <span style={styles.paneCount}>{events.length} available</span>
+                </div>
+
+                <div className="reg-gridwrap">
+                  <div className={`reg-grid${expandedEventId !== null ? ' is-open' : ''}`}>
+                    {events.length === 0 && (
+                      <div style={styles.noEvents}>
+                        {eventsError ? (
+                          <>
+                            <span style={styles.noEventsIcon}>⚠</span>
+                            <p style={styles.noEventsTitle}>Couldn&apos;t load events</p>
+                            <p style={styles.noEventsSub}>{eventsError}</p>
+                            <button
+                              type="button"
+                              className="reg-btn"
+                              style={styles.retryBtn}
+                              onClick={() => {
+                                setLoadingEvents(true);
+                                setEventsError(null);
+                                setReloadKey((k) => k + 1);
+                              }}
+                            >
+                              Retry
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <span style={styles.noEventsIcon}>🌊</span>
+                            <p style={styles.noEventsTitle}>No events published yet</p>
+                            <p style={styles.noEventsSub}>Check back soon.</p>
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {events.map((event) => {
+                      const isExpanded = expandedEventId === event._id;
+                      const participants = formsData[event._id] || [];
+                      const isValid = isFormValid(event._id);
+                      const isRegistered = registeredEventIds.includes(event._id);
+                      const eventRegInfo = registeredEventMap[event._id];
+                      const pStatus = eventRegInfo?.status || 'unpaid';
+
+                      const accent = isRegistered
+                        ? (pStatus === 'approved' ? '#10b981' : pStatus === 'pending' ? '#f59e0b' : '#fb923c')
+                        : isValid
+                          ? '#22d3ee'
+                          : 'rgba(255,255,255,0.10)';
+
+                      const statusChip = isRegistered
+                        ? (pStatus === 'approved'
+                          ? { text: 'Confirmed', bg: 'rgba(16,185,129,0.15)', color: '#6ee7b7', border: 'rgba(16,185,129,0.40)' }
+                          : pStatus === 'pending'
+                            ? { text: 'Verifying', bg: 'rgba(245,158,11,0.15)', color: '#fcd34d', border: 'rgba(245,158,11,0.40)' }
+                            : { text: 'Payment due', bg: 'rgba(249,115,22,0.15)', color: '#fdba74', border: 'rgba(249,115,22,0.40)' })
+                        : isValid
+                          ? { text: '✓ In cart', bg: 'rgba(34,211,238,0.15)', color: '#67e8f9', border: 'rgba(34,211,238,0.40)' }
+                          : participants.length > 0
+                            ? { text: 'Draft', bg: 'rgba(148,163,184,0.14)', color: '#cbd5e1', border: 'rgba(148,163,184,0.30)' }
+                            : null;
+
+                      return (
+                        <article
+                          key={event._id}
+                          id={`event-card-${event._id}`}
+                          className={`reg-card${isExpanded ? ' is-open' : ''}${isValid && !isRegistered ? ' is-ready' : ''}`}
+                          style={{
+                            ...styles.card,
+                            borderColor: accent,
+                          }}
+                        >
+                          <div style={styles.cardHeader}>
+                            <h3 style={styles.cardTitle}>{event.title}</h3>
+                            <span style={styles.feeBadge}>
+                              {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free'}
+                            </span>
+                          </div>
+
+                          <p style={styles.description}>{event.description}</p>
+
+                          <div style={styles.detailsRow}>
+                            <span style={styles.detailTag}>
+                              {event.minParticipants === event.maxParticipants
+                                ? `Team Size: ${event.minParticipants}`
+                                : `Team Size: ${event.minParticipants} - ${event.maxParticipants}`}
+                            </span>
+                            {statusChip && (
+                              <span
+                                style={{
+                                  ...styles.statusChip,
+                                  backgroundColor: statusChip.bg,
+                                  color: statusChip.color,
+                                  borderColor: statusChip.border,
+                                }}
+                              >
+                                {statusChip.text}
+                              </span>
+                            )}
+                          </div>
+
+                          {isRegistered ? (
+                            pStatus === 'approved' ? (
+                              <button disabled style={{ ...styles.actionBtn, background: 'rgba(16,185,129,0.18)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.35)', cursor: 'not-allowed' }}>
+                                ✓ Registered &amp; Verified
+                              </button>
+                            ) : pStatus === 'pending' ? (
+                              <button disabled style={{ ...styles.actionBtn, background: 'rgba(245,158,11,0.18)', color: '#fcd34d', border: '1px solid rgba(245,158,11,0.35)', cursor: 'not-allowed' }}>
+                                ⏳ Payment Verification Pending
+                              </button>
+                            ) : (
+                              <button
+                                className="reg-btn"
+                                onClick={() => {
+                                  sessionStorage.setItem('pendingPaymentAmount', event.registrationFee || 0);
+                                  sessionStorage.setItem('pendingEventIds', JSON.stringify([event._id]));
+                                  router.push('/user/account/payment');
+                                }}
+                                style={{ ...styles.actionBtn, background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
+                              >
+                                Complete Payment (₹{event.registrationFee || 0})
+                              </button>
+                            )
+                          ) : !isExpanded ? (
+                            <button
+                              className="reg-btn"
+                              onClick={() => toggleEventForm(event)}
+                              style={{
+                                ...styles.actionBtn,
+                                background: isValid
+                                  ? 'linear-gradient(135deg, #0d9488, #0f766e)'
+                                  : participants.length > 0
+                                    ? 'rgba(255,255,255,0.08)'
+                                    : 'linear-gradient(135deg, #0891b2, #0e7490)',
+                                border: !isValid && participants.length > 0 ? '1px solid rgba(255,255,255,0.15)' : 'none',
+                              }}
+                            >
+                              {isValid ? 'Edit Details ✓' : participants.length > 0 ? 'Continue Registration' : 'Register Now'}
+                            </button>
+                          ) : (
+                            <div style={styles.formContainer}>
+                              <div style={styles.formDivider} />
+                              <div style={styles.formTitleRow}>
+                                <h4 style={styles.formTitle}>Registration Details</h4>
+                                <span style={styles.formCounter}>
+                                  {participants.length}/{event.maxParticipants} members
+                                </span>
+                              </div>
+
+                              <div style={styles.form}>
+                                {participants.map((p, index) => (
+                                  <div key={index} style={styles.participantBlock} className="reg-participant">
+                                    <div style={styles.participantHeader}>
+                                      <span style={styles.participantLabel}>
+                                        Participant {index + 1} {index === 0 && '(Lead)'}
+                                      </span>
+                                      {participants.length > event.minParticipants && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveParticipant(index, event)}
+                                          style={styles.removeBtn}
+                                        >
+                                          Remove
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    <div style={styles.row} className="reg-input-row">
+                                      <input
+                                        className="reg-input"
+                                        style={styles.inputHalf}
+                                        placeholder="Full Name"
+                                        value={p.name}
+                                        onChange={(e) => handleChange(index, 'name', e.target.value, event._id)}
+                                      />
+                                      <input
+                                        className="reg-input"
+                                        style={styles.inputHalf}
+                                        type="tel"
+                                        placeholder="Phone Number"
+                                        value={p.phone}
+                                        onChange={(e) => handleChange(index, 'phone', e.target.value, event._id)}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+
+                                {participants.length < event.maxParticipants && (
+                                  <button type="button" onClick={() => handleAddParticipant(event)} style={styles.addBtn} className="reg-add">
+                                    + Add Team Member
+                                  </button>
+                                )}
+
+                                <button type="button" onClick={() => setExpandedEventId(null)} style={styles.collapseBtn} className="reg-btn">
+                                  {isValid ? 'Done — Minimize' : 'Minimize Event Form'}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+                </div>
+              </section>
             )}
           </div>
 
-          {!hasTeam && (
-            <form onSubmit={handleSetTeam} className="border-black-900 flex flex-col sm:flex-row gap-3 mt-4 pt-4 border-t border-cyan-200/60">
-              <input
-                type="text"
-                value={newTeamInput}
-                onChange={(e) => setNewTeamInput(e.target.value)}
-                placeholder="Enter Team Name (e.g. CyberKnights)"
-                className="flex-1 px-4 py-2.5 bg-white/70 hover:bg-white focus:bg-white border border-blue-200 rounded-xl text-sm font-medium text-cyan-950 focus:outline-none placeholder-cyan-800/40"
-                required
-              />
-              <button
-                type="submit"
-                disabled={settingTeam || !newTeamInput.trim()}
-                className="px-6 py-2.5 bg-blue-900 hover:bg-purple-800  text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm transition-all border border-teal-500/40 "
-              >
-                {settingTeam ? "Setting Team..." : "Set Team & Continue"}
-              </button>
-            </form>
-          )}
-
-          {teamError && <div className="mt-3 p-2.5 text-xs text-red-700 bg-red-100/70 border border-red-300 rounded-xl font-medium">⚠ {teamError}</div>}
-          {teamSuccess && <div className="mt-3 p-2.5 text-xs text-teal-800 bg-teal-100/70 border border-teal-300 rounded-xl font-medium">✓ {teamSuccess}</div>}
-        </div>
-
-        {loadingEvents ? (
-          <p style={{ color: '#ffffffff', textAlign: 'center', marginTop: 40 }}>Loading events...</p>
-        ) : (
-          <div style={styles.grid}>
-            {events.map((event) => {
-              const isExpanded = expandedEventId === event._id;
-              const participants = formsData[event._id] || [];
-              const isValid = isFormValid(event._id);
-              const isRegistered = registeredEventIds.includes(event._id);
-              const eventRegInfo = registeredEventMap[event._id];
-              const pStatus = eventRegInfo?.status || 'unpaid';
-
-              return (
-                <div key={event._id} style={{ ...styles.card, borderColor: isRegistered ? '#10b981' : isValid ? '#0ea5e9' : '#1e293b' }}>
-                  <div style={styles.cardHeader}>
-                    <h2 style={styles.cardTitle}>{event.title}</h2>
-                    <span style={styles.feeBadge}>
-                      {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free'}
-                    </span>
-                  </div>
-
-                  <p style={styles.description}>{event.description}</p>
-
-                  <div style={styles.detailsRow}>
-                    <span style={styles.detailTag}>
-                      {event.minParticipants === event.maxParticipants
-                        ? `Team Size: ${event.minParticipants}`
-                        : `Team Size: ${event.minParticipants} - ${event.maxParticipants}`}
-                    </span>
-                    {isValid && !isRegistered && <span style={{ ...styles.detailTag, backgroundColor: 'rgba(175, 247, 223, 0.89)', color: '#067651ff' }}>✓ Ready to Checkout</span>}
-                  </div>
-
-                  {isRegistered ? (
-                    pStatus === 'approved' ? (
-                      <button
-                        disabled
-                        style={{ ...styles.actionBtn, backgroundColor: '#024c33ff', opacity: 0.9, cursor: 'not-allowed' }}
-                      >
-                        ✓ Registered & Verified
-                      </button>
-                    ) : pStatus === 'pending' ? (
-                      <button
-                        disabled
-                        style={{ ...styles.actionBtn, backgroundColor: '#b45309', opacity: 0.9, cursor: 'not-allowed' }}
-                      >
-                        ⏳ Payment Verification Pending
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          const amountToPay = event.registrationFee || 0;
-                          sessionStorage.setItem('pendingPaymentAmount', amountToPay);
-                          sessionStorage.setItem('pendingEventIds', JSON.stringify([event._id]));
-                          router.push('/user/account/payment');
-                        }}
-                        style={{ ...styles.actionBtn, backgroundColor: '#d97706', opacity: 1, cursor: 'pointer' }}
-                      >
-                        Complete Payment (₹{event.registrationFee || 0})
-                      </button>
-                    )
-                  ) : !isExpanded ? (
-                    <button
-                      onClick={() => toggleEventForm(event)}
-                      style={{ ...styles.actionBtn, backgroundColor: participants.length > 0 ? '#1e293b' : '#0c4db5ff' }}
-                    >
-                      {participants.length > 0 ? 'Edit Registration' : 'Register Now'}
-                    </button>
-                  ) : (
-                    <div style={styles.formContainer}>
-                      <div style={styles.formDivider} />
-                      <h3 style={styles.formTitle}>Registration Details</h3>
-
-                      <div style={styles.form}>
-                        {participants.map((p, index) => (
-                          <div key={index} style={styles.participantBlock}>
-                            <div style={styles.participantHeader}>
-                              <span style={styles.participantLabel}>
-                                Participant {index + 1} {index === 0 && "(Lead)"}
-                              </span>
-                              {participants.length > event.minParticipants && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveParticipant(index, event)}
-                                  style={styles.removeBtn}
-                                >
-                                  Remove
-                                </button>
-                              )}
-                            </div>
-
-                            <div style={styles.row}>
-                              <input
-                                style={styles.inputHalf}
-                                placeholder="Full Name"
-                                value={p.name}
-                                onChange={(e) => handleChange(index, 'name', e.target.value, event._id)}
-                              />
-                              <input
-                                style={styles.inputHalf}
-                                type="tel"
-                                placeholder="Phone Number"
-                                value={p.phone}
-                                onChange={(e) => handleChange(index, 'phone', e.target.value, event._id)}
-                              />
-                            </div>
-                          </div>
-                        ))}
-
-                        {participants.length < event.maxParticipants && (
-                          <button
-                            type="button"
-                            onClick={() => handleAddParticipant(event)}
-                            style={styles.addBtn}
-                          >
-                            + Add Team Member
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => setExpandedEventId(null)}
-                          style={styles.collapseBtn}
-                        >
-                          Minimize Event Form
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Global Footer Checkout Bar */}
-        {!loadingEvents && (
-          <div style={styles.footerBar}>
-            <div style={styles.footerContainer}>
-              <div style={styles.footerInfo}>
-                <h3 style={styles.footerTotal}>Total Amount: <span>₹{totalAmount}</span></h3>
-                <p style={styles.footerSub}>({validFormsCount} event(s) ready for checkout)</p>
+          {/* -------- RIGHT: checkout summary, pinned while the left column scrolls -------- */}
+          <aside className="reg-summary">
+            <div style={styles.summaryCard} className="reg-summary-card">
+              <div style={styles.summaryHeader}>
+                <h3 style={styles.summaryTitle}>Order Summary</h3>
+                <span
+                  style={{
+                    ...styles.summaryBadge,
+                    ...(validFormsCount === 0 ? styles.summaryBadgeIdle : null),
+                  }}
+                >
+                  {validFormsCount} ready
+                </span>
               </div>
 
-              <div style={styles.footerActions}>
-                <button
-                  type="button"
-                  onClick={handleSaveDraft}
-                  style={styles.draftBtn}
-                  className="text-sm sm:text-[15px] px-3 sm:px-6 py-2.5 sm:py-3"
+              {/* Pips while the count is small enough to read at a glance;
+                  a continuous bar once there are too many to distinguish. */}
+              {selectableCount > 0 && selectableCount <= 10 ? (
+                <div
+                  className="reg-steps"
+                  role="progressbar"
+                  aria-valuenow={validFormsCount}
+                  aria-valuemin={0}
+                  aria-valuemax={selectableCount}
                 >
+                  {Array.from({ length: selectableCount }).map((_, i) => (
+                    <span key={i} className={`reg-step${i < validFormsCount ? ' is-done' : ''}`} />
+                  ))}
+                </div>
+              ) : (
+                <div style={styles.progressTrack}>
+                  <div style={{ ...styles.progressFill, width: `${progressPct}%` }} />
+                </div>
+              )}
+              <p style={styles.progressLabel}>
+                <strong style={styles.progressStrong}>{validFormsCount}</strong> of {selectableCount} event
+                {selectableCount === 1 ? '' : 's'} ready to check out
+              </p>
+
+              <div style={styles.summaryList} className="reg-scroll reg-summary-list" data-lenis-prevent-wheel>
+                {readyItems.length === 0 ? (
+                  <div style={styles.emptyState}>
+                    {/* Inline SVG, not an emoji: the wave glyph rendered as an
+                        unreadable blob on Windows and is off-palette besides. */}
+                    <span style={styles.emptyIconWrap}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6Z" />
+                        <path d="M12 8v8" strokeDasharray="2 3" />
+                      </svg>
+                    </span>
+                    <p style={styles.emptyText}>Your cart is empty</p>
+                    <p style={styles.emptySub}>Fill in every participant&apos;s name &amp; phone on an event to add it here.</p>
+                  </div>
+                ) : (
+                  readyItems.map(({ event, participants }) => (
+                    <button
+                      key={event._id}
+                      type="button"
+                      className="reg-summary-item"
+                      style={styles.summaryItem}
+                      onClick={() => {
+                        setExpandedEventId(event._id);
+                        scrollToEvent(event._id);
+                      }}
+                    >
+                      <span style={styles.summaryItemMain}>
+                        <span style={styles.summaryItemTitle}>{event.title}</span>
+                        <span style={styles.summaryItemMeta}>
+                          {participants.length} participant{participants.length > 1 ? 's' : ''}
+                        </span>
+                      </span>
+                      <span style={styles.summaryItemFee}>₹{event.registrationFee || 0}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+
+              {globalPendingAmount > 0 && (
+                <div style={styles.pendingNote}>
+                  ⏳ ₹{globalPendingAmount} pending from earlier registrations.
+                </div>
+              )}
+
+              <div style={styles.totalRow}>
+                <span style={styles.totalLabel}>
+                  Total Amount
+                  {validFormsCount > 0 && (
+                    <span style={styles.totalMeta}>
+                      {validFormsCount} event{validFormsCount > 1 ? 's' : ''} in cart
+                    </span>
+                  )}
+                </span>
+                <span key={totalAmount} className="reg-pop" style={styles.totalValue}>₹{totalAmount}</span>
+              </div>
+
+              {!hasTeam && (
+                <div style={styles.teamWarn}>Set your team name above to unlock checkout.</div>
+              )}
+
+              <div style={styles.summaryActions}>
+                <button type="button" onClick={handleSaveDraft} style={styles.draftBtn} className="reg-btn">
                   Save Draft
                 </button>
                 <button
+                  type="button"
                   onClick={handleCheckout}
+                  disabled={checkoutDisabled}
+                  className="reg-btn"
                   style={{
                     ...styles.checkoutBtn,
-                    opacity: submitting || validFormsCount === 0 ? 0.6 : 1,
-                    pointerEvents: submitting || validFormsCount === 0 ? 'none' : 'auto',
+                    ...(checkoutDisabled ? styles.checkoutBtnDisabled : null),
                   }}
-                  className="text-sm sm:text-[15px] px-3 sm:px-6 py-2.5 sm:py-3"
                 >
-                  {submitting ? 'Processing...' : 'Save & Make Payment'}
+                  {submitting ? 'Processing…' : totalAmount > 0 ? `Save & Pay ₹${totalAmount}` : 'Save & Make Payment'}
                 </button>
               </div>
-            </div>
 
-            {globalError && <div style={styles.globalError}>⚠ {globalError}</div>}
-            {globalSuccess && <div style={styles.globalSuccess}>✓ {globalSuccess}</div>}
-          </div>
-        )}
+              {/* Say what is blocking checkout. A greyed-out button on its own
+                  reads as broken rather than as waiting on the user. */}
+              {!submitting && validFormsCount === 0 && hasTeam && (
+                <p style={styles.checkoutHint}>Add at least one event to continue.</p>
+              )}
+
+              {globalError && <div style={styles.globalError}>⚠ {globalError}</div>}
+              {globalSuccess && <div style={styles.globalSuccess}>✓ {globalSuccess}</div>}
+            </div>
+          </aside>
+        </div>
+
 
       </div>
     </div>
@@ -651,161 +973,276 @@ const styles = {
   page: {
     minHeight: '100vh',
     width: '100%',
-    color: '#0f172a',
+    color: '#e2e8f0',
     boxSizing: 'border-box',
     fontFamily: 'system-ui, -apple-system, sans-serif',
   },
   container: {
-    maxWidth: 1200,
+    maxWidth: 1320,
     margin: '0 auto',
   },
   header: {
     textAlign: 'center',
-    marginBottom: 48,
-    marginTop: 40,
+    marginBottom: 32,
+    marginTop: 32,
   },
   pageTitle: {
     fontSize: 36,
     fontWeight: 800,
     margin: '0 0 12px',
-    letterSpacing: -0.5,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: '#ffffff',
   },
   pageSubtitle: {
     fontSize: 16,
-    color: '#334155',
+    color: '#94a3b8',
     margin: 0,
   },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 400px), 1fr))',
-    gap: 24,
-    alignItems: 'start',
-  },
-  card: {
-    backgroundColor: 'rgba(229, 252, 251, 0.88)',
-    border: '1px solid rgba(255, 255, 255, 0.8)',
-    borderRadius: "10px 30px ",
-    padding: '18px', // Reduced padding for mobile
+
+  // ---------- Loading ----------
+  loadingBox: {
     display: 'flex',
     flexDirection: 'column',
-    transition: 'all 0.2s',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
-    backdropFilter: 'blur(16px)',
+    alignItems: 'center',
+    gap: 14,
+    padding: '60px 0',
+  },
+  loadingText: {
+    color: '#22d3ee',
+    fontWeight: 700,
+    margin: 0,
+    fontSize: 13,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+
+  // ---------- Left pane (scrollable events) ----------
+  eventsPane: {
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 24,
+    padding: 16,
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
+    boxShadow: '0 16px 40px -24px rgba(0,0,0,0.9)',
+    minWidth: 0,
+  },
+  paneHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+    padding: '4px 6px 14px',
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
+    marginBottom: 14,
+    flexWrap: 'wrap',
+  },
+  paneTitle: {
+    margin: 0,
+    fontSize: 18,
+    fontWeight: 800,
+    color: '#ffffff',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
+  paneHint: {
+    margin: '3px 0 0',
+    fontSize: 12.5,
+    color: '#94a3b8',
+    fontWeight: 500,
+  },
+  paneCount: {
+    fontSize: 11.5,
+    fontWeight: 800,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: '#67e8f9',
+    backgroundColor: 'rgba(34,211,238,0.10)',
+    border: '1px solid rgba(34,211,238,0.30)',
+    padding: '5px 12px',
+    borderRadius: 999,
+    whiteSpace: 'nowrap',
+  },
+  noEvents: {
+    gridColumn: '1 / -1',
+    textAlign: 'center',
+    padding: '36px 20px',
+    color: '#94a3b8',
+    fontWeight: 600,
+    border: '1px dashed rgba(255,255,255,0.15)',
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  noEventsIcon: { fontSize: 30, display: 'block', marginBottom: 8 },
+  noEventsTitle: { margin: 0, fontSize: 15.5, fontWeight: 800, color: '#e2e8f0' },
+  noEventsSub: {
+    margin: '6px auto 0',
+    fontSize: 12.5,
+    fontWeight: 500,
+    color: '#94a3b8',
+    maxWidth: 380,
+    lineHeight: 1.5,
+    wordBreak: 'break-word',
+  },
+  retryBtn: {
+    marginTop: 14,
+    padding: '9px 22px',
+    borderRadius: 10,
+    border: 'none',
+    background: 'linear-gradient(135deg, #0891b2, #0e7490)',
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: 800,
+    cursor: 'pointer',
+  },
+
+  // ---------- Event card ----------
+  card: {
+    position: 'relative',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 24,
+    padding: '20px 18px 18px',
+    display: 'flex',
+    flexDirection: 'column',
+    minWidth: 0,
+    boxShadow: '0 8px 24px -12px rgba(0,0,0,0.8)',
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
+    overflow: 'hidden',
   },
   cardHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    gap: 10,
     marginBottom: 6,
   },
   cardTitle: {
-    fontSize: 20,
-    fontWeight: 700,
+    fontSize: 17.5,
+    fontWeight: 800,
     margin: 0,
-    color: '#0f172a',
+    lineHeight: 1.25,
+    color: '#ffffff',
+    letterSpacing: 0.3,
+    minWidth: 0,
   },
   feeBadge: {
-    backgroundColor: 'rgba(14, 218, 233, 0.5)',
-    color: '#014062ff',
+    backgroundColor: 'rgba(34,211,238,0.12)',
+    color: '#67e8f9',
     padding: '4px 10px',
-    borderRadius: "10px",
+    borderRadius: 10,
     fontSize: 13,
-    fontWeight: 600,
-    border: '1px solid rgba(3, 54, 78, 0.3)',
+    fontWeight: 700,
+    border: '1px solid rgba(34,211,238,0.35)',
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
   },
   description: {
-    fontSize: 14,
-    color: '#475569',
+    fontSize: 13.5,
+    color: '#94a3b8',
     lineHeight: 1.5,
-    margin: '0 0 10px',
+    margin: '0 0 12px',
   },
   detailsRow: {
     display: 'flex',
     gap: 8,
-    marginBottom: 15,
+    marginBottom: 16,
+    flexWrap: 'wrap',
   },
   detailTag: {
-    fontSize: 12,
-    color: '#0f172a',
-    backgroundColor: 'rgba(220, 232, 111, 0.96)',
-    padding: '4px 8px',
-    borderRadius: 6,
-    fontWeight: 600,
+    fontSize: 11.5,
+    color: '#cbd5e1',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.10)',
+    padding: '4px 9px',
+    borderRadius: 8,
+    fontWeight: 700,
+  },
+  statusChip: {
+    fontSize: 11.5,
+    padding: '4px 9px',
+    borderRadius: 999,
+    fontWeight: 700,
+    border: '1px solid transparent',
   },
   actionBtn: {
     width: '100%',
     padding: '12px',
-    backgroundColor: '#0ea5e9',
+    background: 'linear-gradient(135deg, #0891b2, #0e7490)',
     color: 'white',
     border: 'none',
-    borderRadius: "8px 10px 10px 15px",
-    fontSize: 15,
-    fontWeight: 600,
+    borderRadius: 14,
+    fontSize: 14.5,
+    fontWeight: 700,
     cursor: 'pointer',
-    transition: 'background-color 0.2s',
     marginTop: 'auto',
   },
 
-  // Inline Form Styles
-  formContainer: {
-    marginTop: 'auto',
-  },
+  // ---------- Inline form ----------
+  formContainer: { marginTop: 'auto' },
   formDivider: {
     height: 1,
-    backgroundColor: 'rgba(148, 163, 184, 0.3)',
-    margin: '0 0 20px 0',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    margin: '0 0 14px 0',
+  },
+  formTitleRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 14,
   },
   formTitle: {
-    fontSize: 15,
-    fontWeight: 600,
-    color: '#0f172a',
-    margin: '0 0 16px',
+    fontSize: 14.5,
+    fontWeight: 800,
+    color: '#ffffff',
+    margin: 0,
+  },
+  formCounter: {
+    fontSize: 11.5,
+    fontWeight: 700,
+    color: '#67e8f9',
+    backgroundColor: 'rgba(34,211,238,0.10)',
+    border: '1px solid rgba(34,211,238,0.30)',
+    padding: '3px 9px',
+    borderRadius: 999,
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 16,
+    gap: 14,
   },
   participantBlock: {
     display: 'flex',
     flexDirection: 'column',
     gap: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-    padding: 16,
-    borderRadius: 10,
-    border: '1px solid rgba(148, 163, 184, 0.4)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    padding: 14,
+    borderRadius: 16,
+    border: '1px solid rgba(255,255,255,0.1)',
   },
   participantHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
   },
   participantLabel: {
-    fontSize: 12,
-    fontWeight: 600,
-    color: '#475569',
+    fontSize: 11.5,
+    fontWeight: 800,
+    color: '#94a3b8',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   removeBtn: {
     background: 'none',
     border: 'none',
-    color: '#ef4444',
+    color: '#f87171',
     fontSize: 12,
+    fontWeight: 700,
     cursor: 'pointer',
     padding: 0,
-  },
-  input: {
-    width: '100%',
-    padding: '10px 14px',
-    borderRadius: 8,
-    border: '1px solid rgba(148, 163, 184, 0.5)',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    color: '#0f172a',
-    fontSize: 14,
-    boxSizing: 'border-box',
-    outline: 'none',
   },
   row: {
     display: 'flex',
@@ -814,128 +1251,266 @@ const styles = {
   inputHalf: {
     width: '100%',
     flex: 1,
+    minWidth: 0,
     padding: '10px 14px',
-    borderRadius: 8,
-    border: '1px solid rgba(148, 163, 184, 0.5)',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    color: '#0f172a',
+    borderRadius: 12,
+    border: '1px solid rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    color: '#f1f5f9',
     fontSize: 14,
     boxSizing: 'border-box',
     outline: 'none',
   },
   addBtn: {
     background: 'none',
-    color: '#0284c7',
-    border: '1px dashed #94a3b8',
-    borderRadius: 8,
+    color: '#67e8f9',
+    border: '1px dashed rgba(255,255,255,0.2)',
+    borderRadius: 12,
     padding: '10px',
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 700,
     cursor: 'pointer',
   },
   collapseBtn: {
     padding: '10px',
     backgroundColor: 'transparent',
-    color: '#475569',
-    border: '1px solid #94a3b8',
-    borderRadius: "8px 10px 10px 20px",
+    color: '#cbd5e1',
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: 14,
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 700,
     cursor: 'pointer',
-    marginTop: 8,
   },
 
-  // Footer Styles
-  footerBar: {
-    marginTop: 40,
+  // ---------- Right pane (sticky summary) ----------
+  summaryCard: {
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    padding: 20,
+    borderRadius: 24,
+    boxShadow: '0 24px 50px -24px rgba(0,0,0,0.95)',
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-end',
-    width: '100%',
-  },
-  footerContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
-    border: '1px solid rgba(255, 255, 255, 0.9)',
-    padding: '16px 20px', // Reduced from 24px 32px
-    borderRadius: 16,
-    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-    backdropFilter: 'blur(16px)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-    gap: 16,
-    width: 450,
-    maxWidth: '100%',
+    gap: 12,
     boxSizing: 'border-box',
   },
-  footerInfo: {
+  summaryHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+  },
+  summaryTitle: {
+    margin: 0,
+    fontSize: 17,
+    fontWeight: 800,
+    color: '#ffffff',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
+  summaryBadge: {
+    fontSize: 11.5,
+    fontWeight: 800,
+    color: '#67e8f9',
+    backgroundColor: 'rgba(34,211,238,0.10)',
+    border: '1px solid rgba(34,211,238,0.30)',
+    padding: '4px 11px',
+    borderRadius: 999,
+    whiteSpace: 'nowrap',
+  },
+  // Repeats the whole `border` shorthand rather than overriding borderColor:
+  // this object is spread in only while the cart is empty, so a longhand here
+  // would be *removed* on the render where the first event becomes ready, while
+  // summaryBadge's shorthand stayed put. React warns about exactly that, and the
+  // dropped colour can fail to repaint.
+  summaryBadgeIdle: {
+    color: '#94a3b8',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(255,255,255,0.12)',
+  },
+  progressTrack: {
+    height: 7,
+    width: '100%',
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 999,
+    background: 'linear-gradient(90deg, #22d3ee, #0e7490)',
+    transition: 'width .45s cubic-bezier(.4,0,.2,1)',
+  },
+  progressLabel: {
+    margin: 0,
+    fontSize: 12,
+    color: '#94a3b8',
+    fontWeight: 600,
+  },
+  progressStrong: { color: '#e2e8f0', fontWeight: 800 },
+  // max-height / overflow live in .reg-summary-list so the tablet breakpoint can
+  // unpin the card and let the list grow.
+  summaryList: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-end',
-    textAlign: 'right',
+    gap: 8,
+    margin: '2px 0',
   },
-  footerTotal: {
-    margin: 0,
-    fontSize: 24,
-    fontWeight: 700,
-    color: '#070124ff',
+  emptyState: {
+    textAlign: 'center',
+    padding: '18px 14px',
+    border: '1px dashed rgba(255,255,255,0.15)',
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
-  footerSub: {
-    margin: '4px 0 0',
-    fontSize: 13,
-    color: '#475569',
+  emptyIconWrap: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
+    height: 40,
+    marginBottom: 10,
+    borderRadius: 999,
+    color: '#67e8f9',
+    backgroundColor: 'rgba(34,211,238,0.10)',
+    border: '1px solid rgba(34,211,238,0.25)',
   },
-  footerActions: {
+  emptyText: { margin: 0, fontSize: 13.5, fontWeight: 800, color: '#e2e8f0' },
+  emptySub: { margin: '4px 0 0', fontSize: 11.5, color: '#94a3b8', lineHeight: 1.45 },
+  summaryItem: {
     display: 'flex',
-    gap: 12,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+    width: '100%',
+    textAlign: 'left',
+    padding: '10px 12px',
+    borderRadius: 14,
+    border: '1px solid rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    cursor: 'pointer',
+    font: 'inherit',
+  },
+  summaryItemMain: { display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 },
+  summaryItemTitle: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: '#f1f5f9',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    maxWidth: 200,
+  },
+  summaryItemMeta: { fontSize: 11, color: '#94a3b8', fontWeight: 600 },
+  summaryItemFee: { fontSize: 13.5, fontWeight: 800, color: '#34d399', whiteSpace: 'nowrap' },
+  pendingNote: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: '#fcd34d',
+    backgroundColor: 'rgba(245,158,11,0.12)',
+    border: '1px solid rgba(245,158,11,0.30)',
+    borderRadius: 12,
+    padding: '8px 10px',
+  },
+  totalRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    gap: 10,
+    paddingTop: 12,
+    borderTop: '1px solid rgba(255,255,255,0.1)',
+  },
+  totalLabel: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2,
+    fontSize: 13.5,
+    fontWeight: 700,
+    color: '#94a3b8',
+  },
+  totalMeta: { fontSize: 11, fontWeight: 600, color: '#67e8f9' },
+  totalValue: { fontSize: 26, fontWeight: 800, color: '#ffffff', letterSpacing: -0.5 },
+  teamWarn: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: '#fdba74',
+    backgroundColor: 'rgba(249,115,22,0.12)',
+    border: '1px solid rgba(249,115,22,0.30)',
+    borderRadius: 12,
+    padding: '8px 10px',
+  },
+  summaryActions: {
+    display: 'flex',
+    gap: 10,
     width: '100%',
   },
   draftBtn: {
-    backgroundColor: 'rgba(27, 110, 149, 0.36)',
-    color: '#042332ff',
-    border: '1px solid rgba(1, 36, 52, 0.41)',
-    borderRadius: 10,
-    fontWeight: 600,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    color: '#e2e8f0',
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: 12,
+    fontWeight: 700,
+    fontSize: 13.5,
+    padding: '12px 10px',
     cursor: 'pointer',
-    transition: 'background-color 0.2s',
-    flex: '1 1 100px',
+    flex: '1 1 110px',
     textAlign: 'center',
   },
   checkoutBtn: {
-    backgroundColor: '#006443ff',
+    background: 'linear-gradient(135deg, #059669, #047857)',
     color: 'white',
-    border: 'none',
-    borderRadius: 10,
-    fontWeight: 600,
+    border: '1px solid rgba(16,185,129,0.45)',
+    borderRadius: 12,
+    fontWeight: 800,
+    fontSize: 13.5,
+    padding: '12px 10px',
     cursor: 'pointer',
-    transition: 'opacity 0.2s',
-    flex: '2 1 160px',
+    flex: '2 1 170px',
+    textAlign: 'center',
+    boxShadow: '0 10px 22px -12px rgba(5,150,105,0.9)',
+  },
+  // Blocked, not broken: drop the green entirely rather than fading it, so the
+  // button never looks like a failed render of the live one.
+  checkoutBtnDisabled: {
+    background: 'rgba(255,255,255,0.06)',
+    color: '#64748b',
+    border: '1px solid rgba(255,255,255,0.10)',
+    boxShadow: 'none',
+    cursor: 'not-allowed',
+  },
+  checkoutHint: {
+    margin: 0,
+    fontSize: 11.5,
+    fontWeight: 600,
+    color: '#94a3b8',
     textAlign: 'center',
   },
   globalError: {
     width: '100%',
-    margin: '8px 0 0',
-    padding: '10px 14px',
-    backgroundColor: 'rgba(248,113,113,0.1)',
-    border: '1px solid rgba(248,113,113,0.2)',
-    borderRadius: 8,
-    color: '#ef4444',
-    fontSize: 14,
-    textAlign: 'center',
+    margin: 0,
+    padding: '10px 12px',
+    backgroundColor: 'rgba(248,113,113,0.12)',
+    border: '1px solid rgba(248,113,113,0.30)',
+    borderRadius: 12,
+    color: '#fca5a5',
+    fontSize: 12.5,
+    fontWeight: 600,
     boxSizing: 'border-box',
     wordWrap: 'break-word',
   },
   globalSuccess: {
     width: '100%',
-    margin: '8px 0 0',
-    padding: '10px 14px',
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    border: '1px solid rgba(16, 185, 129, 0.2)',
-    borderRadius: 8,
-    color: '#10b981',
-    fontSize: 14,
-    textAlign: 'center',
+    margin: 0,
+    padding: '10px 12px',
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    border: '1px solid rgba(16,185,129,0.30)',
+    borderRadius: 12,
+    color: '#6ee7b7',
+    fontSize: 12.5,
+    fontWeight: 600,
     boxSizing: 'border-box',
     wordWrap: 'break-word',
-  }
+  },
 };
