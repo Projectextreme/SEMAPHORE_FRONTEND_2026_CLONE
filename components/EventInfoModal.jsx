@@ -39,12 +39,13 @@ export default function EventInfoModal({ event, onClose }) {
     "02": "Coral Canvas",//web design
     "03": "Aqua Byte", // IT Quiz
     "04": "Abyss Arena", // Gaming
-    "05": "sonar_symposium",
-    "06": "bermuda_enigma",
-    "07": "trident_command",
-    "08": "aqua_venture",
-    "09": "luminescent_lens",
-    "10": "synchronized_swarm"
+    "05": "AquaVerse",
+    "06": "Ocean Enigma",
+    "07": "Leviathan",
+    "08": "The Meg Pitch",
+    "09": "Narcissa",
+    "10": "Submarine"
+    
   };
 
   const jsonEvent = eventsData.find(e => e.id === eventMap[event.num]);
@@ -55,6 +56,7 @@ export default function EventInfoModal({ event, onClose }) {
   const displayDesc = jsonEvent ? jsonEvent.description : event.desc;
   const displayRules = jsonEvent ? jsonEvent.rules : event.rules;
   const displayHeads = jsonEvent ? jsonEvent.heads : event.heads;
+  const displayParticipants = jsonEvent ? jsonEvent.participants : event.participants;
 
   return (
     <div className="fixed inset-0 z-[100] pointer-events-none flex flex-col justify-end">
@@ -88,22 +90,36 @@ export default function EventInfoModal({ event, onClose }) {
               {displayDesc}
             </div>
             
-            {/* Event Heads */}
-            {displayHeads && displayHeads.length > 0 && (
-              <div className="mt-auto">
-                <div className="text-[0.75rem] text-cyan-400/80 mb-2 uppercase tracking-[1.5px] font-semibold border-b border-cyan-400/20 inline-block pb-1">
-                  EVENT HEADS
+            {/* Event Heads and Participants */}
+            <div className="mt-auto flex flex-col md:flex-row gap-6">
+              {displayHeads && displayHeads.length > 0 && (
+                <div>
+                  <div className="text-[0.75rem] text-cyan-400/80 mb-2 uppercase tracking-[1.5px] font-semibold border-b border-cyan-400/20 inline-block pb-1">
+                    EVENT HEADS
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    {displayHeads.map((head, idx) => (
+                      <div key={idx} className="text-white/80 text-sm flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-cyan-400/50 rounded-full"></span>
+                        {head}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  {displayHeads.map((head, idx) => (
-                    <div key={idx} className="text-white/80 text-sm flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-cyan-400/50 rounded-full"></span>
-                      {head}
-                    </div>
-                  ))}
+              )}
+
+              {displayParticipants && (
+                <div>
+                  <div className="text-[0.75rem] text-cyan-400/80 mb-2 uppercase tracking-[1.5px] font-semibold border-b border-cyan-400/20 inline-block pb-1">
+                    NO. OF PARTICIPANTS
+                  </div>
+                  <div className="text-white/80 text-sm flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-cyan-400/50 rounded-full"></span>
+                    {displayParticipants} {displayParticipants == 1 ? "Member" : "Members"}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </header>
           
 
