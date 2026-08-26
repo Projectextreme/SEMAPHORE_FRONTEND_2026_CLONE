@@ -25,12 +25,12 @@ export const ASSET_VERSION = "v1";
 export const CRITICAL_ASSETS = [
   { key: "waterNormals", url: "/textures/waternormals.jpg", kind: "texture", bytes: 249000 },
   { key: "dolphin", url: "/assets/models/dolphin_anim.glb", kind: "buffer", bytes: 146000 },
-  { key: "fishSchool", url: "/assets/models/source/school%20of%20fish.glb", kind: "buffer", bytes: 34565856 },
+  { key: "fishSchool", url: "/assets/models/source/school%20of%20fish_opt.glb", kind: "buffer", bytes: 34440000 },
 ];
 
 /** Heavy, non-first-frame assets streamed in after the scene is already interactive. */
 export const SECONDARY_ASSETS = [
-  { key: "hdri", url: "/hdri/spiaggia_di_mondello_4k.exr", kind: "buffer", bytes: 19488681 },
+  { key: "hdri", url: "/hdri/spiaggia_di_mondello_1k.hdr", kind: "buffer", bytes: 1533242 },
 ];
 
 async function openCache() {
