@@ -30,6 +30,8 @@ export default function SmoothScroll({ children }) {
     // Recalculate ScrollTrigger start/end positions once Lenis has initialized
     requestAnimationFrame(() => ScrollTrigger.refresh());
 
+    window.__lenis = lenis;
+
     const resizeObserver = new ResizeObserver(() => {
       if (lenis && typeof lenis.resize === 'function') lenis.resize();
       ScrollTrigger.refresh();
@@ -37,6 +39,7 @@ export default function SmoothScroll({ children }) {
     resizeObserver.observe(document.body);
 
     return () => {
+      window.__lenis = null;
       resizeObserver.disconnect();
       gsap.ticker.remove(update);
       lenis.destroy();
