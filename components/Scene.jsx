@@ -8,6 +8,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Loader from "./Loader";
 import EventInfoModal from "./EventInfoModal";
+import { Info } from "lucide-react";
 import { CRITICAL_ASSETS, loadAssets, blobToTexture } from "./assetLoader";
 
 import {
@@ -1946,6 +1947,7 @@ export default function Scene() {
 
     const cliffMeshes = [];
     const bannerMeshes = [];
+    const infoMeshes = [];
     const crystalShrineMeshes = [];
     const eventBannerGroups = {};
     const postPortalHologramGroups = [];
@@ -2214,33 +2216,7 @@ export default function Scene() {
         eventGroup.add(mineralCluster);
       }
 
-      // 7. Floating 3D Code Symbol Glyphs (Positioned behind shrine away from camera line of sight)
-      const codeGlyphsCanvas = document.createElement("canvas");
-      codeGlyphsCanvas.width = 512;
-      codeGlyphsCanvas.height = 256;
-      const gCtx = codeGlyphsCanvas.getContext("2d");
-      gCtx.clearRect(0, 0, 512, 256);
-      gCtx.shadowColor = "#00f0ff";
-      gCtx.shadowBlur = 18;
-      gCtx.font = "900 120px monospace";
-      gCtx.fillStyle = "#67e8f9";
-      gCtx.fillText("</>", 140, 160);
-      const glyphTex = new THREE.CanvasTexture(codeGlyphsCanvas);
 
-      const glyphMat = new THREE.MeshBasicMaterial({
-        map: glyphTex,
-        transparent: true,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-      });
-
-      const glyphMesh1 = new THREE.Mesh(new THREE.PlaneGeometry(8, 4), glyphMat);
-      glyphMesh1.position.set(sideSign * 10, 16, -8);
-      eventGroup.add(glyphMesh1);
-
-      const glyphMesh2 = new THREE.Mesh(new THREE.PlaneGeometry(6, 3), glyphMat);
-      glyphMesh2.position.set(sideSign * -10, 16, -12);
-      eventGroup.add(glyphMesh2);
 
       newWorldGroup.add(eventGroup);
 
@@ -2249,7 +2225,27 @@ export default function Scene() {
       bannerGroup.position.set(x, y + posterAnchorY, z);
       bannerGroup.rotation.y = 0;
 
-      const bannerTexture = createEventBannerTexture(node);
+      //    Map each event to its logo PNG and intrinsic aspect ratio (width / height)
+      const logoConfig = {
+        "event-1": { src: "/events/coding.png", aspect: 3.0 },
+        "event-2": { src: "/events/webdesigning.png", aspect: 3.0 },
+        "event-3": { src: "/events/itquiz.png", aspect: 2.6036 },
+        "event-4": { src: "/events/gaming.png", aspect: 2.849 },
+        "event-5": { src: "/events/techtalk.png", aspect: 2.666 },
+        "event-6": { src: "/events/surpriseevent.png", aspect: 3.0 },
+        "event-7": { src: "/events/itmanager.png", aspect: 2.674 },
+        "event-8": { src: "/events/startup.png", aspect: 3.0 },
+        "event-9": { src: "/events/fashion.png", aspect: 2100 / 749 },
+        "event-10": { src: "/events/photography.png", aspect: 3.0 }
+      };
+
+      let bannerTexture;
+      if (logoConfig[node.id]) {
+        bannerTexture = new THREE.TextureLoader().load(logoConfig[node.id].src);
+        bannerTexture.colorSpace = THREE.SRGBColorSpace;
+      } else {
+        bannerTexture = createEventBannerTexture(node);
+      }
       if (renderer) {
         bannerTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
       }
@@ -2262,12 +2258,39 @@ export default function Scene() {
         alphaTest: 0.05,
       });
 
-      // Compact futuristic plaque geometry (18.4 x 7.2 for all events)
-      const bannerPlaneGeo = new THREE.PlaneGeometry(18.4, 7.2);
+      const bannerWidth = logoConfig[node.id] ? 7.2 * logoConfig[node.id].aspect : 18.4;
+      const bannerPlaneGeo = new THREE.PlaneGeometry(bannerWidth, 7.2);
       const bannerMesh = new THREE.Mesh(bannerPlaneGeo, bannerMat);
       bannerMesh.userData = { eventData: node };
       bannerGroup.add(bannerMesh);
       bannerMeshes.push(bannerMesh);
+
+      // Info 'i' Icon Badge at top-right of poster
+      const infoCanvas = document.createElement("canvas");
+      infoCanvas.width = 128;
+      infoCanvas.height = 128;
+      const iCtx = infoCanvas.getContext("2d");
+      iCtx.beginPath();
+      iCtx.arc(64, 64, 56, 0, Math.PI * 2);
+      iCtx.strokeStyle = "#00f0ff";
+      iCtx.lineWidth = 6;
+      iCtx.stroke();
+      iCtx.fillStyle = "rgba(0, 240, 255, 0.2)";
+      iCtx.fill();
+      iCtx.shadowColor = "#00f0ff";
+      iCtx.shadowBlur = 10;
+      iCtx.fillStyle = "#ffffff";
+      iCtx.font = "bold 72px monospace";
+      iCtx.textAlign = "center";
+      iCtx.textBaseline = "middle";
+      iCtx.fillText("i", 64, 68);
+      const infoTex = new THREE.CanvasTexture(infoCanvas);
+      const infoMat = new THREE.MeshBasicMaterial({ map: infoTex, transparent: true, side: THREE.DoubleSide });
+      const infoMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.6), infoMat);
+      infoMesh.position.set(bannerWidth / 2 - 0.2, 3.6, 0.2); // Top-right corner
+      infoMesh.userData = { eventData: node };
+      bannerGroup.add(infoMesh);
+      infoMeshes.push(infoMesh);
 
       // Glowing Vertical Energy Tether Beam connecting plaque base to crystal shrine
       const tetherGeo = new THREE.CylinderGeometry(0.04, 0.04, 2.2, 8);
@@ -2705,7 +2728,7 @@ export default function Scene() {
       mouseVector.y = -(event.clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouseVector, camera);
 
-      const intersects = raycaster.intersectObjects([portalRingMesh, ...crystalShrineMeshes, ...bannerMeshes], true);
+      const intersects = raycaster.intersectObjects([portalRingMesh, ...crystalShrineMeshes, ...bannerMeshes, ...infoMeshes], true);
       if (intersects.length > 0) {
         const hit = intersects[0].object;
         if (hit === portalRingMesh) {
@@ -2756,7 +2779,7 @@ export default function Scene() {
       mouseVector.y = targetMouse.y;
       raycaster.setFromCamera(mouseVector, camera);
 
-      const intersects = raycaster.intersectObjects([portalRingMesh, ...crystalShrineMeshes, ...bannerMeshes], true);
+      const intersects = raycaster.intersectObjects([portalRingMesh, ...crystalShrineMeshes, ...bannerMeshes, ...infoMeshes], true);
       if (intersects.length > 0) {
         document.body.style.cursor = "pointer";
         const hit = intersects[0].object;
@@ -4653,6 +4676,16 @@ export default function Scene() {
       waterGeometry.dispose();
       waterCeilingGeo.dispose();
       waterCeilingMat.dispose();
+      for (const b of bannerMeshes) {
+        if (b.material.map) b.material.map.dispose();
+        b.material.dispose();
+        b.geometry.dispose();
+      }
+      for (const i of infoMeshes) {
+        if (i.material.map) i.material.map.dispose();
+        i.material.dispose();
+        i.geometry.dispose();
+      }
       iceberg.geometry.dispose();
       iceberg2.geometry.dispose();
       icePlateGeo.dispose();
@@ -4734,14 +4767,7 @@ export default function Scene() {
       <div ref={containerRef} style={{ position: "sticky", top: 0, width: "100vw", height: "100vh", overflow: "hidden" }}>
         <div className="pointer-events-none fixed inset-0 z-50 border-[2px] border-cyan-500/20 opacity-90" />
 
-        {/* Hovered Event Tooltip in 3D View */}
-        {hoveredNode && (
-          <div className="pointer-events-none fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-black/95 border border-cyan-400/80 px-6 py-2 rounded-full shadow-[0_0_25px_rgba(0,255,255,0.4)] animate-pulse">
-            <span className="font-mono text-xs md:text-sm font-bold text-cyan-300 tracking-widest uppercase">
-              CLICK TO ENTER PORTAL // {hoveredNode}
-            </span>
-          </div>
-        )}
+
 
         {/* Surface Semaphore 2K26 Hero UI */}
         <div
@@ -4836,26 +4862,31 @@ export default function Scene() {
 
       {/* Final End Screen after the event scroll (Fades in at the very bottom) */}
       <div 
-        className={`fixed inset-0 bg-black flex flex-col items-center justify-center z-[100] transition-opacity duration-1000 ${
+        className={`fixed inset-0 bg-[#010a13] flex flex-col items-center justify-center z-[100] transition-opacity duration-1000 ${
           scrollProgress >= 99 ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
       >
+        {/* Subtle atmospheric lighting background */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(0,180,255,0.15)_0%,_rgba(0,0,0,0)_60%)] -z-10 pointer-events-none" />
         <div className="absolute inset-0 bg-[url('/textures/waternormals.jpg')] opacity-5 bg-cover bg-center mix-blend-overlay pointer-events-none" />
         
-        <h1 className="text-white text-5xl md:text-8xl font-black mb-6 tracking-[0.25em] drop-shadow-[0_0_20px_rgba(0,255,255,0.6)] text-center z-10">
-          SEMAPHORE<br/>2K26
-        </h1>
+        {/* Semaphore Logo */}
+        <div className="z-10 mb-12 relative flex items-center justify-center">
+          <div className="absolute w-3/4 h-3/4 bg-cyan-400/20 blur-[100px] rounded-full animate-pulse pointer-events-none" />
+          <img 
+            src="/semaphore_logo.png" 
+            alt="Semaphore 2026 Logo" 
+            className="w-[80vw] max-w-[600px] h-auto object-contain relative z-10 drop-shadow-[0_0_25px_rgba(0,255,255,0.4)] hover:scale-105 transition-transform duration-700" 
+          />
+        </div>
         
-        <p className="text-cyan-200 text-lg md:text-xl font-mono mb-12 tracking-widest uppercase z-10 text-center px-4">
-          Ready to dive into the ultimate tech experience?
-        </p>
-        
-        <a 
-          href="/events/register" 
-          className="z-10 px-10 py-4 bg-cyan-600 hover:bg-cyan-500 text-white font-mono font-bold tracking-widest rounded-lg transition-all duration-300 shadow-[0_0_20px_rgba(0,255,255,0.4)] hover:shadow-[0_0_40px_rgba(0,255,255,0.8)] hover:-translate-y-1 text-lg md:text-xl"
+        {/* Standalone Visual Register Button (No link) */}
+        <button 
+          type="button"
+          className="z-10 px-12 py-4 bg-cyan-600/80 hover:bg-cyan-500 text-white font-mono font-bold tracking-[0.2em] rounded-lg transition-all duration-500 shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.8)] hover:-translate-y-1 text-xl md:text-2xl border border-cyan-400/30 hover:border-cyan-300"
         >
-          REGISTER NOW
-        </a>
+          REGISTER
+        </button>
       </div>
 
       </div>
