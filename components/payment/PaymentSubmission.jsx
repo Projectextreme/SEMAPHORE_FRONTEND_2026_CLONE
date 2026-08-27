@@ -115,7 +115,7 @@ export default function PaymentSubmission() {
             if (prev) return prev;
             // Priced per team, not per event: anyone with anything left to pay owes
             // the one flat fee, whether that is a single event or all of them.
-            return unpaidEvents.length > 0 ? String(TEAM_REGISTRATION_FEE) : "";
+            return String(TEAM_REGISTRATION_FEE);
           });
         }
       } catch (err) {
@@ -146,6 +146,12 @@ export default function PaymentSubmission() {
 
     if (!file || !amount || !utr) {
       setError("Please fill in all required fields (Screenshot, Amount, and UTR).");
+      setLoading(false);
+      return;
+    }
+
+    if (!eventIds || eventIds.length === 0) {
+      setError("No unpaid events found to pay for. Please register for at least one event first.");
       setLoading(false);
       return;
     }
@@ -215,13 +221,13 @@ export default function PaymentSubmission() {
   // Already paid: no form at all. One team fee covers every event they register for,
   // and that stays true while the payment sits in the admin approval queue.
   if (feeHandled && !payAnyway && !submittedPayment) {
-    const accent = feeAwaitingApproval
-      ? { ring: 'bg-amber-500/10 border-amber-500/30 text-amber-400' }
-      : { ring: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' };
+    const ring = feeAwaitingApproval
+      ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+      : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
 
     return (
       <div className="w-full h-full p-8 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-sm relative flex flex-col items-center text-center justify-center">
-        <div className={`w-16 h-16 rounded-full border flex items-center justify-center mb-4 ${accent.ring}`}>
+        <div className={`w-16 h-16 rounded-full border flex items-center justify-center mb-4 ${ring}`}>
           {feeAwaitingApproval ? (
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           ) : (

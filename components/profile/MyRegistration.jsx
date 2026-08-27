@@ -3,8 +3,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from 'next/navigation';
 import { User, Phone } from 'lucide-react';
-import { TEAM_REGISTRATION_FEE } from '@/constants/pricing';
-import { fetchPaymentDone } from '@/lib/paymentStatus';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 
@@ -16,13 +14,6 @@ export default function MyRegistration({ user: initialUser }) {
 
   // Modal state for viewing payment screenshot & details
   const [activeProofModal, setActiveProofModal] = useState(null);
-
-  // The fee is charged once per team. If a payment already exists for this user or a
-  // team-mate, nothing is due — however many events were added afterwards without a
-  // payment record of their own. A payment still queued for admin approval counts:
-  // the user has already transferred the money.
-  const [feeHandled, setFeeHandled] = useState(false);
-  const [feeAwaitingApproval, setFeeAwaitingApproval] = useState(false);
 
   const router = useRouter();
 
@@ -102,16 +93,6 @@ export default function MyRegistration({ user: initialUser }) {
     fetchVerifiedUserData();
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetchPaymentDone().then(({ isPaymentDone, isPaymentPending }) => {
-      if (cancelled) return;
-      setFeeHandled(isPaymentDone || isPaymentPending);
-      setFeeAwaitingApproval(!isPaymentDone && isPaymentPending);
-    });
-    return () => { cancelled = true; };
-  }, []);
-
   // Helper to extract clean payment info from a registration item
   const getPaymentInfo = (item) => {
     if (!item) return null;
@@ -162,50 +143,35 @@ export default function MyRegistration({ user: initialUser }) {
     };
   };
 
-  // Group registrations by paymentId so multiple events sharing one payment are grouped together
-  const { paidGroups, unpaidEvents } = useMemo(() => {
-    const paidGroupsMap = {};
-    const unpaidList = [];
-
+  // Since the fee is a flat ₹2000 per team, we find the single best payment record
+  // across all events (Approved > Pending > Rejected) and group ALL events under it.
+  const globalPayment = useMemo(() => {
+    let best = null;
     events.forEach(item => {
       const pInfo = getPaymentInfo(item);
       if (pInfo && pInfo.id) {
-        if (!paidGroupsMap[pInfo.id]) {
-          paidGroupsMap[pInfo.id] = {
-            payment: pInfo,
-            events: []
-          };
+        if (!best) {
+          best = pInfo;
+        } else {
+          // Prioritize approved/verified over pending over rejected
+          const isBestApproved = ['approved', 'verified'].includes(best.status);
+          const isBestPending = ['pending', 'submitted'].includes(best.status);
+          const isNewApproved = ['approved', 'verified'].includes(pInfo.status);
+          const isNewPending = ['pending', 'submitted'].includes(pInfo.status);
+
+          if (isNewApproved && !isBestApproved) {
+            best = pInfo;
+          } else if (isNewPending && !isBestApproved && !isBestPending) {
+            best = pInfo;
+          }
         }
-        // Avoid duplicate event entries in same payment group
-        const exists = paidGroupsMap[pInfo.id].events.some(
-          e => (e._id || e.eventId?._id) === (item._id || item.eventId?._id)
-        );
-        if (!exists) {
-          paidGroupsMap[pInfo.id].events.push(item);
-        }
-      } else {
-        unpaidList.push(item);
       }
     });
-
-    return {
-      paidGroups: Object.values(paidGroupsMap),
-      unpaidEvents: unpaidList
-    };
+    return best;
   }, [events]);
 
-  // Anything still owed: events never paid for, plus events whose payment was
-  // rejected or failed.
-  const rejectedGroups = paidGroups.filter(g => g.payment.status === 'rejected' || g.payment.status === 'failed');
-  const rejectedEventsCount = rejectedGroups.reduce((total, group) => total + group.events.length, 0);
-  // …unless the one team fee has already been paid, in which case those events are
-  // simply covered by it and nothing is owed. Waiting on admin approval still counts
-  // as paid — the user should not be asked for the money a second time.
-  const hasOutstandingDues = !feeHandled && (unpaidEvents.length > 0 || rejectedEventsCount > 0);
-
-  // Priced per team, not per event: an outstanding balance is the one flat fee,
-  // whatever mix of events sits behind it.
-  const trueTotalUnpaidAmount = hasOutstandingDues ? TEAM_REGISTRATION_FEE : 0;
+  const hasValidPayment = globalPayment && globalPayment.status !== 'rejected' && globalPayment.status !== 'failed';
+  const trueTotalUnpaidAmount = hasValidPayment ? 0 : 2000;
 
   if (loading) {
     return (
@@ -257,93 +223,86 @@ export default function MyRegistration({ user: initialUser }) {
       ) : (
         <div className="flex flex-col gap-6">
 
-          {/* Render Paid Event Groups (Events sharing the same paymentId grouped together) */}
-          {paidGroups.map((group, idx) => {
-            const { payment, events: groupEvents } = group;
-            const isApproved = payment.status === 'approved' || payment.status === 'verified';
-            const isPending = payment.status === 'pending' || payment.status === 'submitted';
-            const isRejected = payment.status === 'rejected' || payment.status === 'failed';
-
-            return (
-              <div
-                key={payment.id || idx}
-                className={`bg-black/40 backdrop-blur-xl border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col gap-5 relative overflow-hidden ${isRejected ? 'border-red-500/30' : 'border-white/10'}`}
-              >
-                {/* Group Header: Payment Summary & Proof CTA */}
+          {/* Render All Events inside a Single Card */}
+          <div
+            className={`bg-black/40 backdrop-blur-xl border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col gap-5 relative overflow-hidden ${globalPayment && (globalPayment.status === 'rejected' || globalPayment.status === 'failed') ? 'border-red-500/30' : 'border-white/10'}`}
+          >
+            {/* Global Payment Header */}
+            {globalPayment && (
+              <>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-white/10">
                   <div className="flex flex-col gap-2 flex-1 w-full sm:w-auto pr-4">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-bold uppercase tracking-wider text-white">
-                        Payment Transaction ({groupEvents.length} Event{groupEvents.length > 1 ? 's' : ''})
+                        Payment Transaction ({events.length} Event{events.length > 1 ? 's' : ''})
                       </span>
-                      {isApproved ? (
+                      {['approved', 'verified'].includes(globalPayment.status) ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-green-500/10 text-green-400 px-2.5 py-0.5 rounded-full border border-green-500/30">
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
                           Verified & Approved
                         </span>
-                      ) : isPending ? (
+                      ) : ['pending', 'submitted'].includes(globalPayment.status) ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-yellow-500/10 text-yellow-400 px-2.5 py-0.5 rounded-full border border-yellow-500/30">
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                           Verification Pending
                         </span>
-                      ) : isRejected ? (
+                      ) : ['rejected', 'failed'].includes(globalPayment.status) ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-red-500/10 text-red-400 px-2.5 py-0.5 rounded-full border border-red-500/30">
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                           Payment Rejected
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-white/10 text-gray-300 px-2.5 py-0.5 rounded-full border border-white/20 uppercase">
-                          {payment.status}
+                          {globalPayment.status}
                         </span>
                       )}
                     </div>
 
                     <div className="flex items-center gap-3 text-xs font-medium text-gray-400 flex-wrap">
-                      {payment.utr && (
-                        <span><strong className="text-white">UTR:</strong> <code className="bg-white/10 px-1.5 py-0.5 rounded text-cyan-400 font-mono font-bold">{payment.utr}</code></span>
+                      {globalPayment.utr && (
+                        <span><strong className="text-white">UTR:</strong> <code className="bg-white/10 px-1.5 py-0.5 rounded text-cyan-400 font-mono font-bold">{globalPayment.utr}</code></span>
                       )}
-                      {payment.amount && (
-                        <span><strong className="text-white">Amount:</strong> ₹{payment.amount}</span>
+                      {globalPayment.amount && (
+                        <span><strong className="text-white">Amount:</strong> ₹{globalPayment.amount}</span>
                       )}
                     </div>
                     
-                    {isRejected && payment.message && (
+                    {['rejected', 'failed'].includes(globalPayment.status) && globalPayment.message && (
                       <div className="mt-1 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-300 flex items-start gap-2 max-w-lg">
                         <svg className="w-4 h-4 shrink-0 mt-0.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         <div className="flex flex-col gap-0.5">
                           <span className="font-bold text-red-400 uppercase tracking-wider text-[10px]">Admin Remark</span>
-                          <span className="leading-relaxed">{payment.message}</span>
+                          <span className="leading-relaxed">{globalPayment.message}</span>
                         </div>
                       </div>
                     )}
                   </div>
 
-                  {/* Payment Image Proof Thumbnail / View Button */}
-                  {payment.imageUrl && (
+                  {globalPayment.imageUrl && (
                     <button
                       type="button"
-                      onClick={() => setActiveProofModal({ imageUrl: payment.imageUrl, utr: payment.utr, amount: payment.amount, status: payment.status, message: payment.message })}
+                      onClick={() => setActiveProofModal({ imageUrl: globalPayment.imageUrl, utr: globalPayment.utr, amount: globalPayment.amount, status: globalPayment.status, message: globalPayment.message })}
                       className="flex items-center gap-2 px-3.5 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 rounded-2xl text-xs font-bold transition-all border border-cyan-500/30 shadow-sm shrink-0"
                     >
                       <svg className="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
-                      <span>View Full Screenshot ↗</span>
+                      <span>Payment Proof ↗</span>
                     </button>
                   )}
                 </div>
 
                 {/* Embedded Uploaded Screenshot Display */}
-                {payment.imageUrl && (
+                {globalPayment.imageUrl && (
                   <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
                     <div
                       className="relative group cursor-pointer shrink-0"
-                      onClick={() => setActiveProofModal({ imageUrl: payment.imageUrl, utr: payment.utr, amount: payment.amount, status: payment.status, message: payment.message })}
+                      onClick={() => setActiveProofModal({ imageUrl: globalPayment.imageUrl, utr: globalPayment.utr, amount: globalPayment.amount, status: globalPayment.status, message: globalPayment.message })}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={payment.imageUrl}
+                        src={globalPayment.imageUrl}
                         alt="Submitted Payment Proof"
                         className="w-28 h-28 object-cover rounded-xl border border-white/20 shadow-md transition-transform group-hover:scale-105"
                       />
@@ -354,11 +313,11 @@ export default function MyRegistration({ user: initialUser }) {
                     <div className="flex-1 flex flex-col gap-1 text-xs text-gray-300">
                       <span className="font-extrabold text-white text-sm">Uploaded Payment Screenshot</span>
                       <p className="text-gray-400 font-medium">
-                        Submitted proof for payment verification. UTR: <code className="bg-white/10 px-1.5 py-0.5 rounded font-mono font-bold text-white">{payment.utr || 'N/A'}</code>
+                        Submitted proof for payment verification. UTR: <code className="bg-white/10 px-1.5 py-0.5 rounded font-mono font-bold text-white">{globalPayment.utr || 'N/A'}</code>
                       </p>
                       <button
                         type="button"
-                        onClick={() => setActiveProofModal({ imageUrl: payment.imageUrl, utr: payment.utr, amount: payment.amount, status: payment.status, message: payment.message })}
+                        onClick={() => setActiveProofModal({ imageUrl: globalPayment.imageUrl, utr: globalPayment.utr, amount: globalPayment.amount, status: globalPayment.status, message: globalPayment.message })}
                         className="mt-1 self-start font-bold text-cyan-400 hover:text-white underline"
                       >
                         View full-screen proof details &rarr;
@@ -366,152 +325,78 @@ export default function MyRegistration({ user: initialUser }) {
                     </div>
                   </div>
                 )}
+              </>
+            )}
 
-                {/* List of Events sharing this payment */}
-                <div className="flex flex-col gap-3">
-                  {groupEvents.map((item, eIdx) => {
-                    const ev = item.eventId || {};
-                    const dateStr = item.createdAt || item.addedAt
-                      ? new Date(item.createdAt || item.addedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-                      : null;
-                    const participants = item.participants || [];
+            {/* List of ALL Events */}
+            <div className="flex flex-col gap-3">
+              {events.map((item, eIdx) => {
+                const ev = item.eventId || {};
+                const dateStr = item.createdAt || item.addedAt
+                  ? new Date(item.createdAt || item.addedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                  : null;
+                const participants = item.participants || [];
 
-                    return (
-                      <div key={item._id || eIdx} className="bg-white/5 rounded-2xl p-4 border border-white/10 flex flex-col gap-3">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 font-extrabold flex items-center justify-center text-lg shrink-0 border border-cyan-500/30">
-                              {ev.title ? ev.title.charAt(0).toUpperCase() : '?'}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <h4 className="text-base font-extrabold text-white truncate">{ev.title || 'Event Registration'}</h4>
-                              <p className="text-xs text-gray-400 font-medium truncate">
-                                {ev.registrationFee ? `Fee: ₹${ev.registrationFee}` : 'Registered Event'}
-                                {dateStr ? ` • ${dateStr}` : ''}
-                              </p>
-                            </div>
-                          </div>
-                          <span className="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/30 shrink-0 self-start sm:self-auto mt-1 sm:mt-0">
-                            Linked to Payment
-                          </span>
+                return (
+                  <div key={item._id || eIdx} className="bg-white/5 rounded-2xl p-4 border border-white/10 flex flex-col gap-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 font-extrabold flex items-center justify-center text-lg shrink-0 border border-cyan-500/30">
+                          {ev.title ? ev.title.charAt(0).toUpperCase() : '?'}
                         </div>
-
-                        {/* Participants list */}
-                        {Array.isArray(participants) && participants.length > 0 && (
-                          <div className="pt-2 border-t border-white/10 flex flex-col gap-1.5">
-                            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                              Registered Participants ({participants.length}):
-                            </span>
-                            <div className="flex flex-col gap-2 w-fit">
-                              {participants.map((p, pIdx) => (
-                                <div key={pIdx} className="flex flex-wrap items-center gap-3 text-xs bg-white/5 border border-white/10 text-gray-300 px-4 py-2.5 rounded-lg font-medium">
-                                  <div className="flex items-center gap-1.5">
-                                    <User className="text-cyan-400/80 w-3 h-3" />
-                                    <span>{p.name || `Participant ${pIdx + 1}`}</span>
-                                  </div>
-                                  {p.phone && (
-                                    <>
-                                      <span className="text-white/20 hidden sm:inline">•</span>
-                                      <div className="flex items-center gap-1.5 text-gray-400">
-                                        <Phone className="text-pink-400/80 w-3 h-3" />
-                                        <span>{p.phone}</span>
-                                      </div>
-                                    </>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-base font-extrabold text-white truncate">{ev.title || 'Event Registration'}</h4>
+                          <p className="text-xs text-gray-400 font-medium truncate">
+                            {ev.location || 'TBA'} {dateStr ? ` • ${dateStr}` : ''}
+                          </p>
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Render Unpaid Events Section */}
-          {unpaidEvents.map((eventItem, index) => {
-            const ev = eventItem.eventId || {};
-            const dateStr = eventItem.addedAt || eventItem.createdAt
-              ? new Date(eventItem.addedAt || eventItem.createdAt).toLocaleDateString('en-US', {
-                year: 'numeric', month: 'long', day: 'numeric'
-              })
-              : null;
-            const participants = eventItem.participants || [];
-
-            return (
-              <div key={ev._id || index} className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col gap-4">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-                  <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 font-extrabold text-2xl border border-cyan-500/30 shadow-inner shrink-0">
-                    {ev.title ? ev.title.charAt(0).toUpperCase() : '?'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1.5 gap-2">
-                      <h3 className="text-lg font-extrabold text-white truncate">{ev.title || 'Unknown Event'}</h3>
-                      {feeHandled ? (
-                        feeAwaitingApproval ? (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full border border-amber-500/30 whitespace-nowrap self-start">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Covered — Awaiting Approval
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/30 whitespace-nowrap self-start">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
-                            Covered by Paid Fee
-                          </span>
-                        )
+                      
+                      {hasValidPayment ? (
+                        <span className="text-xs font-bold text-green-400 bg-green-500/10 px-2.5 py-1 rounded-lg border border-green-500/30 shrink-0 self-start sm:self-auto mt-1 sm:mt-0 flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                          Paid
+                        </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-red-500/10 text-red-400 px-3 py-1 rounded-full border border-red-500/30 whitespace-nowrap self-start">
+                        <span className="text-xs font-bold text-red-400 bg-red-500/10 px-2.5 py-1 rounded-lg border border-red-500/30 shrink-0 self-start sm:self-auto mt-1 sm:mt-0 flex items-center gap-1.5">
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                           Payment Required
                         </span>
                       )}
                     </div>
-                    {dateStr && (
-                      <p className="text-sm text-gray-400 flex items-center gap-2.5 mb-1.5 font-medium">
-                        <svg className="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        Registered: {dateStr}
-                      </p>
-                    )}
-                    <p className="text-sm text-gray-400 flex items-center gap-2.5 font-medium">
-                      <svg className="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                      {ev.location || 'TBA'} {ev.registrationFee ? `| Fee: ₹${ev.registrationFee}` : ''}
-                    </p>
-                  </div>
-                </div>
 
-                {/* Participants list for unpaid event */}
-                {Array.isArray(participants) && participants.length > 0 && (
-                  <div className="pt-3 border-t border-white/10 flex flex-col gap-1.5">
-                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                      Registered Participants ({participants.length}):
-                    </span>
-                    <div className="flex flex-col gap-2 w-fit">
-                      {participants.map((p, pIdx) => (
-                        <div key={pIdx} className="flex flex-wrap items-center gap-3 text-xs bg-white/5 border border-white/10 text-gray-300 px-4 py-2.5 rounded-lg font-medium">
-                          <div className="flex items-center gap-1.5">
-                            <User className="text-cyan-400/80 w-3 h-3" />
-                            <span>{p.name || `Participant ${pIdx + 1}`}</span>
-                          </div>
-                          {p.phone && (
-                            <>
-                              <span className="text-white/20 hidden sm:inline">•</span>
-                              <div className="flex items-center gap-1.5 text-gray-400">
-                                <Phone className="text-pink-400/80 w-3 h-3" />
-                                <span>{p.phone}</span>
+                    {/* Participants list */}
+                    {Array.isArray(participants) && participants.length > 0 && (
+                      <div className="pt-2 border-t border-white/10 flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                          Registered Participants ({participants.length}):
+                        </span>
+                        <div className="flex flex-col gap-2 w-fit">
+                          {participants.map((p, pIdx) => (
+                            <div key={pIdx} className="flex flex-wrap items-center gap-3 text-xs bg-white/5 border border-white/10 text-gray-300 px-4 py-2.5 rounded-lg font-medium">
+                              <div className="flex items-center gap-1.5">
+                                <User className="text-cyan-400/80 w-3 h-3" />
+                                <span>{p.name || `Participant ${pIdx + 1}`}</span>
                               </div>
-                            </>
-                          )}
+                              {p.phone && (
+                                <>
+                                  <span className="text-white/20 hidden sm:inline">•</span>
+                                  <div className="flex items-center gap-1.5 text-gray-400">
+                                    <Phone className="text-pink-400/80 w-3 h-3" />
+                                    <span>{p.phone}</span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          </div>
 
         </div>
       )}
@@ -528,33 +413,39 @@ export default function MyRegistration({ user: initialUser }) {
         </div>
 
         {trueTotalUnpaidAmount > 0 ? (
-          <button
-            className="w-full py-3.5 rounded-xl border mb-5 uppercase tracking-widest text-sm shadow-inner transition-all bg-cyan-500/20 text-cyan-400 cursor-pointer hover:bg-cyan-500/30 border-cyan-500/50 font-bold"
-            onClick={() => {
-              const unpaidIds = unpaidEvents.map(item => item.eventId?._id || item.eventId).filter(Boolean);
-              const rejectedIds = rejectedGroups.flatMap(g => g.events.map(e => e.eventId?._id || e.eventId)).filter(Boolean);
-              const allPendingIds = [...unpaidIds, ...rejectedIds];
-              
-              sessionStorage.setItem('pendingPaymentAmount', trueTotalUnpaidAmount);
-              sessionStorage.setItem('pendingEventIds', JSON.stringify(allPendingIds));
-              router.push('/user/account/payment');
-            }}
-          >
-            <span className="flex items-center justify-center gap-2 font-bold">
-              Pay Dues to Confirm Registrations (₹{trueTotalUnpaidAmount})
-            </span>
-          </button>
+          events.length > 0 ? (
+            <button
+              className="w-full py-3.5 rounded-xl border mb-5 uppercase tracking-widest text-sm shadow-inner transition-all bg-cyan-500/20 text-cyan-400 cursor-pointer hover:bg-cyan-500/30 border-cyan-500/50 font-bold"
+              onClick={() => {
+                const unpaidIds = events.map(item => item.eventId?._id || item.eventId).filter(Boolean);
+                const allPendingIds = [...unpaidIds];
+                
+                sessionStorage.setItem('pendingPaymentAmount', trueTotalUnpaidAmount);
+                sessionStorage.setItem('pendingEventIds', JSON.stringify(allPendingIds));
+                router.push('/user/account/payment');
+              }}
+            >
+              <span className="flex items-center justify-center gap-2 font-bold">
+                Pay College Registration Fee (₹{trueTotalUnpaidAmount})
+              </span>
+            </button>
+          ) : (
+            <button
+              className="w-full py-3.5 rounded-xl border mb-5 uppercase tracking-widest text-sm shadow-inner transition-all bg-white/5 text-gray-500 border-white/10 cursor-not-allowed font-bold"
+              disabled
+            >
+              <span className="flex items-center justify-center gap-2 font-bold">
+                Register for at least one event to pay
+              </span>
+            </button>
+          )
         ) : (
           <button
             className="w-full py-3.5 rounded-xl border mb-5 uppercase tracking-widest text-sm shadow-inner transition-all bg-white/5 text-gray-500 border-white/10 cursor-not-allowed font-bold"
             disabled
           >
             <span className="flex items-center justify-center gap-2 font-bold">
-              {feeHandled
-                ? (feeAwaitingApproval
-                  ? `Payment of ₹${TEAM_REGISTRATION_FEE} Submitted — Awaiting Admin Approval`
-                  : `Registration Fee Paid (₹${TEAM_REGISTRATION_FEE}) — Nothing Left to Pay`)
-                : 'All Registrations Paid & Up to Date'}
+              College Registration Paid & Up to Date
             </span>
           </button>
         )}

@@ -1290,7 +1290,10 @@ const styles = {
     outline: 'none',
   },
   inputInvalid: {
-    borderColor: 'rgba(248,113,113,0.65)',
+    // Full shorthand, not just borderColor: inputHalf sets `border`, and mixing the
+    // two means React strips the longhand on rerender while the shorthand stays —
+    // which leaves a stale border and logs a styling warning.
+    border: '1px solid rgba(248,113,113,0.65)',
     backgroundColor: 'rgba(248,113,113,0.08)',
   },
   fieldError: {
