@@ -25,7 +25,7 @@ export const developmentTeam = [
   {
     id: "dev-3",
     name: "Swasthik NJ",
-    role: "Design Systems Engineer",
+    role: "Design Systems Engineer and core design",
     image: "/assets/developer/swasthik.png",
     initials: "SN",
     phone: "",
