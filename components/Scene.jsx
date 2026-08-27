@@ -8,8 +8,8 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Loader from "./Loader";
 import EventInfoModal from "./EventInfoModal";
-import { Info } from "lucide-react";
-import { CRITICAL_ASSETS, loadAssets, blobToTexture } from "./assetLoader";
+import { Info, Link } from "lucide-react";
+import { CRITICAL_ASSETS, loadAssets, blobToTexture, pruneOldCaches } from "./assetLoader";
 
 import { addCoralReef, addCliffCorals } from "./CoralReef";
 import {
@@ -932,7 +932,11 @@ export default function Scene() {
     const skyGroup = new THREE.Group();
 
     // Moon
-    const moonTexture = new THREE.TextureLoader().load('/textures/moon.jpg');
+    // Empty placeholder, filled from preloaded bytes in the preload step below — the
+    // same pattern as waterNormals. Fetching it here instead meant 2MB arriving after
+    // the curtain had already lifted, so the moon visibly popped in.
+    const moonTexture = new THREE.Texture();
+    moonTexture.colorSpace = THREE.SRGBColorSpace;
     const moonGeo = new THREE.SphereGeometry(60, 64, 64);
     const moonMat = new THREE.MeshBasicMaterial({
       map: moonTexture,
@@ -1635,6 +1639,20 @@ export default function Scene() {
 
     let allFishSchools = [];
 
+    // --- Where fish are allowed to swim ---------------------------------------
+    // The canyon is walled by BoxGeometry(34, 180, 160) cliffs centred at x = ±66,
+    // so each inner face sits at x = ∓49 before the vertex bump pushes it up to 7
+    // units further inward. Anything beyond ~±42 is therefore inside solid rock.
+    // The schools used to travel to ±150 and wrap, so they spent most of each pass
+    // buried in the cliffs — which is why they kept disappearing.
+    const CANYON_HALF_WIDTH = 40;
+    // Water surface is at y = -2; stay well under it, and stop short of the canyon
+    // floor. This band is what the schools are spread across.
+    const FISH_TOP_Y = -16;
+    const FISH_BOTTOM_Y = -96;
+    // How far a school may drift vertically from its lane before the bob turns it back.
+    const FISH_BOB_AMPLITUDE = 4.0;
+
     const dolphinMaterial = new THREE.MeshPhysicalMaterial({
       color: 0x102232,
       emissive: 0x020a12,
@@ -1752,11 +1770,15 @@ export default function Scene() {
 
       allFishSchools.push({
         group: fGroup,
+        // The model is kept so the school can be turned to face the way it swims when
+        // it reaches a canyon wall, instead of being teleported to the far side.
+        model: fModel,
         mixer: fMixer,
         baseY: y,
         baseZ: z,
         direction: direction,
         baseRotY: baseRotY,
+        targetRotY: baseRotY,
         speed: 5.0 + Math.random() * 5.0,
         offset: Math.random() * Math.PI * 2
       });
@@ -1770,7 +1792,10 @@ export default function Scene() {
         const gltfLoader = new GLTFLoaderClass(manager);
         if (DRACOLoaderClass) {
           const dracoLoader = new DRACOLoaderClass();
-          dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
+          // Self-hosted: the CDN was a third-party round trip on the critical path,
+          // and a slow or blocked gstatic stalled the decode with no progress feedback.
+          // These files already sat unused in public/draco/gltf/.
+          dracoLoader.setDecoderPath("/draco/gltf/");
           gltfLoader.setDRACOLoader(dracoLoader);
         }
         gltfLoader.parse(
@@ -1791,33 +1816,28 @@ export default function Scene() {
       });
     }
 
-    function buildFishSchoolFromBuffer(arrayBuffer) {
+    // fishTextures is supplied by the preload step: four already-decoded THREE textures
+    // in mesh order. Passing them in keeps every byte the scene needs inside the
+    // progress bar, instead of firing four fetches mid-parse.
+    function buildFishSchoolFromBuffer(arrayBuffer, fishTextures) {
       return new Promise((resolve) => {
         if (!GLTFLoaderClass || !arrayBuffer) return resolve(false);
         const gltfLoader = new GLTFLoaderClass(manager);
         if (DRACOLoaderClass) {
           const dracoLoader = new DRACOLoaderClass();
-          dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
+          // Self-hosted: the CDN was a third-party round trip on the critical path,
+          // and a slow or blocked gstatic stalled the decode with no progress feedback.
+          // These files already sat unused in public/draco/gltf/.
+          dracoLoader.setDecoderPath("/draco/gltf/");
           gltfLoader.setDRACOLoader(dracoLoader);
         }
         gltfLoader.parse(
           arrayBuffer,
           "",
           (gltf) => {
-            // Fix untextured meshes due to deprecated KHR_materials_pbrSpecularGlossiness
-            const textureLoader = new THREE.TextureLoader(manager);
-            const texPaths = [
-              "/assets/models/textures/gltf_embedded_0.webp",
-              "/assets/models/textures/gltf_embedded_5.webp",
-              "/assets/models/textures/gltf_embedded_9.webp",
-              "/assets/models/textures/gltf_embedded_13.webp"
-            ];
-            const textures = texPaths.map(path => {
-              const tex = textureLoader.load(path);
-              tex.flipY = true;
-              tex.colorSpace = THREE.SRGBColorSpace;
-              return tex;
-            });
+            // The GLB carries no textures of its own (they were stripped, since every
+            // material is rebuilt here anyway), so these are the real fish materials.
+            const textures = fishTextures || [];
 
             let meshIndex = 0;
             gltf.scene.traverse((child) => {
@@ -1834,22 +1854,32 @@ export default function Scene() {
               }
             });
 
-            // Generate 15 fish schools for the upper ocean (visible immediately)
-            for (let i = 0; i < 15; i++) {
+            // Generate 15 fish schools for the upper ocean (visible immediately).
+            // Lanes are stratified rather than random so the schools genuinely spread
+            // down the whole water column; pure Math.random() clumped them into a band
+            // near the surface and left the rest of the view empty.
+            const UPPER_COUNT = 15;
+            for (let i = 0; i < UPPER_COUNT; i++) {
+              const laneT = (i + 0.5) / UPPER_COUNT;
+              const startY =
+                FISH_TOP_Y + laneT * (FISH_BOTTOM_Y - FISH_TOP_Y) + (Math.random() - 0.5) * 6;
               const startZ = -20 - Math.random() * 120;  // Upper ocean z spread
-              const startX = -60 + Math.random() * 120;  // Spread horizontally
-              const startY = -25 - Math.random() * 30;   // Keep them strictly underwater
+              // Start inside the canyon corridor, never in the rock.
+              const startX = (Math.random() * 2 - 1) * CANYON_HALF_WIDTH;
               const scale = 0.3 + Math.random() * 0.5;   // Smaller at surface
               const phase = Math.random() * 5;
 
               setupFishSchoolInstance(scene, gltf, startX, startY, startZ, scale, phase);
             }
 
-            // Generate 15 fish schools for the deep canyon (visible after scrolling down)
-            for (let i = 0; i < 15; i++) {
+            // Generate 15 fish schools for the deep canyon (visible after scrolling down).
+            // Stratified by depth for the same reason as above.
+            const DEEP_COUNT = 15;
+            for (let i = 0; i < DEEP_COUNT; i++) {
+              const laneT = (i + 0.5) / DEEP_COUNT;
               const startZ = -200 - Math.random() * 800; // Spread from z: -200 to -1000
-              const startX = -40 + Math.random() * 80;   // Spread horizontally
-              const startY = -60 - Math.random() * 150;  // Deep down
+              const startX = (Math.random() * 2 - 1) * CANYON_HALF_WIDTH;
+              const startY = -60 - laneT * 150 + (Math.random() - 0.5) * 12; // Deep down
               const scale = 0.4 + Math.random() * 0.6;   // Smaller in deep
               const phase = Math.random() * 5;
 
@@ -4103,20 +4133,31 @@ export default function Scene() {
           // Slight wobble to look alive, instead of continuously spinning
           school.group.rotation.y = Math.sin(t * 0.5 + school.offset) * 0.1;
 
-          school.group.position.y = school.baseY + Math.sin(t * 1.5 + school.offset) * 4.0;
+          school.group.position.y =
+            school.baseY + Math.sin(t * 1.5 + school.offset) * FISH_BOB_AMPLITUDE;
 
           // Move horizontally (X axis)
           school.group.position.x += school.direction * school.speed * delta;
 
-          // Loop horizontally across the cavern width
-          if (school.direction > 0 && school.group.position.x > 150) {
-            school.group.position.x = -150;
-            school.group.position.y = school.baseY + (Math.random() - 0.5) * 40;
-            school.group.position.z = school.baseZ + (Math.random() - 0.5) * 40;
-          } else if (school.direction < 0 && school.group.position.x < -150) {
-            school.group.position.x = 150;
-            school.group.position.y = school.baseY + (Math.random() - 0.5) * 40;
-            school.group.position.z = school.baseZ + (Math.random() - 0.5) * 40;
+          // Turn back at the canyon walls rather than wrapping to the far side.
+          // Wrapping only worked while the loop points (±150) sat far outside the
+          // view; inside the corridor the same trick would read as the school
+          // teleporting across the screen, so the school banks around instead —
+          // which is also what a real school does when it meets a rock face.
+          if (school.direction > 0 && school.group.position.x > CANYON_HALF_WIDTH) {
+            school.group.position.x = CANYON_HALF_WIDTH;
+            school.direction = -1;
+            school.targetRotY = -Math.PI / 2;
+          } else if (school.direction < 0 && school.group.position.x < -CANYON_HALF_WIDTH) {
+            school.group.position.x = -CANYON_HALF_WIDTH;
+            school.direction = 1;
+            school.targetRotY = Math.PI / 2;
+          }
+
+          // Ease into the new heading so the turn reads as a bank, not a snap.
+          if (school.model) {
+            const rot = school.model.rotation;
+            rot.y += (school.targetRotY - rot.y) * Math.min(1, delta * 2.2);
           }
         }
       });
@@ -4570,9 +4611,15 @@ export default function Scene() {
     // has actually been rendered — which is what prevents texture/model pop-in.
     (async () => {
       try {
+        // The bar is split across every phase, not just the download. Downloads own
+        // 0-70%; decoding, the environment map and shader compilation own the rest.
+        // Previously those phases ran after the bar had already reached 100%, so it
+        // looked frozen at full while several seconds of work were still happening.
+        pruneOldCaches();
+
         const { results, failures } = await loadAssets(
           CRITICAL_ASSETS,
-          (pct) => setProgress(pct),
+          (pct) => setProgress(pct * 0.70),
           abortController.signal
         );
 
@@ -4599,27 +4646,55 @@ export default function Scene() {
           waterNormals.image = tex.image;
           waterNormals.needsUpdate = true;
         }
+        setProgress(74);
+
+        if (results.moon) {
+          const tex = await blobToTexture(THREE, results.moon, { srgb: true });
+          moonTexture.image = tex.image;
+          moonTexture.needsUpdate = true;
+        }
+        setProgress(78);
 
         if (results.dolphin) {
           await buildDolphinsFromBuffer(await results.dolphin.arrayBuffer());
         }
+        setProgress(82);
 
-        if (results.fishSchool) {
-          await buildFishSchoolFromBuffer(await results.fishSchool.arrayBuffer());
+        // Decode the four fish materials from preloaded bytes, in mesh order.
+        const fishTextures = [];
+        for (const key of ["fishTex0", "fishTex5", "fishTex9", "fishTex13"]) {
+          if (!results[key]) { fishTextures.push(null); continue; }
+          // flipY matches what TextureLoader produced before, so the fish keep the
+          // same UV orientation they had.
+          const tex = await blobToTexture(THREE, results[key], { srgb: true, flipY: true });
+          fishTextures.push(tex);
         }
+        setProgress(84);
+
+        // Draco decode of the fish school is the longest single step after download,
+        // so it gets the widest slice of the remaining bar.
+        if (results.fishSchool) {
+          await buildFishSchoolFromBuffer(await results.fishSchool.arrayBuffer(), fishTextures);
+        }
+        setProgress(90);
 
         if (sceneDisposed) return;
 
         // Load the HDR environment map so it is active BEFORE compiling shaders
         const loadHdrEnvPromise = () => {
           return new Promise((resolve) => {
+            if (!results.hdri) { resolve(); return; }
             const rgbeLoader = new RGBELoader(manager);
+            // Parse the bytes the preloader already counted, via a blob URL, rather
+            // than hitting the network a second time for a file we have in hand.
+            const hdrUrl = URL.createObjectURL(results.hdri);
+            const done = () => { URL.revokeObjectURL(hdrUrl); resolve(); };
             rgbeLoader.load(
-              "/hdri/spiaggia_di_mondello_1k.hdr",
+              hdrUrl,
               (texture) => {
                 if (sceneDisposed) {
                   texture.dispose();
-                  resolve();
+                  done();
                   return;
                 }
                 texture.mapping = THREE.EquirectangularReflectionMapping;
@@ -4629,18 +4704,19 @@ export default function Scene() {
                 scene.environment = cubeRenderTarget.texture;
                 fallbackEnvTarget.dispose();
                 texture.dispose();
-                resolve();
+                done();
               },
               undefined,
               (err) => {
                 console.warn("Failed to load HDR environment, using fallback gradient.", err);
-                resolve();
+                done();
               }
             );
           });
         };
 
         await loadHdrEnvPromise();
+        setProgress(95);
 
         if (sceneDisposed) return;
 
@@ -4659,6 +4735,7 @@ export default function Scene() {
         });
 
         renderer.compile(scene, camera);
+        setProgress(98);
         renderer.render(scene, camera);
 
         // Restore original visibility and frustum culling states
@@ -4928,12 +5005,12 @@ export default function Scene() {
             </div>
 
             {/* Standalone Visual Register Button (No link) */}
-            <button
-              type="button"
+            <a 
+              href="/events/register"
               className="z-10 px-12 py-4 bg-cyan-600/80 hover:bg-cyan-500 text-white font-mono font-bold tracking-[0.2em] rounded-lg transition-all duration-500 shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.8)] hover:-translate-y-1 text-xl md:text-2xl border border-cyan-400/30 hover:border-cyan-300"
             >
               REGISTER
-            </button>
+            </a>
           </div>
 
         </div>
