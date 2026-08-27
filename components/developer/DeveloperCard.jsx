@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 
-const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, hideSocials }) => {
-  return (
-    <div key={dev.id} className="relative group w-full sm:w-[calc(50%-1.25rem)] lg:w-[calc(25%-1.125rem)] min-w-[260px] max-w-[350px] flex-shrink-0 [perspective:1000px]">
+const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, hideSocials }) => (
+  <div key={dev.id} className="relative group w-full sm:w-[calc(50%-1.25rem)] lg:w-[calc(25%-1.125rem)] min-w-[260px] max-w-[350px] flex-shrink-0 [perspective:1000px]">
 
     {/* 3D Glass Card */}
     <div
@@ -23,7 +22,7 @@ const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, 
               src={dev.image}
               alt={dev.name}
               onError={() => handleImageError(dev.id)}
-              className={`w-full h-full rounded-full object-cover transition-transform duration-500 ${dev.imagePosition || "object-top"} ${dev.imageScale || "scale-[1.15] group-hover:scale-125"}`}
+              className="w-full h-full rounded-full object-cover group-hover:scale-110 transition-transform duration-500"
             />
           ) : (
             <div className="w-full h-full rounded-full bg-gradient-to-br from-cyan-900/50 to-slate-900/50 flex items-center justify-center text-cyan-300 font-mono font-bold text-2xl shadow-inner">
@@ -43,10 +42,9 @@ const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, 
         </span>
       </div>
 
-      {/* Contact Action Icons & Hover Info */}
+      {/* Contact Action Icons */}
       {!hideAllContacts && (
-        <div className="mt-6 w-full relative z-10 [transform:translateZ(20px)] transition-transform duration-500 flex flex-col items-center">
-          <div className="flex items-center justify-center space-x-3 w-full">
+        <div className="flex items-center justify-center space-x-3 mt-6 w-full relative z-10 [transform:translateZ(20px)] transition-transform duration-500">
 
           {/* Phone / Call */}
           <a
@@ -100,21 +98,9 @@ const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, 
             </a>
           )}
         </div>
-
-          {/* Hover Info (Phone and Email) */}
-          <div className="flex flex-col items-center justify-center mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none translate-y-2 group-hover:translate-y-0 h-[36px]">
-            <div className="text-[10px] sm:text-xs font-mono text-cyan-200 tracking-widest drop-shadow-md">
-              {dev.phone.replace('tel:', '')}
-            </div>
-            <div className="text-[10px] sm:text-xs font-mono text-cyan-200 tracking-widest drop-shadow-md">
-              {dev.email.replace('mailto:', '')}
-            </div>
-          </div>
-        </div>
       )}
     </div>
   </div>
-  );
-};
+);
 
 export default DeveloperCard;
