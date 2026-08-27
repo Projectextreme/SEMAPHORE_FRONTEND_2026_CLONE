@@ -10,7 +10,16 @@ import Loader from "./Loader";
 import EventInfoModal from "./EventInfoModal";
 import { Info } from "lucide-react";
 import { CRITICAL_ASSETS, loadAssets, blobToTexture } from "./assetLoader";
-
+import { FishSchoolSimulation } from "./fish/fish-school-simulation";
+import { createClownfishSchool } from "./fish/clownfish-school";
+import { loadFishModel } from "./fish/model-loader";
+import {
+  createFishMeshByKey,
+  setFishMeshCount,
+  updateFishInstances
+} from "./fish/instanced-school-renderer";
+import { aquariumHalfSize, simulationSettings, fishConfig } from "./fish/config";
+import { addCoralReef } from "./CoralReef";
 import {
   seabedVertex,
   seabedFragment,
@@ -641,7 +650,7 @@ export default function Scene() {
           })
           .catch((err) => {
             console.timeEnd("[Performance] Audio Play Promise");
-            console.warn("Audio autoplay blocked or failed:", err);
+            console.log("Audio autoplay blocked (expected if no user interaction yet):", err.message);
             isPlayPendingRef.current = false;
           });
       }
@@ -920,7 +929,7 @@ export default function Scene() {
 
     // --- NIGHT SKY (MOON & STARS) ---
     const skyGroup = new THREE.Group();
-    
+
     // Moon
     const moonTexture = new THREE.TextureLoader().load('/textures/moon.jpg');
     const moonGeo = new THREE.SphereGeometry(60, 64, 64);
@@ -947,7 +956,7 @@ export default function Scene() {
     glowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
     glowCtx.fillStyle = glowGradient;
     glowCtx.fillRect(0, 0, 256, 256);
-    
+
     const glowTexture = new THREE.CanvasTexture(glowCanvas);
     const glowMaterial = new THREE.SpriteMaterial({
       map: glowTexture,
@@ -977,19 +986,19 @@ export default function Scene() {
     const starGeo = new THREE.BufferGeometry();
     const starCount = 2000;
     const starPositions = new Float32Array(starCount * 3);
-    for(let i=0; i<starCount; i++) {
-      starPositions[i*3] = (Math.random() - 0.5) * 1500; // x
-      starPositions[i*3+1] = 20 + Math.random() * 800; // y
-      starPositions[i*3+2] = (Math.random() - 0.5) * 1000 - 300; // z
+    for (let i = 0; i < starCount; i++) {
+      starPositions[i * 3] = (Math.random() - 0.5) * 1500; // x
+      starPositions[i * 3 + 1] = 20 + Math.random() * 800; // y
+      starPositions[i * 3 + 2] = (Math.random() - 0.5) * 1000 - 300; // z
     }
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    const starMat = new THREE.PointsMaterial({ 
-      color: 0xffffff, 
-      size: 1.5, 
+    const starMat = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 1.5,
       map: starTexture,
       transparent: true,
       alphaTest: 0.5,
-      opacity: 0.8 
+      opacity: 0.8
     });
     const starPoints = new THREE.Points(starGeo, starMat);
     skyGroup.add(starPoints);
@@ -1192,6 +1201,8 @@ export default function Scene() {
     const portalGroup = new THREE.Group();
     portalGroup.position.set(0, -110, -190);
 
+    addCoralReef(scene, portalGroup);
+
     // ── Helper: procedurally deform a geometry to look rocky ────────────────────
     function deformGeo(geo, strength, seed) {
       const pos = geo.attributes.position;
@@ -1274,8 +1285,8 @@ export default function Scene() {
     // Stalactite spikes hanging from lintel
     const stalactiteData = [
       { x: -30, y: 34, s: 3.5 }, { x: -16, y: 36, s: 4.2 },
-      { x: -4,  y: 37, s: 3.0 }, { x:  8,  y: 36, s: 4.8 },
-      { x:  20, y: 35, s: 3.2 }, { x:  32, y: 34, s: 3.8 },
+      { x: -4, y: 37, s: 3.0 }, { x: 8, y: 36, s: 4.8 },
+      { x: 20, y: 35, s: 3.2 }, { x: 32, y: 34, s: 3.8 },
     ];
     for (const st of stalactiteData) {
       const sGeo = new THREE.ConeGeometry(st.s * 0.35, st.s * 2.8, 5);
@@ -1324,7 +1335,7 @@ export default function Scene() {
       const legL = new THREE.Mesh(new THREE.BoxGeometry(SW, LH * 0.85, LT), letterStoneMat);
       legL.position.set(-3.0, -LH * 0.07, 0); legL.rotation.z = 0.32; g.add(legL);
       const legR = new THREE.Mesh(new THREE.BoxGeometry(SW, LH * 0.85, LT), letterStoneMat);
-      legR.position.set( 3.0, -LH * 0.07, 0); legR.rotation.z = -0.32; g.add(legR);
+      legR.position.set(3.0, -LH * 0.07, 0); legR.rotation.z = -0.32; g.add(legR);
       g.add(mkBar(4.5, SW, 0, -0.8));
       if (withCrown) {
         const crGeo = new THREE.OctahedronGeometry(1.6, 0);
@@ -1337,7 +1348,7 @@ export default function Scene() {
       const glL = new THREE.Mesh(new THREE.BoxGeometry(SW * 0.5, LH * 0.85, LT * 0.4), letterGlowMat);
       glL.position.set(-3.0, -LH * 0.07, LT * 0.7); glL.rotation.z = 0.32; g.add(glL);
       const glR = new THREE.Mesh(new THREE.BoxGeometry(SW * 0.5, LH * 0.85, LT * 0.4), letterGlowMat);
-      glR.position.set( 3.0, -LH * 0.07, LT * 0.7); glR.rotation.z = -0.32; g.add(glR);
+      glR.position.set(3.0, -LH * 0.07, LT * 0.7); glR.rotation.z = -0.32; g.add(glR);
       return g;
     }
     function mkLetterQ() {
@@ -1359,39 +1370,39 @@ export default function Scene() {
     }
     function mkLetterS() {
       const g = new THREE.Group();
-      g.add(mkBar(7, SW, 0,  LH / 2 - SW / 2));
-      g.add(mkBar(7, SW, 0,  0));
+      g.add(mkBar(7, SW, 0, LH / 2 - SW / 2));
+      g.add(mkBar(7, SW, 0, 0));
       g.add(mkBar(7, SW, 0, -LH / 2 + SW / 2));
-      g.add(mkBar(SW, LH / 2, -3.2,  LH / 4));
-      g.add(mkBar(SW, LH / 2,  3.2, -LH / 4));
-      g.add(mkGlowBar(7, SW * 0.5, 0,  LH / 2 - SW / 2));
-      g.add(mkGlowBar(7, SW * 0.5, 0,  0));
+      g.add(mkBar(SW, LH / 2, -3.2, LH / 4));
+      g.add(mkBar(SW, LH / 2, 3.2, -LH / 4));
+      g.add(mkGlowBar(7, SW * 0.5, 0, LH / 2 - SW / 2));
+      g.add(mkGlowBar(7, SW * 0.5, 0, 0));
       g.add(mkGlowBar(7, SW * 0.5, 0, -LH / 2 + SW / 2));
       return g;
     }
     function mkLetterG() {
       const g = new THREE.Group();
-      g.add(mkBar(7, SW,   0,  LH / 2 - SW / 2));
-      g.add(mkBar(7, SW,   0, -LH / 2 + SW / 2));
+      g.add(mkBar(7, SW, 0, LH / 2 - SW / 2));
+      g.add(mkBar(7, SW, 0, -LH / 2 + SW / 2));
       g.add(mkBar(SW, LH, -3.2, 0));
       g.add(mkBar(SW, LH / 2, 3.2, -LH / 4));
-      g.add(mkBar(4,  SW,  1.6, 0));
-      g.add(mkGlowBar(7, SW * 0.5,  0,  LH / 2 - SW / 2));
-      g.add(mkGlowBar(7, SW * 0.5,  0, -LH / 2 + SW / 2));
+      g.add(mkBar(4, SW, 1.6, 0));
+      g.add(mkGlowBar(7, SW * 0.5, 0, LH / 2 - SW / 2));
+      g.add(mkGlowBar(7, SW * 0.5, 0, -LH / 2 + SW / 2));
       g.add(mkGlowBar(SW * 0.5, LH, -3.2, 0));
       return g;
     }
 
     // A  Q  U  A  S  A  G  A
     const titleLetters = [
-      { make: () => mkLetterA(true),  x: -33.25 },
-      { make: mkLetterQ,              x: -23.75 },
-      { make: mkLetterU,              x: -14.25 },
-      { make: () => mkLetterA(false), x:  -4.75 },
-      { make: mkLetterS,              x:   4.75 },
-      { make: () => mkLetterA(false), x:  14.25 },
-      { make: mkLetterG,              x:  23.75 },
-      { make: () => mkLetterA(false), x:  33.25 },
+      { make: () => mkLetterA(true), x: -33.25 },
+      { make: mkLetterQ, x: -23.75 },
+      { make: mkLetterU, x: -14.25 },
+      { make: () => mkLetterA(false), x: -4.75 },
+      { make: mkLetterS, x: 4.75 },
+      { make: () => mkLetterA(false), x: 14.25 },
+      { make: mkLetterG, x: 23.75 },
+      { make: () => mkLetterA(false), x: 33.25 },
     ];
     for (const def of titleLetters) {
       const lg = def.make();
@@ -1439,16 +1450,16 @@ export default function Scene() {
     // ── ANCIENT RUIN APPROACH — scattered irregular stone slabs (replaces uniform staircase) ──
     // Dark flat slabs at varying angles/heights — like a collapsed underwater temple floor
     const ruinSlabData = [
-      { w: 28, h: 2.2, d: 14, x:  0,    y: -13, z:  2,  ry: 0.04  },
-      { w: 20, h: 1.8, d: 10, x: -6,    y: -15, z:  6,  ry: -0.12 },
-      { w: 22, h: 1.8, d: 10, x:  5,    y: -16, z:  5,  ry:  0.10 },
-      { w: 32, h: 2.5, d: 16, x:  0,    y: -18, z:  1,  ry:  0.02 },
-      { w: 16, h: 1.6, d:  9, x: -10,   y: -20, z:  8,  ry: -0.18 },
-      { w: 15, h: 1.6, d:  9, x:  9,    y: -21, z:  7,  ry:  0.15 },
-      { w: 36, h: 2.8, d: 18, x:  0,    y: -23, z:  0,  ry: -0.03 },
-      { w: 14, h: 1.4, d:  8, x: -14,   y: -25, z: 10,  ry: -0.22 },
-      { w: 14, h: 1.4, d:  8, x:  13,   y: -26, z:  9,  ry:  0.20 },
-      { w: 40, h: 3.0, d: 20, x:  0,    y: -28, z: -1,  ry:  0.01 },
+      { w: 28, h: 2.2, d: 14, x: 0, y: -13, z: 2, ry: 0.04 },
+      { w: 20, h: 1.8, d: 10, x: -6, y: -15, z: 6, ry: -0.12 },
+      { w: 22, h: 1.8, d: 10, x: 5, y: -16, z: 5, ry: 0.10 },
+      { w: 32, h: 2.5, d: 16, x: 0, y: -18, z: 1, ry: 0.02 },
+      { w: 16, h: 1.6, d: 9, x: -10, y: -20, z: 8, ry: -0.18 },
+      { w: 15, h: 1.6, d: 9, x: 9, y: -21, z: 7, ry: 0.15 },
+      { w: 36, h: 2.8, d: 18, x: 0, y: -23, z: 0, ry: -0.03 },
+      { w: 14, h: 1.4, d: 8, x: -14, y: -25, z: 10, ry: -0.22 },
+      { w: 14, h: 1.4, d: 8, x: 13, y: -26, z: 9, ry: 0.20 },
+      { w: 40, h: 3.0, d: 20, x: 0, y: -28, z: -1, ry: 0.01 },
     ];
 
     const ruinSlabMat = new THREE.MeshStandardMaterial({
@@ -1482,10 +1493,10 @@ export default function Scene() {
     // Tumbled boulder clusters flanking the ruin approach
     const flankBoulderData = [
       { x: -18, y: -18, z: 10, r: 3.5 }, { x: -22, y: -22, z: 12, r: 4.2 },
-      { x: -14, y: -25, z:  8, r: 2.8 }, { x: -26, y: -15, z:  6, r: 3.0 },
-      { x:  18, y: -18, z: 10, r: 3.5 }, { x:  22, y: -22, z: 12, r: 4.0 },
-      { x:  15, y: -25, z:  8, r: 2.9 }, { x:  26, y: -15, z:  6, r: 3.1 },
-      { x: -10, y: -28, z: 14, r: 2.4 }, { x:  10, y: -28, z: 14, r: 2.4 },
+      { x: -14, y: -25, z: 8, r: 2.8 }, { x: -26, y: -15, z: 6, r: 3.0 },
+      { x: 18, y: -18, z: 10, r: 3.5 }, { x: 22, y: -22, z: 12, r: 4.0 },
+      { x: 15, y: -25, z: 8, r: 2.9 }, { x: 26, y: -15, z: 6, r: 3.1 },
+      { x: -10, y: -28, z: 14, r: 2.4 }, { x: 10, y: -28, z: 14, r: 2.4 },
     ];
     for (const b of flankBoulderData) {
       const bGeo = deformGeo(new THREE.DodecahedronGeometry(b.r, 1), b.r * 0.28, b.x * 0.07);
@@ -1497,7 +1508,7 @@ export default function Scene() {
 
     // ── FOUNDATION BASE — solid irregular stone mounds (no glowing rims) ────────
     const portalBaseTiers = [
-      { rTop: 22, rBot: 30, h:  8.0, y: -32 },
+      { rTop: 22, rBot: 30, h: 8.0, y: -32 },
       { rTop: 30, rBot: 40, h: 10.0, y: -40 },
     ];
     for (const tier of portalBaseTiers) {
@@ -1832,7 +1843,7 @@ export default function Scene() {
               const startY = -25 - Math.random() * 30;   // Keep them strictly underwater
               const scale = 0.3 + Math.random() * 0.5;   // Smaller at surface
               const phase = Math.random() * 5;
-              
+
               setupFishSchoolInstance(scene, gltf, startX, startY, startZ, scale, phase);
             }
 
@@ -1843,7 +1854,7 @@ export default function Scene() {
               const startY = -60 - Math.random() * 150;  // Deep down
               const scale = 0.4 + Math.random() * 0.6;   // Smaller in deep
               const phase = Math.random() * 5;
-              
+
               setupFishSchoolInstance(newWorldGroup, gltf, startX, startY, startZ, scale, phase);
             }
 
@@ -2227,16 +2238,46 @@ export default function Scene() {
 
       //    Map each event to its logo PNG and intrinsic aspect ratio (width / height)
       const logoConfig = {
-        "event-1": { src: "/events/coding.png", aspect: 3.0 },
-        "event-2": { src: "/events/webdesigning.png", aspect: 3.0 },
-        "event-3": { src: "/events/itquiz.png", aspect: 2.6036 },
-        "event-4": { src: "/events/gaming.png", aspect: 2.849 },
-        "event-5": { src: "/events/techtalk.png", aspect: 2.666 },
-        "event-6": { src: "/events/surpriseevent.png", aspect: 3.0 },
-        "event-7": { src: "/events/itmanager.png", aspect: 2.674 },
-        "event-8": { src: "/events/startup.png", aspect: 3.0 },
-        "event-9": { src: "/events/fashion.png", aspect: 2100 / 749 },
-        "event-10": { src: "/events/photography.png", aspect: 3.0 }
+        "event-1": {
+          src: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802488/coding.png",
+          aspect: 3.0,
+        },
+        "event-2": {
+          src: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802485/webdesigning.png",
+          aspect: 3.0,
+        },
+        "event-3": {
+          src: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802490/itquiz.png",
+          aspect: 2.6036,
+        },
+        "event-4": {
+          src: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802491/gaming.png",
+          aspect: 2.849,
+        },
+        "event-5": {
+          src: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802515/techtalk.png",
+          aspect: 2.666,
+        },
+        "event-6": {
+          src: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802513/surpriseevent.png",
+          aspect: 3.0,
+        },
+        "event-7": {
+          src: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802487/itmanager.png",
+          aspect: 2.674,
+        },
+        "event-8": {
+          src: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802510/startup.png",
+          aspect: 3.0,
+        },
+        "event-9": {
+          src: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802490/fashion.png",
+          aspect: 2100 / 749,
+        },
+        "event-10": {
+          src: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802512/photography.png",
+          aspect: 3.0,
+        },
       };
 
       let bannerTexture;
@@ -3805,6 +3846,54 @@ export default function Scene() {
     const _deepAmbientColor = new THREE.Color(0x002e4d);
     const _ambientScratch = new THREE.Color();
     const _ambientUnderwaterTarget = new THREE.Color(0x006699);
+    const _fishTarget = new THREE.Vector3();
+    const _fishPathPoints = [
+      new THREE.Vector3(-22, -106, -318), // Event 1
+      new THREE.Vector3(22, -186, -430),  // Event 2
+      new THREE.Vector3(-32, -186, -508), // Event 3
+      new THREE.Vector3(-32, -106, -400), // Midpoint return
+    ];
+
+    const clock = new THREE.Clock();
+    let animationId;
+    let frameCount = 0;
+    let lastFpsCheck = performance.now();
+
+    // --- RIPPLE AQUARIUM FISH SIMULATION INITIALIZATION ---
+    const fishGroup = new THREE.Group();
+    fishGroup.position.set(-22, -106, -318); // Place near Event 1 Crystal Shrine
+    scene.add(fishGroup);
+
+    const sardineSimulation = new FishSchoolSimulation({
+      aquariumHalfSize,
+      obstacles: [],
+      settings: { ...simulationSettings, minSpeed: 8, maxSpeed: 18 },
+    });
+    const koiSimulation = new FishSchoolSimulation({
+      aquariumHalfSize,
+      obstacles: [],
+      settings: { ...simulationSettings, minSpeed: 6, maxSpeed: 12 },
+    });
+
+    let sardineMesh = null;
+    let koiMesh = null;
+    let clownfishSchoolObj = null;
+
+    loadFishModel().then(() => {
+      sardineSimulation.reset(60);
+      sardineMesh = createFishMeshByKey(260, "cartoon");
+      setFishMeshCount(sardineMesh, 60);
+      fishGroup.add(sardineMesh);
+
+      koiSimulation.reset(24);
+      koiMesh = createFishMeshByKey(120, "koi");
+      setFishMeshCount(koiMesh, 24);
+      fishGroup.add(koiMesh);
+
+      clownfishSchoolObj = createClownfishSchool(null, { count: 18 });
+      fishGroup.add(clownfishSchoolObj.mesh);
+    }).catch(e => console.error("Error loading fish:", e));
+
     const _podForward = new THREE.Vector3();
     const _podRight = new THREE.Vector3();
     const _podUp = new THREE.Vector3();
@@ -3827,10 +3916,6 @@ export default function Scene() {
       10: new THREE.Vector3(8, -455, -1215),
     };
 
-    const clock = new THREE.Clock();
-    let animationId;
-    let frameCount = 0;
-    let lastFpsCheck = performance.now();
     function animate() {
       animationId = requestAnimationFrame(animate);
 
@@ -3884,7 +3969,7 @@ export default function Scene() {
         if (exrEnvironmentTexture) {
           scene.environment = exrEnvironmentTexture; // Keep environment for water reflections
         }
-        
+
         renderer.setClearColor(0x041024, 1.0);
         scene.fog = null;
 
@@ -4058,12 +4143,12 @@ export default function Scene() {
         if (school.group) {
           // Slight wobble to look alive, instead of continuously spinning
           school.group.rotation.y = Math.sin(t * 0.5 + school.offset) * 0.1;
-          
+
           school.group.position.y = school.baseY + Math.sin(t * 1.5 + school.offset) * 4.0;
-          
+
           // Move horizontally (X axis)
           school.group.position.x += school.direction * school.speed * delta;
-          
+
           // Loop horizontally across the cavern width
           if (school.direction > 0 && school.group.position.x > 150) {
             school.group.position.x = -150;
@@ -4133,7 +4218,102 @@ export default function Scene() {
 
       // Rotate top glowing central crystal shrines and animate 3D Holographic Event Title Plaques
       for (const xtal of crystalShrineMeshes) {
-        xtal.rotation.y = t * 0.8;
+        if (xtal) {
+          xtal.rotation.y = t * 0.8;
+        }
+      }
+
+      // Make the fish school migrate between Event 1, 2, and 3
+      if (fishGroup) {
+        const speed = 14.0; // Migration speed (units per second)
+        let totalDist = 0;
+        const distances = [];
+        for (let i = 0; i < _fishPathPoints.length; i++) {
+          const p1 = _fishPathPoints[i];
+          const p2 = _fishPathPoints[(i + 1) % _fishPathPoints.length];
+          const d = p1.distanceTo(p2);
+          distances.push(d);
+          totalDist += d;
+        }
+
+        const cycleTime = totalDist / speed;
+        // Add a large time offset so they don't always start at Event 1 at t=0
+        const currentDist = ((t + 100) % cycleTime) * speed;
+
+        let dAccum = 0;
+        for (let i = 0; i < _fishPathPoints.length; i++) {
+          if (currentDist <= dAccum + distances[i]) {
+            const progress = (currentDist - dAccum) / distances[i];
+            const p1 = _fishPathPoints[i];
+            const p2 = _fishPathPoints[(i + 1) % _fishPathPoints.length];
+            _fishTarget.lerpVectors(p1, p2, progress);
+
+            // Look ahead to rotate the fish group towards travel direction
+            const lookAheadDist = currentDist + 1.0;
+            const lookAheadCycle = lookAheadDist % totalDist;
+            let dAccumAhead = 0;
+            const lookTarget = new THREE.Vector3();
+            for (let j = 0; j < _fishPathPoints.length; j++) {
+              if (lookAheadCycle <= dAccumAhead + distances[j]) {
+                const progressAhead = (lookAheadCycle - dAccumAhead) / distances[j];
+                const p1Ahead = _fishPathPoints[j];
+                const p2Ahead = _fishPathPoints[(j + 1) % _fishPathPoints.length];
+                lookTarget.lerpVectors(p1Ahead, p2Ahead, progressAhead);
+                fishGroup.lookAt(lookTarget);
+                break;
+              }
+              dAccumAhead += distances[j];
+            }
+
+            fishGroup.position.copy(_fishTarget);
+            break;
+          }
+          dAccum += distances[i];
+        }
+      }
+
+      // School-Formation helper function (Teardrop Spindle)
+      const applySchoolFormation = (simulation, dt, speed, length, maxRadius) => {
+        const lerpFactor = Math.min(2.5 * dt, 1.0);
+        const totalFish = simulation.fish.length;
+
+        for (let i = 0; i < totalFish; i++) {
+          const fish = simulation.fish[i];
+          const p = i / totalFish;
+
+          // Math.sin(p * Math.PI) creates a curve that starts at 0, goes to 1 in the middle, and back to 0
+          const radius = Math.sin(p * Math.PI) * maxRadius;
+          const theta = i * 2.39996; // Golden angle for even distribution
+
+          const targetX = Math.cos(theta) * radius;
+          const targetY = Math.sin(theta) * radius;
+          const targetZ = p * length; // Stretch them backwards
+
+          fish.position.lerp(_fishTarget.set(targetX, targetY, targetZ), lerpFactor);
+          // Force velocity to point locally "forward" (-Z) so they animate swimming continuously
+          fish.velocity.set(0, 0, -speed);
+        }
+      };
+
+      // --- RIPPLE AQUARIUM FISH ANIMATION UPDATE ---
+      const dt = Math.min(clock.getDelta(), 1 / 30);
+      if (dt > 0) {
+        sardineSimulation.update(dt);
+        koiSimulation.update(dt);
+
+        applySchoolFormation(sardineSimulation, dt, 14.0, 45.0, 8.0);
+        applySchoolFormation(koiSimulation, dt, 14.0, 15.0, 4.0);
+
+        if (sardineMesh) {
+          updateFishInstances(sardineMesh, sardineSimulation.fish);
+        }
+        if (koiMesh) {
+          updateFishInstances(koiMesh, koiSimulation.fish);
+        }
+        if (clownfishSchoolObj) {
+          const timeMs = performance.now() * 0.001;
+          clownfishSchoolObj.update(timeMs, dt);
+        }
       }
 
       postPortalMineralGroups.forEach((group, index) => {
@@ -4748,149 +4928,148 @@ export default function Scene() {
 
   return (
     <>
-    <div ref={wrapperRef} style={{ height: "1600vh", position: "relative", backgroundColor: "#011728" }}>
-      {/* Custom Loader */}
-      <Loader
-        loading={loading}
-        progress={progress}
-        error={loadError}
-        onRetry={() => {
-          setLoadError(null);
-          setProgress(0);
-          setLoading(true);
-          setRetryToken((n) => n + 1);
-        }}
-      />
+      <div ref={wrapperRef} style={{ height: "1600vh", position: "relative", backgroundColor: "#011728" }}>
+        {/* Custom Loader */}
+        <Loader
+          loading={loading}
+          progress={progress}
+          error={loadError}
+          onRetry={() => {
+            setLoadError(null);
+            setProgress(0);
+            setLoading(true);
+            setRetryToken((n) => n + 1);
+          }}
+        />
 
 
-      {/* 3D Canvas Container */}
-      <div ref={containerRef} style={{ position: "sticky", top: 0, width: "100vw", height: "100vh", overflow: "hidden" }}>
-        <div className="pointer-events-none fixed inset-0 z-50 border-[2px] border-cyan-500/20 opacity-90" />
-
-
-
-        {/* Surface Semaphore 2K26 Hero UI */}
-        <div
-          ref={heroUiRef}
-          className="pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-12 text-white"
-        >
-
-
-          <main className="relative flex flex-col items-center justify-center text-center my-auto w-full py-20">
-            {/* Dark gradient behind text to ensure readability against the bright moon */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(2,6,23,0.85)_0%,_rgba(0,0,0,0)_70%)] -z-10 pointer-events-none" />
-            
-            <h1 className="font-mono text-5xl md:text-[7rem] font-black tracking-[0.2em] text-white drop-shadow-[0_0_30px_rgba(0,255,255,0.9)] mb-2 select-none leading-none">
-              SEMAPHORE
-            </h1>
-            <h2 className="font-mono text-xl md:text-3xl font-extrabold tracking-[0.4em] text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] mb-6 select-none ml-2">
-              2 K 2 6
-            </h2>
-            <span className="font-mono text-xs md:text-sm tracking-[0.3em] text-cyan-50 uppercase font-bold drop-shadow-[0_2px_5px_rgba(0,0,0,1)]">
-              NATIONAL LEVEL MCA TECH FEST - NMAMIT NITTE
-            </span>
-          </main>
-
-          <footer className="flex justify-between items-end w-full">
-          </footer>
-        </div>
-
-        {/* Main Cyber Ocean HUD Overlay */}
-        <div className={`ui-layer ${hudVisible ? "visible" : ""}`} id="ui-layer">
-          <div className="grid-overlay" />
-          <div className="vignette" />
+        {/* 3D Canvas Container */}
+        <div ref={containerRef} style={{ position: "sticky", top: 0, width: "100vw", height: "100vh", overflow: "hidden" }}>
+          <div className="pointer-events-none fixed inset-0 z-50 border-[2px] border-cyan-500/20 opacity-90" />
 
 
 
-          {/* Animated Scroll Down Mouse Logo (Visible only at beginning surface view, scrollProgress < 10) */}
+          {/* Surface Semaphore 2K26 Hero UI */}
           <div
-            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none transition-all duration-500 font-mono select-none ${scrollProgress < 10 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+            ref={heroUiRef}
+            className="pointer-events-none fixed inset-0 z-40 flex flex-col justify-between p-6 md:p-12 text-white"
+          >
+
+
+            <main className="relative flex flex-col items-center justify-center text-center my-auto w-full py-20">
+              {/* Dark gradient behind text to ensure readability against the bright moon */}
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(2,6,23,0.85)_0%,_rgba(0,0,0,0)_70%)] -z-10 pointer-events-none" />
+
+              <h1 className="font-mono text-5xl md:text-[7rem] font-black tracking-[0.2em] text-white drop-shadow-[0_0_30px_rgba(0,255,255,0.9)] mb-2 select-none leading-none">
+                SEMAPHORE
+              </h1>
+              <h2 className="font-mono text-xl md:text-3xl font-extrabold tracking-[0.4em] text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] mb-6 select-none ml-2">
+                2 K 2 6
+              </h2>
+              <span className="font-mono text-xs md:text-sm tracking-[0.3em] text-cyan-50 uppercase font-bold drop-shadow-[0_2px_5px_rgba(0,0,0,1)]">
+                NATIONAL LEVEL MCA TECH FEST - NMAMIT NITTE
+              </span>
+            </main>
+
+            <footer className="flex justify-between items-end w-full">
+            </footer>
+          </div>
+
+          {/* Main Cyber Ocean HUD Overlay */}
+          <div className={`ui-layer ${hudVisible ? "visible" : ""}`} id="ui-layer">
+            <div className="grid-overlay" />
+            <div className="vignette" />
+
+
+
+            {/* Animated Scroll Down Mouse Logo (Visible only at beginning surface view, scrollProgress < 10) */}
+            <div
+              className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none transition-all duration-500 font-mono select-none ${scrollProgress < 10 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                }`}
+            >
+              <div className="relative w-6 h-10 rounded-full border-2 border-cyan-400/80 shadow-[0_0_15px_rgba(0,255,255,0.4)] flex justify-center pt-2 bg-[#010c18]/90">
+                <div className="w-1.5 h-3 rounded-full bg-cyan-300 animate-bounce shadow-[0_0_8px_rgba(0,255,255,0.9)]" />
+              </div>
+              <div className="flex items-center gap-1 text-[11px] font-bold tracking-[0.25em] text-cyan-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] uppercase">
+                <span>SCROLL TO DIVE</span>
+                <span className="text-cyan-400 text-xs animate-bounce">↓</span>
+              </div>
+            </div>
+
+            {/* Right-Side Down Telemetry HUD Readout (Clean Panel-less design) */}
+            <div className="fixed bottom-6 md:bottom-8 right-6 md:right-10 z-50 flex flex-col items-end gap-1.5 font-mono text-right select-none pointer-events-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+
+              <div className="flex items-baseline gap-2 text-cyan-100 font-bold text-sm tracking-wider">
+                <span className="text-[10px] text-cyan-400/70 font-semibold uppercase">DEPTH:</span>
+                <span className="text-cyan-300 font-extrabold text-base">{stats.depth}</span>
+                <span className="text-[10px] text-cyan-400/80">M</span>
+              </div>
+
+              <div className="flex items-baseline gap-2 text-cyan-100 font-bold text-sm tracking-wider">
+                <span className="text-[10px] text-cyan-400/70 font-semibold uppercase">SPEED:</span>
+                <span className="text-cyan-300 font-extrabold text-base">{stats.speed}</span>
+                <span className="text-[10px] text-cyan-400/80">M/S</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Minimal Top-Left Speaker Audio Toggle Icon */}
+          <button
+            onClick={toggleAudio}
+            className={`fixed top-6 left-6 md:top-8 md:left-10 z-[80] p-1 text-cyan-300 hover:text-white transition-all duration-500 cursor-pointer pointer-events-auto hover:scale-110 active:scale-95 drop-shadow-[0_0_15px_rgba(0,255,255,0.8)] ${scrollProgress >= 4 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+              }`}
+            aria-label="Toggle Audio"
+            title={isAudioPlaying ? "Mute Audio" : "Play Audio"}
+          >
+            {isAudioPlaying ? (
+              <svg className="w-6 h-6 fill-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]" viewBox="0 0 24 24">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 fill-cyan-400/50 hover:fill-cyan-300" viewBox="0 0 24 24">
+                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+              </svg>
+            )}
+          </button>
+
+          {/* Interactive Event Detail Modal when clicking on any Event Portal, Pin, or 3D Banner */}
+          {selectedEvent && (
+            <EventInfoModal
+              event={selectedEvent}
+              onClose={() => setSelectedEvent(null)}
+            />
+          )}
+
+          {/* Final End Screen after the event scroll (Fades in at the very bottom) */}
+          <div
+            className={`fixed inset-0 bg-[#010a13] flex flex-col items-center justify-center z-[100] transition-opacity duration-1000 ${scrollProgress >= 99 ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
               }`}
           >
-            <div className="relative w-6 h-10 rounded-full border-2 border-cyan-400/80 shadow-[0_0_15px_rgba(0,255,255,0.4)] flex justify-center pt-2 bg-[#010c18]/90">
-              <div className="w-1.5 h-3 rounded-full bg-cyan-300 animate-bounce shadow-[0_0_8px_rgba(0,255,255,0.9)]" />
+            {/* Subtle atmospheric lighting background */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(0,180,255,0.15)_0%,_rgba(0,0,0,0)_60%)] -z-10 pointer-events-none" />
+            <div className="absolute inset-0 bg-[url('/textures/waternormals.jpg')] opacity-5 bg-cover bg-center mix-blend-overlay pointer-events-none" />
+
+            {/* Semaphore Logo */}
+            <div className="z-10 mb-12 relative flex items-center justify-center">
+              <div className="absolute w-3/4 h-3/4 bg-cyan-400/20 blur-[100px] rounded-full animate-pulse pointer-events-none" />
+              <img
+  src="https://res.cloudinary.com/zuxdlzob/image/upload/v1787802540/semaphore_logo.png"
+  alt="Semaphore 2026 Logo"
+  className="w-[80vw] max-w-[600px] h-auto object-contain relative z-10 drop-shadow-[0_0_25px_rgba(0,255,255,0.4)] hover:scale-105 transition-transform duration-700"
+/>
             </div>
-            <div className="flex items-center gap-1 text-[11px] font-bold tracking-[0.25em] text-cyan-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] uppercase">
-              <span>SCROLL TO DIVE</span>
-              <span className="text-cyan-400 text-xs animate-bounce">↓</span>
-            </div>
+
+            {/* Standalone Visual Register Button (No link) */}
+            <button
+              type="button"
+              className="z-10 px-12 py-4 bg-cyan-600/80 hover:bg-cyan-500 text-white font-mono font-bold tracking-[0.2em] rounded-lg transition-all duration-500 shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.8)] hover:-translate-y-1 text-xl md:text-2xl border border-cyan-400/30 hover:border-cyan-300"
+            >
+              REGISTER
+            </button>
           </div>
 
-          {/* Right-Side Down Telemetry HUD Readout (Clean Panel-less design) */}
-          <div className="fixed bottom-6 md:bottom-8 right-6 md:right-10 z-50 flex flex-col items-end gap-1.5 font-mono text-right select-none pointer-events-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-
-            <div className="flex items-baseline gap-2 text-cyan-100 font-bold text-sm tracking-wider">
-              <span className="text-[10px] text-cyan-400/70 font-semibold uppercase">DEPTH:</span>
-              <span className="text-cyan-300 font-extrabold text-base">{stats.depth}</span>
-              <span className="text-[10px] text-cyan-400/80">M</span>
-            </div>
-
-            <div className="flex items-baseline gap-2 text-cyan-100 font-bold text-sm tracking-wider">
-              <span className="text-[10px] text-cyan-400/70 font-semibold uppercase">SPEED:</span>
-              <span className="text-cyan-300 font-extrabold text-base">{stats.speed}</span>
-              <span className="text-[10px] text-cyan-400/80">M/S</span>
-            </div>
-          </div>
         </div>
-
-      {/* Minimal Top-Left Speaker Audio Toggle Icon */}
-      <button
-        onClick={toggleAudio}
-        className={`fixed top-6 left-6 md:top-8 md:left-10 z-[80] p-1 text-cyan-300 hover:text-white transition-all duration-500 cursor-pointer pointer-events-auto hover:scale-110 active:scale-95 drop-shadow-[0_0_15px_rgba(0,255,255,0.8)] ${scrollProgress >= 4 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
-          }`}
-        aria-label="Toggle Audio"
-        title={isAudioPlaying ? "Mute Audio" : "Play Audio"}
-      >
-        {isAudioPlaying ? (
-          <svg className="w-6 h-6 fill-cyan-400 drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]" viewBox="0 0 24 24">
-            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-          </svg>
-        ) : (
-          <svg className="w-6 h-6 fill-cyan-400/50 hover:fill-cyan-300" viewBox="0 0 24 24">
-            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
-          </svg>
-        )}
-      </button>
-
-      {/* Interactive Event Detail Modal when clicking on any Event Portal, Pin, or 3D Banner */}
-      {selectedEvent && (
-        <EventInfoModal 
-          event={selectedEvent} 
-          onClose={() => setSelectedEvent(null)} 
-        />
-      )}
-
-      {/* Final End Screen after the event scroll (Fades in at the very bottom) */}
-      <div 
-        className={`fixed inset-0 bg-[#010a13] flex flex-col items-center justify-center z-[100] transition-opacity duration-1000 ${
-          scrollProgress >= 99 ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
-      >
-        {/* Subtle atmospheric lighting background */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(0,180,255,0.15)_0%,_rgba(0,0,0,0)_60%)] -z-10 pointer-events-none" />
-        <div className="absolute inset-0 bg-[url('/textures/waternormals.jpg')] opacity-5 bg-cover bg-center mix-blend-overlay pointer-events-none" />
-        
-        {/* Semaphore Logo */}
-        <div className="z-10 mb-12 relative flex items-center justify-center">
-          <div className="absolute w-3/4 h-3/4 bg-cyan-400/20 blur-[100px] rounded-full animate-pulse pointer-events-none" />
-          <img 
-            src="/semaphore_logo.png" 
-            alt="Semaphore 2026 Logo" 
-            className="w-[80vw] max-w-[600px] h-auto object-contain relative z-10 drop-shadow-[0_0_25px_rgba(0,255,255,0.4)] hover:scale-105 transition-transform duration-700" 
-          />
-        </div>
-        
-        {/* Standalone Visual Register Button (No link) */}
-        <button 
-          type="button"
-          className="z-10 px-12 py-4 bg-cyan-600/80 hover:bg-cyan-500 text-white font-mono font-bold tracking-[0.2em] rounded-lg transition-all duration-500 shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.8)] hover:-translate-y-1 text-xl md:text-2xl border border-cyan-400/30 hover:border-cyan-300"
-        >
-          REGISTER
-        </button>
       </div>
-
-      </div>
-    </div>
     </>
   );
 }
