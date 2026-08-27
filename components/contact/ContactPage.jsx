@@ -213,12 +213,18 @@ export default function ContactPage() {
 
             <div className="bg-white/5 border border-white/10 border-t-white/20 border-l-white/20 rounded-3xl p-6 sm:p-8 md:p-10 backdrop-blur-xl shadow-[0_15px_40px_rgba(0,0,0,0.5),inset_0_0_30px_rgba(255,255,255,0.03)] mx-auto max-w-4xl">
               <ul className="space-y-4 text-white/80 list-none">
-                {generalRulesData.rules.map((rule, idx) => (
-                  <li key={idx} className="flex items-start space-x-3 text-sm sm:text-base leading-relaxed tracking-wide">
-                    <span className="text-cyan-400 mt-0.5">▹</span>
-                    <span>{rule}</span>
-                  </li>
-                ))}
+                {generalRulesData.rules.map((rule, idx) => {
+                  const isLast = idx === generalRulesData.rules.length - 1;
+                  return (
+                    <li 
+                      key={idx} 
+                      className={`flex items-start space-x-3 text-sm sm:text-base leading-relaxed tracking-wide ${isLast ? 'font-bold text-cyan-50 mt-6 pt-4 border-t border-white/10' : ''}`}
+                    >
+                      <span className="text-cyan-400 mt-0.5">{isLast ? '⚠️' : '▹'}</span>
+                      <span>{rule}</span>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </section>
