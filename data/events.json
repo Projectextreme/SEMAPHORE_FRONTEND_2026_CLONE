@@ -5,8 +5,10 @@
     "category": "Coding",
     "description": "Where every line creates a Wave",
     "rules": [
-      "Rule 1 here",
-      "Rule 2 here"
+      "Basic knowledge of C/C++, Java, Python, and JavaScript is required (questions can be from any of these).",
+      "Good understanding of Computer Science fundamentals is required.",
+      "Experience in Data Structures & Algorithms and basic competitive coding is necessary.",
+      "Rules for each round will be explained on the spot."
     ],
     "heads": ["Havyas U - 7483989780", "Shashidhara K - 7760770725"],
     "participants": 2
@@ -17,12 +19,9 @@
     "category": "Web Design",
     "description": "Where every pixel shapes a Reef",
     "rules": [
-      "No of participants -2",
-      "No of rounds -3",
-"Participants must have knowledge in HTML, CSS, and JavaScript",
-"The rounds and design tasks will be provided on the spot.",
- "Electronic gadgets are not allowed"
-
+      "Participants must have knowledge in HTML, CSS, and JavaScript.",
+      "The rounds and design tasks will be provided on the spot.",
+      "Electronic gadgets are not allowed."
     ],
     "heads": ["Swasthik NJ - 8951192848", "Udith R Poojary - 8088575178"],
     "participants": 2
@@ -33,8 +32,8 @@
     "category": "IT Quiz",
     "description": "Where knowledge meets the Unknown",
     "rules": [
-      "Each team shall consist of 2 participants",
-      "The questions will cover General Knowledge, Technical Knowledge, Programming,Information Technology, Computer Science, and other IT-related topics",
+     
+      "The questions will cover General Knowledge, Technical Knowledge, Programming, Information Technology, Computer Science, and other IT-related topics",
       "The use of mobile phones, smartwatches, or any electronic gadgets is strictly prohibited during the event",
       "The decision of the judges shall be final and binding",
       "Any malpractice or violation of the quiz rules will lead to disqualification"
@@ -49,13 +48,9 @@
     "description": "Battle beyond the Depths",
     "rules": [
       "A team must consist of 4 players",
-      "Use of emulators, iPads and triggers is not allowed",
-      "Players must bring their own mobile devices, chargers, finger sleeves and earphones",
-      "Players should ensure their devices are compatible with the game and that they have the latest version installed",
-      "All required maps must be downloaded before the event",
-      "Players must have their own internet connection available as a backup",
-      "Any misconduct or unfair play will result in disqualification",
-      "Organizers' decisions will be final and binding"
+      "Participants should bring their laptops and other necessary equipment",
+      "Any use of hacking will result in disqualification",
+      "Participants should bring their own ethernet adapter if their laptop doesn't have an ethernet port"
     ],
     "heads": ["Jithesh Kotian - 7619168599", "Keerthan Kulal - 8792839166"],
     "participants": 4
@@ -80,14 +75,13 @@
     "category": "Surprise Event",
     "description": "The Ultimate Surprise Challenge",
     "rules": [
-      "Each team shall consists of 2 participants",
-"Mystery will be revealed only at the event",
-"Surprise bonus challenges may appear anytime",
-"Use your brain, not gadgets, electronic devices are not allowed.",
-"Some tasks will be time-based",
-"Judges' decisions are final and binding.",
-"Maintain fair play and sportsmanship throughout the event"
-
+      
+      "Mystery will be revealed only at the event",
+      "Surprise bonus challenges may appear anytime",
+      "Use your brain, not gadgets, electronic devices are not allowed.",
+      "Some tasks will be time-based",
+      "Judges' decisions are final and binding.",
+      "Maintain fair play and sportsmanship throughout the event"
     ],
     "heads": ["Sameeksha Jain - 7676292225", "Dheemanth Bhatta - 9480463974"],
     "participants": 2
@@ -99,39 +93,37 @@
     "description": "Only one can rule the depths",
     "rules": [
       "This is a solo event, and each participant will compete individually",
-"The competition will consist of 4 rounds",
-"Participants are expected to maintain professional and respectful conduct throughout the event",
-"Participants must follow the instructions given by the organizers during each round",
-"Any form of cheating, unfair practice, or misconduct will result in disqualification",
-"The decision of the judges and organizers will be final"
-
+      "Participants must report on time for all rounds with their own laptops",
+      "No communication or teamwork is allowed during rounds",
+      "Judges' decisions are final and cannot be challenged",
+      "Any form of cheating, unfair practice, or misconduct will result in disqualification",
+      "Participants are not allowed to join any other event"
     ],
     "heads": ["Jathin - 6364058375", "Hasth - 7338371775"],
     "participants": 1
   },
-  {
-    "id": "The Meg Pitch",
-    "name": "The Meg Pitch",
-    "category": "StartUp",
-    "description": "The Deep Sea of Innovation",
-    "rules": [
-      "Round 1 (Tech Battle Royale), teams pick one technology – AI, Cyber Security, IoT, or Blockchain – and prepare exactly 5 slides pitching a startup idea, incorporating any challenge cards given during the round.",
-"Round 2 (One-Slide Mastery), qualifying teams prepare a single slide that builds on their Round 1 idea, including logo, brief explanation, business model, and funding needs",
-"Each round has a strict presentation time of 5 minutes (4 minutes presenting + 1 minute for questions)",
-"The decision of the judges shall be final and binding"
-
-    ],
-    "heads": ["Sumanth Acharya - 8748059243", "Shahavez - 7349342520"],
-    "participants": 2
-  },
+{
+  "id": "The Meg Pitch",
+  "name": "The Meg Pitch",
+  "category": "StartUp",
+  "description": "The Deep Sea of Innovation",
+  "rules": [
+    "The event will have 2 rounds, with teams of 2 participants each.",
+    "Participants must bring their own laptops to create and pitch their ideas.",
+    "For the 1st round, each team will prepare and present their startup idea using a single slide."
+  ],
+  "heads": ["Sumanth Acharya - 8748059243", "Shahavez - 7349342520"],
+  "participants": 2
+},
   {
     "id": "Submarine",
     "name": "Submarine",
     "category": "Photography",
     "description": "Enter the tagline/description here",
     "rules": [
-      "Rule 1 here",
-      "Rule 2 here"
+      "Per team 1 participant",
+      "Participant should have photography and videography knowledge",
+      "DSLR can be used"
     ],
     "heads": ["Goutam Hegde - 9242288471", "Bhargavi Pai - 9632081787"],
     "participants": 1
@@ -142,17 +134,15 @@
     "category": "Fashin Show",
     "description": "Only the Boldest can own the Depths",
     "rules": [
-      "Each team must consist of 2 members",
-      "Each team gets 2+1 minutes on stage",
-      "Outfits must follow a corporate/professional theme",
-      "Participants can experiment with formal wear, business casual, modern office fashion, and power dressing",
-      "Both members should have some coordination in their outfits, colours, styling, or overall concept",
-      "Confidence, posture, walking style, and presentation will be judged",
-      "Outfits must be suitable for a college event and maintain a professional appearance",
-      "Teams must submit selected ramp walk songs/music in advance",
-      "Teams must report to the venue before their assigned time",
-      "The judges decision will be final"
-    ],
+    "The team must have a minimum of 4 members and a maximum of 8 members.",
+    "The time limit is 4+1. Timing starts as soon as the team enters the stage.",
+    "Any dance style is allowed, including Eastern, Western, or Fusion.",
+    "Performances must not contain any vulgarity, offensive gestures, or content targeting any community or religion.",
+    "No extra preparation time will be given on stage.",
+    "Props are allowed but must be safe and manageable by the team. Participants are responsible for bringing and handling their own props.",
+    "Teams must submit their audio track in MP3 format 2 days before the event.",
+    "The decision of the judges will be final."
+  ],
     "heads": ["Prapthi Shetty - 9632081932", "Prathiksha - 9483505763"],
     "participants": 2
   }
