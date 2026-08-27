@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
+import { TEAM_REGISTRATION_FEE } from '@/constants/pricing';
+import { fetchPaymentDone } from '@/lib/paymentStatus';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 
@@ -39,6 +41,9 @@ export default function PaymentSubmission() {
   const [utr, setUtr] = useState("");
   
   const [submittedPayment, setSubmittedPayment] = useState(null);
+  // Whether the fee is already settled for this user or their team. `null` while the
+  // check is still in flight, so the form is not flashed at someone who owes nothing.
+  const [feeAlreadyPaid, setFeeAlreadyPaid] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
@@ -52,6 +57,23 @@ export default function PaymentSubmission() {
       }
     };
   }, [previewUrl]);
+
+  // The fee is charged once per team. Someone who already paid it and then
+  // registered for another event lands here from the old flow (or a stale link) —
+  // show them that they are covered instead of a form asking for ₹2000 again.
+  useEffect(() => {
+    let cancelled = false;
+    fetchPaymentDone().then(({ isPaymentDone }) => {
+      if (cancelled) return;
+      setFeeAlreadyPaid(isPaymentDone);
+      if (isPaymentDone) {
+        // Drop the handoff values so a stale amount cannot be resurrected later.
+        sessionStorage.removeItem('pendingPaymentAmount');
+        sessionStorage.removeItem('pendingEventIds');
+      }
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   // Auto-fetch unpaid event registrations if eventIds or amount is not set
   useEffect(() => {
@@ -80,8 +102,9 @@ export default function PaymentSubmission() {
           setEventIds(prev => (prev.length > 0 ? prev : unpaidIds));
           setAmount(prev => {
             if (prev) return prev;
-            const total = unpaidEvents.reduce((sum, e) => sum + (e.eventId?.registrationFee || 0), 0);
-            return total > 0 ? total.toString() : "";
+            // Priced per team, not per event: anyone with anything left to pay owes
+            // the one flat fee, whether that is a single event or all of them.
+            return unpaidEvents.length > 0 ? String(TEAM_REGISTRATION_FEE) : "";
           });
         }
       } catch (err) {
@@ -165,6 +188,52 @@ export default function PaymentSubmission() {
       setLoading(false);
     }
   };
+
+  // Still asking the backend — hold the form back rather than prompt for money that
+  // may not be owed.
+  if (feeAlreadyPaid === null) {
+    return (
+      <div className="w-full h-full p-8 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-sm flex items-center justify-center">
+        <p className="text-cyan-400 font-bold tracking-widest uppercase text-sm animate-pulse">
+          Checking payment status…
+        </p>
+      </div>
+    );
+  }
+
+  // Already paid: no form at all. One team fee covers every event they register for.
+  if (feeAlreadyPaid && !submittedPayment) {
+    return (
+      <div className="w-full h-full p-8 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-sm relative flex flex-col items-center text-center justify-center">
+        <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mb-4">
+          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+        <h2 className="text-2xl font-extrabold text-white uppercase tracking-wide mb-2">
+          Registration Fee Already Paid
+        </h2>
+        <p className="text-sm text-gray-400 font-medium mb-6 max-w-sm">
+          The ₹{TEAM_REGISTRATION_FEE} fee is charged once per team and your payment has
+          already been approved. Every event you register for is covered — there is
+          nothing more to pay.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+          <button
+            onClick={() => router.push('/user/account')}
+            className="flex-1 py-3 px-4 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 border border-cyan-500/50 font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md"
+          >
+            Go to My Dashboard ↗
+          </button>
+          <button
+            onClick={() => router.push('/events/register')}
+            className="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white font-bold text-xs uppercase tracking-wider rounded-xl border border-white/10 transition-all"
+          >
+            Register More Events
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (submittedPayment) {
     return (
