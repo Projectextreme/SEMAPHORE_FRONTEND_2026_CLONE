@@ -3,12 +3,13 @@ export const developmentTeam = [
     id: "dev-1",
     name: "Shashidhar",
     role: "Developer",
-    image: "/assets/developer/shashidhara.png",
+    image: "/assets/developer/SHASHIDHAR.png",
+    imagePosition: "object-[50%_-30%]",
     initials: "SH",
     phone: "",
-    email: "",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    email: "mailto:shashidharak334@gmail.com",
+    github: "",
+    linkedin: "https://www.linkedin.com/in/shashidhara-k-a2374b31b"
   },
   {
     id: "dev-2",
@@ -17,9 +18,9 @@ export const developmentTeam = [
     image: "/assets/developer/havyas.png",
     initials: "HA",
     phone: "",
-    email: "",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    email: "mailto:havyasu2005@gmail.com",
+    github: "",
+    linkedin: "https://www.linkedin.com/in/havyasu/"
   },
   {
     id: "dev-3",
@@ -28,53 +29,56 @@ export const developmentTeam = [
     image: "/assets/developer/swasthik.png",
     initials: "SN",
     phone: "",
-    email: "",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    email: "mailto:swastiknj76@gmail.com",
+    github: "",
+    linkedin: "https://www.linkedin.com/in/swasthik-nj/"
   },
   {
     id: "dev-4",
     name: "Sumanth",
     role: "Developer",
-    image: "/favicon.ico",
+    image: "/assets/developer/sumanth.png",
+    imagePosition: "object-[50%_-20%]",
     initials: "SU",
     phone: "",
-    email: "",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    email: "mailto:sumanthpoojary965@gmail.com",
+    github: "",
+    linkedin: "https://www.linkedin.com/in/sumanth-poojary-2a1052246"
   },
   {
     id: "dev-5",
     name: "Thushar R Poojary",
     role: "Developer",
-    image: "/favicon.ico",
+    image: "/assets/developer/ChatGPT_Image_Aug_7__2026__08_20_21_PM-removebg-preview.png",
     initials: "TP",
     phone: "",
-    email: "",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    email: "mailto:thusharrpoojary@gmail.com",
+    github: "",
+    linkedin: "https://www.linkedin.com/in/thushar-r-poojary-972b74245/"
   },
   {
     id: "dev-6",
     name: "Sharan",
     role: "Developer",
-    image: "/assets/developer/sharan.jpg",
+    image: "/assets/developer/sharan.png",
+    imagePosition: "object-[50%_-20%]",
     initials: "SH",
     phone: "",
-    email: "",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    email: "mailto:sharansalyan1@gmail.com",
+    github: "",
+    linkedin: "https://www.linkedin.com/in/sharan-salyan-3162a42b9"
   },
   {
     id: "dev-7",
     name: "Udith R Poojary",
     role: "Developer",
     image: "/assets/developer/udith.png",
+    imagePosition: "object-[50%_-30%]",
     initials: "UP",
     phone: "",
-    email: "",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    email: "mailto:udithrpoojary@gmail.com",
+    github: "",
+    linkedin: "https://www.linkedin.com/in/udith-r-poojary-8a4053246"
   },
   {
     id: "dev-8",
@@ -83,20 +87,21 @@ export const developmentTeam = [
     image: "/assets/developer/DATTATREYA.png",
     initials: "DA",
     phone: "",
-    email: "",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    email: "mailto:dattatreyagokhale@gmail.com",
+    github: "",
+    linkedin: "https://www.linkedin.com/in/dattatreya-gokhale-501b79341"
   },
   {
     id: "dev-9",
     name: "Hanson Vas",
     role: "Developer",
     image: "/assets/developer/HANSON VAZ.png",
+    imagePosition: "object-[50%_-10%]",
     initials: "HV",
     phone: "",
-    email: "",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    email: "mailto:hansonvaz0704@gmail.com",
+    github: "",
+    linkedin: "https://www.linkedin.com/in/hanson-vaz"
   },
   {
     id: "dev-10",
@@ -105,9 +110,9 @@ export const developmentTeam = [
     image: "/assets/developer/gaurav.png",
     initials: "GA",
     phone: "",
-    email: "",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    email: "mailto:gauravsk615@gmail.com",
+    github: "",
+    linkedin: "https://www.linkedin.com/in/gaurav-sk-891720333/"
   },
   {
     id: "dev-11",
@@ -116,9 +121,9 @@ export const developmentTeam = [
     image: "/assets/developer/jeevan.png",
     initials: "JE",
     phone: "",
-    email: "",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    email: "mailto:jeevanshetty9481@gmail.com",
+    github: "",
+    linkedin: "https://www.linkedin.com/in/jeevan-shetty-241613229/"
   }
 ];
 
@@ -133,7 +138,7 @@ export const staffCoordinators = [
     phone: "tel:+91 9663484343",
     email: "mailto:roshan.suaris@nitte.edu.in",
     github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    linkedin: ""
   }
 ];
 
@@ -148,7 +153,7 @@ export const studentCoordinators = [
     phone: "tel:+91 9019720766",
     email: "mailto:nn25mca171@nmamit.in",
     github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    linkedin: ""
   },
   {
     id: "student-2",
@@ -160,7 +165,7 @@ export const studentCoordinators = [
     phone: "tel:+91 7019489127",
     email: "mailto:nn25mca170@nmamit.in",
     github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    linkedin: ""
   },
   {
     id: "student-3",
@@ -172,6 +177,6 @@ export const studentCoordinators = [
     phone: "tel:+91 7019480750",
     email: "mailto:nn25mca081@nmamit.in",
     github: "https://github.com",
-    linkedin: "https://linkedin.com"
+    linkedin: ""
   }
 ];
