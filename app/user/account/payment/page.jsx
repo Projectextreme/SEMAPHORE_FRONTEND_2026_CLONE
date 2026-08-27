@@ -86,7 +86,7 @@ export default function PaymentPage() {
           
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-cyan-500/30 mb-6 relative group cursor-pointer transition-all hover:scale-105">
             <Image 
-              src="/QR_code.png" 
+              src="/QR_code.jpeg" 
               alt="Payment QR Code" 
               width={224}
               height={224}
