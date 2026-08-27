@@ -68,14 +68,14 @@ export default function PaymentPage() {
       {/* Water Wave Effect (Darkened via overlay) */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-auto">
         <WaterWave
-          imageUrl="/water.jpg"
+          imageUrl="/assets/images/payment_bg.png"
           dropRadius={25}
           perturbance={0.03}
           resolution={512}
           className="absolute inset-0 w-full h-full opacity-90 bg-cover bg-center"
           style={{ backgroundSize: 'cover', backgroundPosition: 'center' }}
         >
-          {() => <div className="w-full h-full bg-black/80 pointer-events-none" />}
+          {() => <div className="w-full h-full bg-black/30 pointer-events-none" />}
         </WaterWave>
       </div>
       
