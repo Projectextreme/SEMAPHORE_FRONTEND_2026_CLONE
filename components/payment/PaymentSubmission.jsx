@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
+import { TEAM_REGISTRATION_FEE } from '@/constants/pricing';
+import { fetchPaymentDone } from '@/lib/paymentStatus';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 
@@ -39,6 +41,15 @@ export default function PaymentSubmission() {
   const [utr, setUtr] = useState("");
   
   const [submittedPayment, setSubmittedPayment] = useState(null);
+  // Whether the fee is already settled for this user or their team — approved, or
+  // submitted and waiting on an admin. `null` while the check is still in flight, so
+  // the form is not flashed at someone who owes nothing.
+  const [feeHandled, setFeeHandled] = useState(null);
+  const [feeAwaitingApproval, setFeeAwaitingApproval] = useState(false);
+  // Escape hatch for the one case where a paid user legitimately needs the form:
+  // they submitted the wrong screenshot or UTR and want to replace it before an
+  // admin reviews it. Off by default so nobody pays twice by accident.
+  const [payAnyway, setPayAnyway] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
@@ -52,6 +63,28 @@ export default function PaymentSubmission() {
       }
     };
   }, [previewUrl]);
+
+  // The fee is charged once per team. Someone who already paid it and then
+  // registered for another event lands here from a stale link or an old tab — show
+  // them that they are covered instead of a form asking for ₹2000 again. A payment
+  // still queued for admin approval counts as paid: the transfer already happened,
+  // and asking again there is exactly how a user ends up paying twice.
+  useEffect(() => {
+    let cancelled = false;
+    fetchPaymentDone().then(({ isPaymentDone, isPaymentPending }) => {
+      if (cancelled) return;
+      setFeeHandled(isPaymentDone || isPaymentPending);
+      setFeeAwaitingApproval(!isPaymentDone && isPaymentPending);
+      if (isPaymentDone) {
+        // Drop the handoff values so a stale amount cannot be resurrected later.
+        // Only for an approved payment: a pending one can still be replaced through
+        // the escape hatch below, and that form needs the amount.
+        sessionStorage.removeItem('pendingPaymentAmount');
+        sessionStorage.removeItem('pendingEventIds');
+      }
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   // Auto-fetch unpaid event registrations if eventIds or amount is not set
   useEffect(() => {
@@ -80,8 +113,9 @@ export default function PaymentSubmission() {
           setEventIds(prev => (prev.length > 0 ? prev : unpaidIds));
           setAmount(prev => {
             if (prev) return prev;
-            // Flat one-time payment for college registration
-            return "2000";
+            // Priced per team, not per event: anyone with anything left to pay owes
+            // the one flat fee, whether that is a single event or all of them.
+            return String(TEAM_REGISTRATION_FEE);
           });
         }
       } catch (err) {
@@ -172,6 +206,85 @@ export default function PaymentSubmission() {
     }
   };
 
+  // Still asking the backend — hold the form back rather than prompt for money that
+  // may not be owed.
+  if (feeHandled === null) {
+    return (
+      <div className="w-full h-full p-8 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-sm flex items-center justify-center">
+        <p className="text-cyan-400 font-bold tracking-widest uppercase text-sm animate-pulse">
+          Checking payment status…
+        </p>
+      </div>
+    );
+  }
+
+  // Already paid: no form at all. One team fee covers every event they register for,
+  // and that stays true while the payment sits in the admin approval queue.
+  if (feeHandled && !payAnyway && !submittedPayment) {
+    const ring = feeAwaitingApproval
+      ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+      : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
+
+    return (
+      <div className="w-full h-full p-8 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-sm relative flex flex-col items-center text-center justify-center">
+        <div className={`w-16 h-16 rounded-full border flex items-center justify-center mb-4 ${ring}`}>
+          {feeAwaitingApproval ? (
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          ) : (
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+          )}
+        </div>
+
+        <h2 className="text-2xl font-extrabold text-white uppercase tracking-wide mb-2">
+          {feeAwaitingApproval ? 'Payment Already Submitted' : 'Registration Fee Already Paid'}
+        </h2>
+        <p className="text-sm text-gray-400 font-medium mb-6 max-w-sm">
+          {feeAwaitingApproval ? (
+            <>
+              Your ₹{TEAM_REGISTRATION_FEE} payment is uploaded and waiting for admin
+              approval. It already covers every event you register for — including any
+              you add now. <span className="text-amber-400 font-bold">Please do not pay again.</span>
+            </>
+          ) : (
+            <>
+              The ₹{TEAM_REGISTRATION_FEE} fee is charged once per team and your payment has
+              already been approved. Every event you register for is covered — there is
+              nothing more to pay.
+            </>
+          )}
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+          <button
+            onClick={() => router.push('/user/account')}
+            className="flex-1 py-3 px-4 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 border border-cyan-500/50 font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md"
+          >
+            Go to My Dashboard ↗
+          </button>
+          <button
+            onClick={() => router.push('/events/register')}
+            className="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white font-bold text-xs uppercase tracking-wider rounded-xl border border-white/10 transition-all"
+          >
+            Register More Events
+          </button>
+        </div>
+
+        {/* Wrong screenshot or wrong UTR on a payment nobody has reviewed yet is the
+            only honest reason to reopen this form, so it stays available — just not
+            as the obvious next click. */}
+        {feeAwaitingApproval && (
+          <button
+            type="button"
+            onClick={() => setPayAnyway(true)}
+            className="mt-6 text-[11px] font-bold text-gray-500 hover:text-gray-300 underline underline-offset-4 transition-colors"
+          >
+            Submitted the wrong screenshot or UTR? Replace it &rarr;
+          </button>
+        )}
+      </div>
+    );
+  }
+
   if (submittedPayment) {
     return (
       <div className="w-full h-full p-8 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-sm relative flex flex-col items-center text-center">
@@ -224,6 +337,23 @@ export default function PaymentSubmission() {
       <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-6 tracking-wide text-center uppercase">
         Payment Submission
       </h2>
+
+      {payAnyway && (
+        <div className="mb-6 p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 font-medium flex flex-col gap-2">
+          <span>
+            You already have a payment awaiting approval. Only submit again if the
+            earlier screenshot or UTR was wrong — this does not charge you twice, but
+            an admin will see both submissions.
+          </span>
+          <button
+            type="button"
+            onClick={() => setPayAnyway(false)}
+            className="self-start font-bold underline underline-offset-2 hover:text-amber-200 transition-colors"
+          >
+            &larr; Never mind, take me back
+          </button>
+        </div>
+      )}
 
       {eventTitles.length > 0 && (
         <div className="mb-6 p-3.5 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-xs text-gray-300 font-medium">
