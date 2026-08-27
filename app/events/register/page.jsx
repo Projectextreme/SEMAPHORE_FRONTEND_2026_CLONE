@@ -128,6 +128,22 @@ const pageCss = `
   }
 `;
 
+// ---------------------------------------------------------------- phone rules
+// Participants are Indian mobile numbers: 10 digits starting 6-9.
+// Keep only digits while typing, but leave room for a pasted 91/+91 or a leading
+// 0 so a number copied from a contacts app is not silently truncated.
+const sanitizePhoneInput = (value) => String(value ?? '').replace(/\D/g, '').slice(0, 12);
+
+// Reduce any accepted format down to the bare 10-digit subscriber number.
+const normalizePhone = (value) => {
+  const digits = sanitizePhoneInput(value);
+  if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2);
+  if (digits.length === 11 && digits.startsWith('0')) return digits.slice(1);
+  return digits;
+};
+
+const isValidPhone = (value) => /^[6-9]\d{9}$/.test(normalizePhone(value));
+
 export default function EventsPage() {
   const router = useRouter();
 
@@ -368,8 +384,11 @@ export default function EventsPage() {
 
   const handleChange = (index, field, value, eventId) => {
     const currentList = formsData[eventId] || [];
-    const updated = [...currentList];
-    updated[index][field] = value;
+    // Copy the row being edited instead of writing through to it: the old code
+    // mutated the object still held in state before calling setFormsData.
+    const updated = currentList.map((p, i) =>
+      i === index ? { ...p, [field]: field === 'phone' ? sanitizePhoneInput(value) : value } : p
+    );
     setFormsData({
       ...formsData,
       [eventId]: updated
@@ -395,10 +414,16 @@ export default function EventsPage() {
     if (participants.length < min || participants.length > max) return false;
 
     for (let p of participants) {
-      if (!p.name || !p.name.trim() || !p.phone || !p.phone.trim()) {
-        return false;
-      }
+      if (!p.name || !p.name.trim()) return false;
+      // An event only counts as ready once every phone is a real mobile number,
+      // so a typo cannot reach checkout as a "completed" event.
+      if (!isValidPhone(p.phone)) return false;
     }
+
+    // The same number twice in one team is nearly always a copy-paste slip.
+    const numbers = participants.map((p) => normalizePhone(p.phone));
+    if (new Set(numbers).size !== numbers.length) return false;
+
     return true;
   };
 
@@ -452,7 +477,7 @@ export default function EventsPage() {
       const firstForm = validForms[0];
       const singleEventId = validForms.length === 1 ? (firstForm.event._id || firstForm.event.id) : undefined;
       const singleParticipants = validForms.length === 1
-        ? firstForm.participants.map(p => ({ name: p.name.trim(), phone: p.phone.trim() }))
+        ? firstForm.participants.map(p => ({ name: p.name.trim(), phone: normalizePhone(p.phone) }))
         : undefined;
 
       const payload = {
@@ -464,7 +489,8 @@ export default function EventsPage() {
           _id: event._id || event.id,
           participants: participants.map(p => ({
             name: p.name.trim(),
-            phone: p.phone.trim(),
+            // Send the bare 10 digits whatever the user pasted in.
+            phone: normalizePhone(p.phone),
           }))
         }))
       };
@@ -776,7 +802,20 @@ export default function EventsPage() {
                               </div>
 
                               <div style={styles.form}>
-                                {participants.map((p, index) => (
+                                {participants.map((p, index) => {
+                                  const phoneDigits = normalizePhone(p.phone);
+                                  const isDuplicatePhone =
+                                    phoneDigits.length === 10 &&
+                                    participants.some((other, i) => i !== index && normalizePhone(other.phone) === phoneDigits);
+                                  const phoneError = !p.phone
+                                    ? null
+                                    : !isValidPhone(p.phone)
+                                      ? 'Enter a valid 10-digit mobile number.'
+                                      : isDuplicatePhone
+                                        ? 'This number is already used by another participant.'
+                                        : null;
+
+                                  return (
                                   <div key={index} style={styles.participantBlock} className="reg-participant">
                                     <div style={styles.participantHeader}>
                                       <span style={styles.participantLabel}>
@@ -803,15 +842,29 @@ export default function EventsPage() {
                                       />
                                       <input
                                         className="reg-input"
-                                        style={styles.inputHalf}
+                                        style={{
+                                          ...styles.inputHalf,
+                                          ...(phoneError ? styles.inputInvalid : null),
+                                        }}
                                         type="tel"
-                                        placeholder="Phone Number"
+                                        inputMode="numeric"
+                                        autoComplete="tel"
+                                        maxLength={12}
+                                        placeholder="10-digit mobile number"
+                                        aria-invalid={phoneError ? 'true' : 'false'}
                                         value={p.phone}
                                         onChange={(e) => handleChange(index, 'phone', e.target.value, event._id)}
                                       />
                                     </div>
+
+                                    {/* Stays quiet until there is something to correct,
+                                        so a half-typed number is not flagged mid-entry. */}
+                                    {phoneError && (
+                                      <span style={styles.fieldError}>{phoneError}</span>
+                                    )}
                                   </div>
-                                ))}
+                                  );
+                                })}
 
                                 {participants.length < event.maxParticipants && (
                                   <button type="button" onClick={() => handleAddParticipant(event)} style={styles.addBtn} className="reg-add">
@@ -820,7 +873,7 @@ export default function EventsPage() {
                                 )}
 
                                 <button type="button" onClick={() => setExpandedEventId(null)} style={styles.collapseBtn} className="reg-btn">
-                                  {isValid ? 'Done — Minimize' : 'Minimize Event Form'}
+                                  {isValid ? 'Done' : 'Minimize Event Form'}
                                 </button>
                               </div>
                             </div>
@@ -1260,6 +1313,16 @@ const styles = {
     fontSize: 14,
     boxSizing: 'border-box',
     outline: 'none',
+  },
+  inputInvalid: {
+    borderColor: 'rgba(248,113,113,0.65)',
+    backgroundColor: 'rgba(248,113,113,0.08)',
+  },
+  fieldError: {
+    fontSize: 11.5,
+    fontWeight: 600,
+    color: '#fca5a5',
+    lineHeight: 1.4,
   },
   addBtn: {
     background: 'none',
