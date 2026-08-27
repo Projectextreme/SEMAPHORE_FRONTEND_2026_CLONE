@@ -17,10 +17,12 @@ export default function MyRegistration({ user: initialUser }) {
   // Modal state for viewing payment screenshot & details
   const [activeProofModal, setActiveProofModal] = useState(null);
 
-  // The fee is charged once per team. If the backend already has an approved payment
-  // for this user or a team-mate, nothing is due — however many events were added
-  // afterwards without a payment record of their own.
-  const [feeAlreadyPaid, setFeeAlreadyPaid] = useState(false);
+  // The fee is charged once per team. If a payment already exists for this user or a
+  // team-mate, nothing is due — however many events were added afterwards without a
+  // payment record of their own. A payment still queued for admin approval counts:
+  // the user has already transferred the money.
+  const [feeHandled, setFeeHandled] = useState(false);
+  const [feeAwaitingApproval, setFeeAwaitingApproval] = useState(false);
 
   const router = useRouter();
 
@@ -102,8 +104,10 @@ export default function MyRegistration({ user: initialUser }) {
 
   useEffect(() => {
     let cancelled = false;
-    fetchPaymentDone().then(({ isPaymentDone }) => {
-      if (!cancelled) setFeeAlreadyPaid(isPaymentDone);
+    fetchPaymentDone().then(({ isPaymentDone, isPaymentPending }) => {
+      if (cancelled) return;
+      setFeeHandled(isPaymentDone || isPaymentPending);
+      setFeeAwaitingApproval(!isPaymentDone && isPaymentPending);
     });
     return () => { cancelled = true; };
   }, []);
@@ -194,9 +198,10 @@ export default function MyRegistration({ user: initialUser }) {
   // rejected or failed.
   const rejectedGroups = paidGroups.filter(g => g.payment.status === 'rejected' || g.payment.status === 'failed');
   const rejectedEventsCount = rejectedGroups.reduce((total, group) => total + group.events.length, 0);
-  // …unless the one team fee is already paid and approved, in which case those
-  // events are simply covered by it and nothing is owed.
-  const hasOutstandingDues = !feeAlreadyPaid && (unpaidEvents.length > 0 || rejectedEventsCount > 0);
+  // …unless the one team fee has already been paid, in which case those events are
+  // simply covered by it and nothing is owed. Waiting on admin approval still counts
+  // as paid — the user should not be asked for the money a second time.
+  const hasOutstandingDues = !feeHandled && (unpaidEvents.length > 0 || rejectedEventsCount > 0);
 
   // Priced per team, not per event: an outstanding balance is the one flat fee,
   // whatever mix of events sits behind it.
@@ -445,11 +450,18 @@ export default function MyRegistration({ user: initialUser }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1.5 gap-2">
                       <h3 className="text-lg font-extrabold text-white truncate">{ev.title || 'Unknown Event'}</h3>
-                      {feeAlreadyPaid ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/30 whitespace-nowrap self-start">
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
-                          Covered by Paid Fee
-                        </span>
+                      {feeHandled ? (
+                        feeAwaitingApproval ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full border border-amber-500/30 whitespace-nowrap self-start">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Covered — Awaiting Approval
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/30 whitespace-nowrap self-start">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
+                            Covered by Paid Fee
+                          </span>
+                        )
                       ) : (
                         <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-red-500/10 text-red-400 px-3 py-1 rounded-full border border-red-500/30 whitespace-nowrap self-start">
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -538,8 +550,10 @@ export default function MyRegistration({ user: initialUser }) {
             disabled
           >
             <span className="flex items-center justify-center gap-2 font-bold">
-              {feeAlreadyPaid
-                ? `Registration Fee Paid (₹${TEAM_REGISTRATION_FEE}) — Nothing Left to Pay`
+              {feeHandled
+                ? (feeAwaitingApproval
+                  ? `Payment of ₹${TEAM_REGISTRATION_FEE} Submitted — Awaiting Admin Approval`
+                  : `Registration Fee Paid (₹${TEAM_REGISTRATION_FEE}) — Nothing Left to Pay`)
                 : 'All Registrations Paid & Up to Date'}
             </span>
           </button>
