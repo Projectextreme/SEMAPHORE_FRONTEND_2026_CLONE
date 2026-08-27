@@ -11,7 +11,7 @@ import EventInfoModal from "./EventInfoModal";
 import { Info } from "lucide-react";
 import { CRITICAL_ASSETS, loadAssets, blobToTexture } from "./assetLoader";
 
-import { addCoralReef } from "./CoralReef";
+import { addCoralReef, addCliffCorals } from "./CoralReef";
 import {
   seabedVertex,
   seabedFragment,
@@ -1037,8 +1037,6 @@ export default function Scene() {
       flatShading: true,
     });
 
-    const coralGlowColors = [0x00f0ff, 0xa855f7, 0xec4899, 0x0284c7];
-
     function createSideCliffWall(xPos, isRight, zCenter = -120, yPos = -95) {
       const cliffWallGeo = new THREE.BoxGeometry(34, 180, 160, 12, 16, 12);
       const pos = cliffWallGeo.attributes.position;
@@ -1058,28 +1056,8 @@ export default function Scene() {
       sideCliffGroup.add(cliffMesh);
 
       // Add glowing corals & sponges along the cliff face shelves
-      for (let c = 0; c < 12; c++) {
-        const cGeo = new THREE.ConeGeometry(1.2 + Math.random() * 0.6, 4.5 + Math.random() * 3.0, 7);
-        const cMat = new THREE.MeshStandardMaterial({
-          color: 0x032035,
-          emissive: coralGlowColors[c % coralGlowColors.length],
-          emissiveIntensity: 1.2,
-          roughness: 0.2,
-          flatShading: true,
-        });
-        const coralMesh = new THREE.Mesh(cGeo, cMat);
-        const sideOffset = isRight ? -16 + (Math.random() - 0.5) * 5 : 16 + (Math.random() - 0.5) * 5;
-        coralMesh.position.set(
-          xPos + sideOffset,
-          yPos + 40 - Math.random() * 80,
-          zCenter + (Math.random() - 0.5) * 140
-        );
-        coralMesh.rotation.set(
-          (Math.random() - 0.5) * 0.4,
-          Math.random() * Math.PI,
-          isRight ? -0.4 : 0.4
-        );
-        sideCliffGroup.add(coralMesh);
+      if (zCenter <= -190) {
+        addCliffCorals(sideCliffGroup, isRight, xPos, yPos, zCenter);
       }
     }
 
