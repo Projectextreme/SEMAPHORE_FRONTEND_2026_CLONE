@@ -66,7 +66,7 @@ if (list.length > 0) setCollegeName(list[0]);
       if (data.token) localStorage.setItem('token', data.token);
       
       const redirectUrl = searchParams.get('redirect');
-      router.push(redirectUrl ? decodeURIComponent(redirectUrl) : '/');
+      router.push(redirectUrl ? decodeURIComponent(redirectUrl) : '/user/account');
     } catch (err) {
       setError(err.message);
     } finally {
