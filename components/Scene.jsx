@@ -10,15 +10,7 @@ import Loader from "./Loader";
 import EventInfoModal from "./EventInfoModal";
 import { Info } from "lucide-react";
 import { CRITICAL_ASSETS, loadAssets, blobToTexture } from "./assetLoader";
-import { FishSchoolSimulation } from "./fish/fish-school-simulation";
-import { createClownfishSchool } from "./fish/clownfish-school";
-import { loadFishModel } from "./fish/model-loader";
-import {
-  createFishMeshByKey,
-  setFishMeshCount,
-  updateFishInstances
-} from "./fish/instanced-school-renderer";
-import { aquariumHalfSize, simulationSettings, fishConfig } from "./fish/config";
+
 import { addCoralReef } from "./CoralReef";
 import {
   seabedVertex,
@@ -3873,58 +3865,7 @@ export default function Scene() {
     const _deepAmbientColor = new THREE.Color(0x002e4d);
     const _ambientScratch = new THREE.Color();
     const _ambientUnderwaterTarget = new THREE.Color(0x006699);
-    const _fishTarget = new THREE.Vector3();
-    const _fishPathPoints = [
-      new THREE.Vector3(0, -70, -200),    // Spawn behind Event 1
-      new THREE.Vector3(15, -140, -430),  // Above Event 2
-      new THREE.Vector3(-10, -150, -508), // Above Event 3
-      new THREE.Vector3(10, -180, -618),  // Above Event 4
-      new THREE.Vector3(0, -190, -780),   // Disappear past Event 5
-    ];
-    const _fishCurve = new THREE.CatmullRomCurve3(_fishPathPoints, false);
-    _fishCurve.curveType = 'chordal';
-    _fishCurve.tension = 0.5;
-    const _fishLookTarget = new THREE.Vector3();
 
-    const clock = new THREE.Clock();
-    let animationId;
-    let frameCount = 0;
-    let lastFpsCheck = performance.now();
-
-    // --- RIPPLE AQUARIUM FISH SIMULATION INITIALIZATION ---
-    const fishGroup = new THREE.Group();
-    fishGroup.position.set(-22, -106, -318); // Place near Event 1 Crystal Shrine
-    scene.add(fishGroup);
-
-    const sardineSimulation = new FishSchoolSimulation({
-      aquariumHalfSize,
-      obstacles: [],
-      settings: { ...simulationSettings, minSpeed: 8, maxSpeed: 18 },
-    });
-    const koiSimulation = new FishSchoolSimulation({
-      aquariumHalfSize,
-      obstacles: [],
-      settings: { ...simulationSettings, minSpeed: 6, maxSpeed: 12 },
-    });
-
-    let sardineMesh = null;
-    let koiMesh = null;
-    let clownfishSchoolObj = null;
-
-    loadFishModel().then(() => {
-      sardineSimulation.reset(60);
-      sardineMesh = createFishMeshByKey(260, "cartoon");
-      setFishMeshCount(sardineMesh, 60);
-      fishGroup.add(sardineMesh);
-
-      koiSimulation.reset(24);
-      koiMesh = createFishMeshByKey(120, "koi");
-      setFishMeshCount(koiMesh, 24);
-      fishGroup.add(koiMesh);
-
-      clownfishSchoolObj = createClownfishSchool(null, { count: 18 });
-      fishGroup.add(clownfishSchoolObj.mesh);
-    }).catch(e => console.error("Error loading fish:", e));
 
     const _podForward = new THREE.Vector3();
     const _podRight = new THREE.Vector3();
@@ -3936,6 +3877,10 @@ export default function Scene() {
     const _dolphinRollQuat = new THREE.Quaternion();
     const _smoothCamTarget = new THREE.Vector3();
 
+    const clock = new THREE.Clock();
+    let animationId;
+    let frameCount = 0;
+    let lastFpsCheck = performance.now();
 
     const _eventShrinePositions = {
       1: new THREE.Vector3(-22, -106, -318),
@@ -4259,80 +4204,7 @@ export default function Scene() {
         }
       }
 
-      // Make the fish school migrate organically through Events 1 to 5 (forward only)
-      if (fishGroup) {
-        const cycleTime = 120.0; // Seconds to complete the full loop
-        const loopProgress = ((t + 100) % cycleTime) / cycleTime;
-        
-        _fishCurve.getPointAt(loopProgress, _fishTarget);
-        
-        // Since the curve is not closed, ensure we don't look past the end (progress > 1.0)
-        const lookAheadProgress = Math.min(loopProgress + 0.01, 1.0);
-        _fishCurve.getPointAt(lookAheadProgress, _fishLookTarget);
-        
-        // If we are at the very end of the curve, keep the previous rotation
-        if (lookAheadProgress > loopProgress) {
-          fishGroup.lookAt(_fishLookTarget);
-        }
-        
-        fishGroup.position.copy(_fishTarget);
-      }
 
-      // Organic School-Formation helper function
-      const applySchoolFormation = (simulation, dt, speed, length, maxRadius) => {
-        const lerpFactor = Math.min(2.5 * dt, 1.0);
-        const totalFish = simulation.fish.length;
-
-        for (let i = 0; i < totalFish; i++) {
-          const fish = simulation.fish[i];
-          const p = i / totalFish;
-
-          // Organic bobbing and swaying based on global time and individual index
-          const timeOffset = t * 1.5 + i;
-          const verticalBob = Math.sin(timeOffset * 0.8) * 2.5;
-          const horizontalSway = Math.cos(timeOffset * 0.6) * 2.0;
-
-          // Still roughly maintain a loose teardrop, but with dynamic radius
-          const baseRadius = Math.sin(p * Math.PI) * maxRadius;
-          const dynamicRadius = baseRadius + Math.sin(t * 2.0 + i) * 1.5;
-          const theta = i * 2.39996 + t * 0.2; // Slowly rotate the formation
-
-          const targetX = Math.cos(theta) * dynamicRadius + horizontalSway;
-          const targetY = Math.sin(theta) * dynamicRadius + verticalBob;
-          const targetZ = p * length; // Stretch them backwards
-
-          fish.position.lerp(_fishTarget.set(targetX, targetY, targetZ), lerpFactor);
-          
-          // Organic velocity variation creates slight wobble in their forward facing direction
-          const individualSpeed = speed + Math.sin(timeOffset) * (speed * 0.2);
-          const swayVelocityX = Math.cos(timeOffset * 0.8) * 2.0;
-          const bobVelocityY = Math.sin(timeOffset * 1.2) * 1.0;
-          
-          // Velocity controls orientation (where they are looking) and speed
-          fish.velocity.set(swayVelocityX, bobVelocityY, -individualSpeed);
-        }
-      };
-
-      // --- RIPPLE AQUARIUM FISH ANIMATION UPDATE ---
-      const dt = Math.min(clock.getDelta(), 1 / 30);
-      if (dt > 0) {
-        sardineSimulation.update(dt);
-        koiSimulation.update(dt);
-
-        applySchoolFormation(sardineSimulation, dt, 14.0, 45.0, 8.0);
-        applySchoolFormation(koiSimulation, dt, 14.0, 15.0, 4.0);
-
-        if (sardineMesh) {
-          updateFishInstances(sardineMesh, sardineSimulation.fish);
-        }
-        if (koiMesh) {
-          updateFishInstances(koiMesh, koiSimulation.fish);
-        }
-        if (clownfishSchoolObj) {
-          const timeMs = performance.now() * 0.001;
-          clownfishSchoolObj.update(timeMs, dt);
-        }
-      }
 
       postPortalMineralGroups.forEach((group, index) => {
         group.rotation.z = t * (0.025 + index * 0.004);

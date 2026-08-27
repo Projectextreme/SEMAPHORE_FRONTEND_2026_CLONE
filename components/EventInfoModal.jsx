@@ -58,6 +58,22 @@ export default function EventInfoModal({ event, onClose }) {
   const displayHeads = jsonEvent ? jsonEvent.heads : event.heads;
   const displayParticipants = jsonEvent ? jsonEvent.participants : event.participants;
 
+  useEffect(() => {
+    const handleScroll = () => {
+      onClose();
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("wheel", handleScroll, { passive: true });
+    window.addEventListener("touchmove", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("wheel", handleScroll);
+      window.removeEventListener("touchmove", handleScroll);
+    };
+  }, [onClose]);
+
   return (
     <div className="fixed inset-0 z-[100] pointer-events-none flex flex-col justify-end">
       {/* Click outside to close (invisible backdrop) */}
@@ -136,7 +152,12 @@ export default function EventInfoModal({ event, onClose }) {
               EVENT_RULES
             </div>
             
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            <div 
+              className="flex-1 overflow-y-auto pr-2 custom-scrollbar"
+              onWheel={(e) => e.stopPropagation()}
+              onScroll={(e) => e.stopPropagation()}
+              onTouchMove={(e) => e.stopPropagation()}
+            >
               {displayRules && displayRules.length > 0 ? (
                 <ul className="text-white/60 text-sm list-disc pl-5 space-y-2">
                   {displayRules.map((rule, idx) => (
