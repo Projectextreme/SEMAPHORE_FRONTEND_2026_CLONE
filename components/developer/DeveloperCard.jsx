@@ -62,15 +62,17 @@ const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, 
           )}
 
           {/* Email */}
-          <a
-            href={dev.email}
-            title="Email"
-            className="w-9 h-9 rounded-full border border-white/10 bg-white/5 hover:bg-cyan-400 hover:border-cyan-300 hover:text-slate-950 text-cyan-100 backdrop-blur-md transition-all duration-300 flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:shadow-[0_0_15px_rgba(0,219,233,0.5)] hover:-translate-y-1 focus:outline-none"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          </a>
+          {dev.email && (
+            <a
+              href={dev.email}
+              title="Email"
+              className="w-9 h-9 rounded-full border border-white/10 bg-white/5 hover:bg-cyan-400 hover:border-cyan-300 hover:text-slate-950 text-cyan-100 backdrop-blur-md transition-all duration-300 flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:shadow-[0_0_15px_rgba(0,219,233,0.5)] hover:-translate-y-1 focus:outline-none"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </a>
+          )}
 
           {/* GitHub */}
           {!hideSocials && dev.github && (
