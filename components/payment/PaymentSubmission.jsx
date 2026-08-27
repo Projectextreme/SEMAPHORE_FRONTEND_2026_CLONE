@@ -116,6 +116,12 @@ export default function PaymentSubmission() {
       return;
     }
 
+    if (utr.trim().length < 12 || utr.trim().length > 22) {
+      setError("UTR number must be between 12 and 22 characters long.");
+      setLoading(false);
+      return;
+    }
+
     if (!eventIds || eventIds.length === 0) {
       setError("No unpaid events found to pay for. Please register for at least one event first.");
       setLoading(false);
@@ -349,6 +355,8 @@ export default function PaymentSubmission() {
               onChange={(e) => setUtr(e.target.value)}
               className="block w-full px-4 py-3.5 bg-transparent text-white focus:outline-none focus:ring-0 font-medium sm:text-sm placeholder-gray-600"
               placeholder="e.g. 123456789012"
+              minLength={12}
+              maxLength={22}
               required
             />
           </div>
@@ -357,9 +365,9 @@ export default function PaymentSubmission() {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={loading || !file || !amount || !utr}
+          disabled={loading || !file || !amount || !utr || utr.trim().length < 12 || utr.trim().length > 22}
           className={`w-full py-4 px-6 rounded-xl flex items-center justify-center font-bold tracking-widest uppercase transition-all duration-300 shadow-md border ${
-            loading || !file || !amount || !utr
+            loading || !file || !amount || !utr || utr.trim().length < 12 || utr.trim().length > 22
               ? "bg-white/5 border-white/10 text-gray-500 cursor-not-allowed"
               : "bg-cyan-500/20 hover:bg-cyan-500/30 border-cyan-500/50 text-cyan-400 shadow-[0_4px_15px_rgba(13,148,136,0.1)]"
           }`}
