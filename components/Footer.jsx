@@ -36,13 +36,12 @@ export default function Footer() {
                 NAVIGATE
               </h4>
               <ul className="space-y-2.5 text-xs text-cyan-100/70">
-                <li><a href="#" className="hover:text-cyan-300 transition-colors">Surface Home</a></li>
-                <li><a href="#" className="hover:text-cyan-300 transition-colors">Deep Ocean Journey</a></li>
-                <li><a href="#" className="hover:text-cyan-300 transition-colors">Events & Competitions</a></li>
-                <li><a href="#" className="hover:text-cyan-300 transition-colors">About MCA Department</a></li>
+                <li><a href="/" className="hover:text-cyan-300 transition-colors">Home</a></li>
+                <li><a href="/events/register" className="hover:text-cyan-300 transition-colors">Events & Competitions</a></li>
+                <li><a href="https://nitte.edu.in/nmamit/department-mca.php" className="hover:text-cyan-300 transition-colors">About MCA Department</a></li>
                 <li>
                   <a
-                    href="#"
+                    href="/contact"
                     className="hover:text-cyan-300 transition-colors text-cyan-300/90 font-bold"
                   >
                     Contact & Support →
@@ -111,7 +110,7 @@ export default function Footer() {
 
             {/* Instagram SEMAPHORE.26 */}
             <a
-              href="https://www.instagram.com/semaphore_nmamit"
+              href="https://www.instagram.com/semaphore.26"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2.5 px-4 py-2 rounded-lg border border-cyan-400/20 bg-transparent text-cyan-200/70 hover:text-cyan-100 hover:border-cyan-400/40 text-xs font-mono font-semibold tracking-wider transition-all duration-300 shadow-[0_8px_20px_rgba(0,0,0,0.4)] hover:shadow-[0_12px_25px_rgba(0,219,233,0.3)] hover:-translate-y-1 group"
