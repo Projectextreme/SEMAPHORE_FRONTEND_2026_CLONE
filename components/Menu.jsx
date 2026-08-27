@@ -23,6 +23,7 @@ import {
   X,
   Menu as MenuIcon
 } from "lucide-react"
+
 const menuItems = [
   { label: 'Home', icon: Home, href: '/' },
   { label: 'Login', icon: FileEdit, href: '/user/register' },
@@ -30,7 +31,6 @@ const menuItems = [
   { label: 'Developers', icon: Code, href: '/developer' },
   { label: 'Info', icon: Info, href: '/contact' },
   { label: 'Events', icon: Calendar, href: '/events/register' },
-  { label: 'Rules', icon: BookOpen, href: '/rules' },
   { label: 'Profile', icon: User, href: '/user/account' },
 ]
 
@@ -54,8 +54,8 @@ export default function Menu() {
       <div className="fixed top-3 right-3 z-[100]">
         <DrawerTrigger render={
           <Button
-            variant="outline"
-            className="group relative bg-[#010c18]/80 hover:bg-cyan-950/60 text-cyan-300 hover:text-cyan-100 rounded-2xl border border-cyan-500/50 hover:border-cyan-400 p-5 w-16 h-16 flex items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(0,255,255,0.2)] hover:shadow-[0_0_25px_rgba(0,255,255,0.5)] overflow-hidden backdrop-blur-md"
+            variant="ghost"
+            className="group relative !bg-[#010c18]/80 hover:!bg-cyan-950/60 text-cyan-300 hover:text-cyan-100 rounded-2xl border border-cyan-500/50 hover:border-cyan-400 p-5 w-16 h-16 flex items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(0,255,255,0.2)] hover:shadow-[0_0_25px_rgba(0,255,255,0.5)] overflow-hidden backdrop-blur-md"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             {open ? (
