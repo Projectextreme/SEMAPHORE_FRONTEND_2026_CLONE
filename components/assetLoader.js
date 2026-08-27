@@ -11,11 +11,32 @@
 // It also gives us one place to do application-level caching (Cache API), so a repeat
 // visit reuses stored bytes instead of re-downloading megabytes of models/textures.
 
-const CACHE_NAME = "aquasaga-assets-v1";
-
 // Bump when an asset's CONTENTS change, so stale cached bytes are dropped.
 // (Static-export filenames under /public are not content-hashed by Next.)
-export const ASSET_VERSION = "v1";
+// v2: fish school replaced by the texture-stripped build; moon + hdri added.
+export const ASSET_VERSION = "v2";
+
+const CACHE_PREFIX = "aquasaga-assets-";
+const CACHE_NAME = CACHE_PREFIX + ASSET_VERSION;
+
+/**
+ * Delete caches from previous ASSET_VERSIONs. Without this the old 31MB fish-school
+ * blob would sit in every returning visitor's storage indefinitely, since bumping the
+ * version only makes it unreachable, not gone.
+ */
+export async function pruneOldCaches() {
+  try {
+    if (typeof caches === "undefined" || !caches.keys) return;
+    const names = await caches.keys();
+    await Promise.all(
+      names
+        .filter((n) => n.startsWith(CACHE_PREFIX) && n !== CACHE_NAME)
+        .map((n) => caches.delete(n))
+    );
+  } catch {
+    /* storage unavailable — nothing to prune */
+  }
+}
 
 /**
  * Assets required before the first frame can be rendered correctly.
@@ -23,13 +44,26 @@ export const ASSET_VERSION = "v1";
  * Content-Length replaces it as soon as response headers arrive.
  */
 export const CRITICAL_ASSETS = [
-  { key: "waterNormals", url: "/textures/waternormals.jpg", kind: "texture", bytes: 249000 },
-  { key: "dolphin", url: "/assets/models/dolphin_anim.glb", kind: "buffer", bytes: 146000 },
-  { key: "fishSchool", url: "/assets/models/source/school%20of%20fish_opt.glb", kind: "buffer", bytes: 34440000 },
-];
-
-/** Heavy, non-first-frame assets streamed in after the scene is already interactive. */
-export const SECONDARY_ASSETS = [
+  { key: "waterNormals", url: "/textures/waternormals.jpg", kind: "texture", bytes: 248813 },
+  // 1024px WebP re-encode of moon.jpg, which was a 2580x2452 / 2MB JPEG for a sphere
+  // sitting 600 units back. The original is kept at /textures/moon.jpg.
+  { key: "moon", url: "/textures/moon.webp", kind: "texture", bytes: 171622 },
+  // The four fish-school materials. Scene.jsx used to pull these inside the GLTF parse
+  // callback, so they were untracked by the bar and could land after the reveal,
+  // showing untextured fish for a beat.
+  { key: "fishTex0", url: "/assets/models/textures/gltf_embedded_0.webp", kind: "texture", bytes: 102816 },
+  { key: "fishTex5", url: "/assets/models/textures/gltf_embedded_5.webp", kind: "texture", bytes: 40086 },
+  { key: "fishTex9", url: "/assets/models/textures/gltf_embedded_9.webp", kind: "texture", bytes: 38936 },
+  { key: "fishTex13", url: "/assets/models/textures/gltf_embedded_13.webp", kind: "texture", bytes: 62988 },
+  { key: "dolphin", url: "/assets/models/dolphin_anim.glb", kind: "buffer", bytes: 146932 },
+  // Texture-stripped build of "school of fish_opt.glb". The original embedded 18 PNGs
+  // (22MB of the 31MB file) that Scene.jsx discarded anyway — it rebuilds every fish
+  // material from the four external .webp files under /assets/models/textures. Same
+  // Draco geometry and animation, byte for byte; just none of the dead weight.
+  { key: "fishSchool", url: "/assets/models/fish_school_opt.glb", kind: "buffer", bytes: 9765992 },
+  // The HDR is awaited before the curtain lifts, so it belongs in the tracked set.
+  // Fetching it outside meant ~1.5MB of work the progress bar could not see, which is
+  // why the bar used to sit at 100% while the screen stayed dark.
   { key: "hdri", url: "/hdri/spiaggia_di_mondello_1k.hdr", kind: "buffer", bytes: 1533242 },
 ];
 
@@ -164,13 +198,26 @@ export async function loadAssets(assets, onProgress, signal) {
   return { results, failures };
 }
 
-/** Decode an image blob into a THREE texture without a second network request. */
-export async function blobToTexture(THREE, blob, { srgb = true, anisotropy = 1 } = {}) {
+/**
+ * Decode an image blob into a THREE texture without a second network request.
+ *
+ * `flipY` reproduces what TextureLoader gives you for a normal HTMLImageElement.
+ * It is done by asking createImageBitmap for a pre-flipped bitmap and then leaving
+ * texture.flipY false, rather than relying on UNPACK_FLIP_Y_WEBGL being honoured for
+ * ImageBitmap sources — which varies by browser and would silently render a texture
+ * upside down.
+ */
+export async function blobToTexture(THREE, blob, { srgb = true, anisotropy = 1, flipY = false } = {}) {
   let texture;
 
   if (typeof createImageBitmap === "function") {
-    const bitmap = await createImageBitmap(blob);
+    const bitmap = await createImageBitmap(
+      blob,
+      flipY ? { imageOrientation: "flipY" } : undefined
+    );
     texture = new THREE.Texture(bitmap);
+    // The bitmap already carries the flip; a second one would undo it.
+    texture.flipY = false;
   } else {
     const url = URL.createObjectURL(blob);
     try {
@@ -181,6 +228,8 @@ export async function blobToTexture(THREE, blob, { srgb = true, anisotropy = 1 }
         el.src = url;
       });
       texture = new THREE.Texture(img);
+      // HTMLImageElement takes the conventional GL flip.
+      texture.flipY = flipY;
     } finally {
       URL.revokeObjectURL(url);
     }
