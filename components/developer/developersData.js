@@ -49,7 +49,7 @@ export const developmentTeam = [
     id: "dev-5",
     name: "Thushar R Poojary",
     role: "UI/UX Engineer",
-    image: "/assets/developer/ChatGPT_Image_Aug_7__2026__08_20_21_PM-removebg-preview.png",
+    image: "/assets/developer/thushar.png",
     initials: "TP",
     phone: "",
     email: "mailto:thusharrpoojary@gmail.com",
