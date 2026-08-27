@@ -31,6 +31,7 @@ const menuItems = [
   { label: 'Brochure', icon: BookOpen, href: '#' },
   { label: 'Developers', icon: Code, href: '/developer' },
   { label: 'Events', icon: Calendar, href: '/events/register' },
+  { label: 'Rules', icon: BookOpen, href: '/rules' },
   { label: 'Profile', icon: User, href: '/user/account' },
 ]
 
@@ -78,21 +79,21 @@ export default function Menu() {
                 key={index}
                 href={item.href}
                 className="group relative flex items-center gap-4 px-6 py-4 bg-[#010c18]/90 backdrop-blur-md hover:bg-cyan-950/60 border border-cyan-400/10 hover:border-cyan-400/60 rounded-2xl transition-all duration-300 overflow-hidden"
-                style={{ 
+                style={{
                   animation: `menuFadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards ${index * 0.08}s`,
-                  opacity: 0 
+                  opacity: 0
                 }}
               >
                 {/* Tech hover effects */}
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-cyan-400 opacity-0 group-hover:opacity-100 transition-all duration-300" />
                 <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-cyan-400 opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                
+
                 <Icon className="w-5 h-5 text-cyan-500/70 group-hover:text-cyan-300 group-hover:drop-shadow-[0_0_8px_rgba(0,255,255,0.8)] transition-all relative z-10" />
                 <span className="font-bold text-gray-300 group-hover:text-white tracking-[0.15em] uppercase text-sm relative z-10">
                   {item.label}
                 </span>
-                
+
                 <span className="ml-auto text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity font-black relative z-10 tracking-widest">
                   {'>'}
                 </span>
@@ -100,7 +101,8 @@ export default function Menu() {
             )
           })}
         </nav>
-        <style dangerouslySetInnerHTML={{__html: `
+        <style dangerouslySetInnerHTML={{
+          __html: `
           @keyframes menuFadeInUp {
             from { opacity: 0; transform: translateY(30px) scale(0.95); }
             to { opacity: 1; transform: translateY(0) scale(1); }
