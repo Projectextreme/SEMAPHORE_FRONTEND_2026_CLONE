@@ -46,10 +46,9 @@ export async function addCoralReef(scene, parentGroup) {
     for (let i = 0; i < coralCount; i++) {
       let x = (Math.random() - 0.5) * 160; 
       let z = (Math.random() - 0.5) * 80 - 10;
-      
-      // Keep away from the central path
-      if (Math.abs(x) < 25 && z > -15) {
-        x += (x > 0 ? 25 : -25);
+      // Keep completely away from the central path so the portal view is unobstructed
+      if (Math.abs(x) < 30) {
+        x += (x >= 0 ? 30 : -30);
       }
 
       let y = -40 + Math.random() * 8;

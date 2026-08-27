@@ -728,6 +728,14 @@ export default function Scene() {
 
     const scene = new THREE.Scene();
 
+    // --- PERF: Pre-allocated persistent fog ---
+    // ALWAYS attach a fog object to the scene *before* renderer.compile() is called!
+    // This forces all materials to compile with fog support (USE_FOG).
+    // If scene.fog is dynamically added later on scroll, it will trigger a massive 
+    // synchronous recompilation of all shaders, freezing the browser for 1-2 seconds.
+    const _persistentFog = new THREE.FogExp2(0x052a42, 0.0);
+    scene.fog = _persistentFog;
+
     const camera = new THREE.PerspectiveCamera(
       isMobile ? 65 : 75,
       window.innerWidth / window.innerHeight,
@@ -762,12 +770,13 @@ export default function Scene() {
       skyCanvas.height = 256;
       const sctx = skyCanvas.getContext("2d");
       const grad = sctx.createLinearGradient(0, 0, 0, 256);
-      grad.addColorStop(0.0, "#1d4e7a");
-      grad.addColorStop(0.34, "#5b9fc4");
-      grad.addColorStop(0.49, "#cfe4ec");
-      grad.addColorStop(0.52, "#e8dcc4");
-      grad.addColorStop(0.62, "#4e7f96");
-      grad.addColorStop(1.0, "#123449");
+      // Night sky gradient matching reference image
+      grad.addColorStop(0.0, "#010a15"); // Deep space top
+      grad.addColorStop(0.34, "#021124"); // Night sky
+      grad.addColorStop(0.49, "#041a37"); // Moonlit horizon
+      grad.addColorStop(0.52, "#041a37");
+      grad.addColorStop(0.62, "#021124"); // Water reflection
+      grad.addColorStop(1.0, "#010a15"); // Deep water
       sctx.fillStyle = grad;
       sctx.fillRect(0, 0, 512, 256);
       const tex = new THREE.CanvasTexture(skyCanvas);
@@ -781,7 +790,7 @@ export default function Scene() {
     // The animate loop reads `exrEnvironmentTexture` fresh each frame, so pointing it at
     // the fallback now and reassigning it later swaps the sky with no further wiring.
     let exrEnvironmentTexture = fallbackEnvTarget.texture;
-    scene.background = exrEnvironmentTexture;
+    // We intentionally leave scene.background unassigned here so it uses the Color from the animate loop
     scene.environment = exrEnvironmentTexture;
     fallbackSkySource.dispose();
 
@@ -1276,11 +1285,30 @@ export default function Scene() {
     rightChunkMesh.rotation.set(0.2, -0.6, -0.1);
     portalGroup.add(rightChunkMesh);
 
-    // Background cavern wall (occluder)
-    const backWallGeo = deformGeo(new THREE.PlaneGeometry(160, 100, 6, 5), 2.5, 7.7);
-    const backWallMesh = new THREE.Mesh(backWallGeo, archRockMat);
-    backWallMesh.position.set(0, 5, -22);
-    portalGroup.add(backWallMesh);
+    // Background cavern wall (occluder) split into 4 parts to create a completely clear hollow center passage
+    // Top
+    const backWallTopGeo = deformGeo(new THREE.PlaneGeometry(160, 20, 6, 2), 2.5, 7.7);
+    const backWallTopMesh = new THREE.Mesh(backWallTopGeo, archRockMat);
+    backWallTopMesh.position.set(0, 45, -22);
+    portalGroup.add(backWallTopMesh);
+
+    // Bottom
+    const backWallBotGeo = deformGeo(new THREE.PlaneGeometry(160, 20, 6, 2), 2.5, 7.7);
+    const backWallBotMesh = new THREE.Mesh(backWallBotGeo, archRockMat);
+    backWallBotMesh.position.set(0, -35, -22);
+    portalGroup.add(backWallBotMesh);
+
+    // Left
+    const backWallLeftGeo = deformGeo(new THREE.PlaneGeometry(40, 60, 2, 3), 2.5, 7.7);
+    const backWallLeftMesh = new THREE.Mesh(backWallLeftGeo, archRockMat);
+    backWallLeftMesh.position.set(-60, 5, -22);
+    portalGroup.add(backWallLeftMesh);
+
+    // Right
+    const backWallRightGeo = deformGeo(new THREE.PlaneGeometry(40, 60, 2, 3), 2.5, 7.7);
+    const backWallRightMesh = new THREE.Mesh(backWallRightGeo, archRockMat);
+    backWallRightMesh.position.set(60, 5, -22);
+    portalGroup.add(backWallRightMesh);
 
     // Stalactite spikes hanging from lintel
     const stalactiteData = [
@@ -3833,9 +3861,8 @@ export default function Scene() {
     const portalGroupMaterials = flattenGroupMaterials(portalGroup, portalDisc);
     let lastSurfaceStateKey = null; // tracks which fixed-opacity branch (surface/blended/underwater) was last applied
     let lastPortalApproachBlend = -1;
+    let hasInitializedEventWorld = false;
 
-    // --- PERF: Pre-allocated persistent fog to avoid per-frame `new FogExp2()` allocations ---
-    const _persistentFog = new THREE.FogExp2(0x052a42, 0.0);
     let lastScrollInt = -1; // throttle setScrollProgress to only fire on integer change
 
     // --- PERF: Reusable scratch vectors/quaternions/colors so the animate loop
@@ -3848,11 +3875,16 @@ export default function Scene() {
     const _ambientUnderwaterTarget = new THREE.Color(0x006699);
     const _fishTarget = new THREE.Vector3();
     const _fishPathPoints = [
-      new THREE.Vector3(-22, -106, -318), // Event 1
-      new THREE.Vector3(22, -186, -430),  // Event 2
-      new THREE.Vector3(-32, -186, -508), // Event 3
-      new THREE.Vector3(-32, -106, -400), // Midpoint return
+      new THREE.Vector3(0, -70, -200),    // Spawn behind Event 1
+      new THREE.Vector3(15, -140, -430),  // Above Event 2
+      new THREE.Vector3(-10, -150, -508), // Above Event 3
+      new THREE.Vector3(10, -180, -618),  // Above Event 4
+      new THREE.Vector3(0, -190, -780),   // Disappear past Event 5
     ];
+    const _fishCurve = new THREE.CatmullRomCurve3(_fishPathPoints, false);
+    _fishCurve.curveType = 'chordal';
+    _fishCurve.tension = 0.5;
+    const _fishLookTarget = new THREE.Vector3();
 
     const clock = new THREE.Clock();
     let animationId;
@@ -3971,7 +4003,7 @@ export default function Scene() {
         }
 
         renderer.setClearColor(0x041024, 1.0);
-        scene.fog = null;
+        _persistentFog.density = 0.0; // Keeps fog shader active, visually zero fog
 
         sunLight.intensity = 1.0; // Dimmer sun for night time
         ambientLight.color.setHex(0x0a1526); // Darker ambient light
@@ -3984,13 +4016,13 @@ export default function Scene() {
         waterUnderside.visible = true;
         caveMesh.visible = true;
         caveMaterial.transparent = true;
-        caveMaterial.opacity = 0.4;
+        caveMaterial.opacity = 1.0;
         bgMountainsGroup.visible = true;
         sideCliffGroup.visible = true;
 
         if (lastSurfaceStateKey !== "surface") {
-          setMaterialsOpacity(sideCliffMaterials, 0.4);
-          setMaterialsOpacity(bgMountainMaterials, 0.4);
+          setMaterialsOpacity(sideCliffMaterials, 1.0);
+          setMaterialsOpacity(bgMountainMaterials, 1.0);
           portalBackdropMat.color.copy(caveFogColor);
           lastSurfaceStateKey = "surface";
         }
@@ -4004,13 +4036,8 @@ export default function Scene() {
 
         // Use pre-allocated fog object to avoid per-frame allocations
         const targetFogDensity = camState.fogDensity * 0.5 * underwaterBlend;
-        if (targetFogDensity > 0.0001) {
-          _persistentFog.color.copy(caveFogColor);
-          _persistentFog.density = targetFogDensity;
-          scene.fog = _persistentFog;
-        } else {
-          scene.fog = null;
-        }
+        _persistentFog.color.copy(caveFogColor);
+        _persistentFog.density = targetFogDensity;
 
         sunLight.intensity = THREE.MathUtils.lerp(1.0, Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6)), underwaterBlend);
         // Use pre-allocated scratch color to avoid per-frame `new Color()` allocations
@@ -4018,8 +4045,8 @@ export default function Scene() {
         ambientLight.color.copy(_ambientScratch);
         ambientLight.intensity = THREE.MathUtils.lerp(1.0, 1.6, underwaterBlend);
 
-        // Smooth opacity crossfade: 0.4 at surface -> 1.0 fully underwater
-        const rockOpacity = THREE.MathUtils.lerp(0.4, 1.0, underwaterBlend);
+        // Keep opacity at 1.0
+        const rockOpacity = 1.0;
 
         // Meshes always remain visible
         skyGroup.visible = true;
@@ -4044,7 +4071,6 @@ export default function Scene() {
         // Use pre-allocated fog object
         _persistentFog.color.copy(caveFogColor);
         _persistentFog.density = camState.fogDensity * 0.5;
-        scene.fog = _persistentFog;
 
         sunLight.intensity = Math.max(0.6, 2.4 * (1.0 - depthFactor * 0.6));
         ambientLight.color.setHex(0x006699).lerp(_deepAmbientColor, depthFactor);
@@ -4081,22 +4107,32 @@ export default function Scene() {
       // STRICT REQUIREMENT: Event World is STRICTLY INVISIBLE until camera passes inside circular portal ring (camState.z < -185)!
       // Cut/hide caveMesh inside the portal so no cavern tunnel mesh ever obstructs or blocks event visibility!
       if (camState.z < -185) {
-        newWorldGroup.visible = true;
-        sideCliffGroup.visible = true;
-        caveMesh.visible = false;
-        portalBackdropMesh.visible = false;
-      } else {
-        newWorldGroup.visible = true;
-        portalBackdropMesh.visible = true;
+        hasInitializedEventWorld = true;
       }
 
-      // Shroud Portal Structure in Deep Water Fog until camera approaches (camState.y: -20.0 down to -75.0)
-      const portalApproachRaw = THREE.MathUtils.clamp((-20.0 - camState.y) / 55.0, 0.0, 1.0);
-      const portalApproachBlend = THREE.MathUtils.lerp(0.2, 1.0, THREE.MathUtils.smoothstep(portalApproachRaw, 0.0, 1.0));
+      newWorldGroup.visible = true;
+      sideCliffGroup.visible = true;
 
-      if (Math.abs(portalApproachBlend - lastPortalApproachBlend) > 0.0005) {
-        setMaterialsOpacity(portalGroupMaterials, portalApproachBlend);
-        lastPortalApproachBlend = portalApproachBlend;
+      if (camState.z < -185) {
+        portalBackdropMesh.visible = false;
+      } else {
+        portalBackdropMesh.visible = !hasInitializedEventWorld;
+      }
+
+      if (camState.z < -190) {
+        // Smoothly fade out the cave so we don't get a black frame or sudden pop
+        const caveFade = THREE.MathUtils.clamp((-190 - camState.z) / 40.0, 0.0, 1.0);
+        caveMaterial.opacity = 1.0 - caveFade;
+        caveMesh.visible = caveFade < 1.0;
+      } else {
+        caveMaterial.opacity = 1.0;
+        caveMesh.visible = true;
+      }
+
+      // Portal Structure is fully visible from the beginning per user request
+      if (lastPortalApproachBlend !== 1.0) {
+        setMaterialsOpacity(portalGroupMaterials, 1.0);
+        lastPortalApproachBlend = 1.0;
       }
 
       // Update Portal Vortex Shader and Flow Field Water Particles
@@ -4223,56 +4259,26 @@ export default function Scene() {
         }
       }
 
-      // Make the fish school migrate between Event 1, 2, and 3
+      // Make the fish school migrate organically through Events 1 to 5 (forward only)
       if (fishGroup) {
-        const speed = 14.0; // Migration speed (units per second)
-        let totalDist = 0;
-        const distances = [];
-        for (let i = 0; i < _fishPathPoints.length; i++) {
-          const p1 = _fishPathPoints[i];
-          const p2 = _fishPathPoints[(i + 1) % _fishPathPoints.length];
-          const d = p1.distanceTo(p2);
-          distances.push(d);
-          totalDist += d;
+        const cycleTime = 120.0; // Seconds to complete the full loop
+        const loopProgress = ((t + 100) % cycleTime) / cycleTime;
+        
+        _fishCurve.getPointAt(loopProgress, _fishTarget);
+        
+        // Since the curve is not closed, ensure we don't look past the end (progress > 1.0)
+        const lookAheadProgress = Math.min(loopProgress + 0.01, 1.0);
+        _fishCurve.getPointAt(lookAheadProgress, _fishLookTarget);
+        
+        // If we are at the very end of the curve, keep the previous rotation
+        if (lookAheadProgress > loopProgress) {
+          fishGroup.lookAt(_fishLookTarget);
         }
-
-        const cycleTime = totalDist / speed;
-        // Add a large time offset so they don't always start at Event 1 at t=0
-        const currentDist = ((t + 100) % cycleTime) * speed;
-
-        let dAccum = 0;
-        for (let i = 0; i < _fishPathPoints.length; i++) {
-          if (currentDist <= dAccum + distances[i]) {
-            const progress = (currentDist - dAccum) / distances[i];
-            const p1 = _fishPathPoints[i];
-            const p2 = _fishPathPoints[(i + 1) % _fishPathPoints.length];
-            _fishTarget.lerpVectors(p1, p2, progress);
-
-            // Look ahead to rotate the fish group towards travel direction
-            const lookAheadDist = currentDist + 1.0;
-            const lookAheadCycle = lookAheadDist % totalDist;
-            let dAccumAhead = 0;
-            const lookTarget = new THREE.Vector3();
-            for (let j = 0; j < _fishPathPoints.length; j++) {
-              if (lookAheadCycle <= dAccumAhead + distances[j]) {
-                const progressAhead = (lookAheadCycle - dAccumAhead) / distances[j];
-                const p1Ahead = _fishPathPoints[j];
-                const p2Ahead = _fishPathPoints[(j + 1) % _fishPathPoints.length];
-                lookTarget.lerpVectors(p1Ahead, p2Ahead, progressAhead);
-                fishGroup.lookAt(lookTarget);
-                break;
-              }
-              dAccumAhead += distances[j];
-            }
-
-            fishGroup.position.copy(_fishTarget);
-            break;
-          }
-          dAccum += distances[i];
-        }
+        
+        fishGroup.position.copy(_fishTarget);
       }
 
-      // School-Formation helper function (Teardrop Spindle)
+      // Organic School-Formation helper function
       const applySchoolFormation = (simulation, dt, speed, length, maxRadius) => {
         const lerpFactor = Math.min(2.5 * dt, 1.0);
         const totalFish = simulation.fish.length;
@@ -4281,17 +4287,29 @@ export default function Scene() {
           const fish = simulation.fish[i];
           const p = i / totalFish;
 
-          // Math.sin(p * Math.PI) creates a curve that starts at 0, goes to 1 in the middle, and back to 0
-          const radius = Math.sin(p * Math.PI) * maxRadius;
-          const theta = i * 2.39996; // Golden angle for even distribution
+          // Organic bobbing and swaying based on global time and individual index
+          const timeOffset = t * 1.5 + i;
+          const verticalBob = Math.sin(timeOffset * 0.8) * 2.5;
+          const horizontalSway = Math.cos(timeOffset * 0.6) * 2.0;
 
-          const targetX = Math.cos(theta) * radius;
-          const targetY = Math.sin(theta) * radius;
+          // Still roughly maintain a loose teardrop, but with dynamic radius
+          const baseRadius = Math.sin(p * Math.PI) * maxRadius;
+          const dynamicRadius = baseRadius + Math.sin(t * 2.0 + i) * 1.5;
+          const theta = i * 2.39996 + t * 0.2; // Slowly rotate the formation
+
+          const targetX = Math.cos(theta) * dynamicRadius + horizontalSway;
+          const targetY = Math.sin(theta) * dynamicRadius + verticalBob;
           const targetZ = p * length; // Stretch them backwards
 
           fish.position.lerp(_fishTarget.set(targetX, targetY, targetZ), lerpFactor);
-          // Force velocity to point locally "forward" (-Z) so they animate swimming continuously
-          fish.velocity.set(0, 0, -speed);
+          
+          // Organic velocity variation creates slight wobble in their forward facing direction
+          const individualSpeed = speed + Math.sin(timeOffset) * (speed * 0.2);
+          const swayVelocityX = Math.cos(timeOffset * 0.8) * 2.0;
+          const bobVelocityY = Math.sin(timeOffset * 1.2) * 1.0;
+          
+          // Velocity controls orientation (where they are looking) and speed
+          fish.velocity.set(swayVelocityX, bobVelocityY, -individualSpeed);
         }
       };
 
@@ -4757,7 +4775,7 @@ export default function Scene() {
                 texture.mapping = THREE.EquirectangularReflectionMapping;
                 const cubeRenderTarget = pmremGenerator.fromEquirectangular(texture);
                 exrEnvironmentTexture = cubeRenderTarget.texture;
-                scene.background = cubeRenderTarget.texture;
+                // Omit setting scene.background so we don't flash a bright daytime beach sky
                 scene.environment = cubeRenderTarget.texture;
                 fallbackEnvTarget.dispose();
                 texture.dispose();
