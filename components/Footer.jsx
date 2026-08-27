@@ -36,13 +36,12 @@ export default function Footer() {
                 NAVIGATE
               </h4>
               <ul className="space-y-2.5 text-xs text-cyan-100/70">
-                <li><a href="#" className="hover:text-cyan-300 transition-colors">Surface Home</a></li>
-                <li><a href="#" className="hover:text-cyan-300 transition-colors">Deep Ocean Journey</a></li>
-                <li><a href="#" className="hover:text-cyan-300 transition-colors">Events & Competitions</a></li>
-                <li><a href="#" className="hover:text-cyan-300 transition-colors">About MCA Department</a></li>
+                <li><a href="/" className="hover:text-cyan-300 transition-colors">Surface Home</a></li>
+                <li><a href="/events/register" className="hover:text-cyan-300 transition-colors">Events & Competitions</a></li>
+                <li><a href="https://nitte.edu.in/nmamit/department-mca.php" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-300 transition-colors">About MCA Department</a></li>
                 <li>
                   <a
-                    href="#"
+                    href="/contact"
                     className="hover:text-cyan-300 transition-colors text-cyan-300/90 font-bold"
                   >
                     Contact & Support →
