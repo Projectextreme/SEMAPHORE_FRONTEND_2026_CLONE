@@ -72,7 +72,7 @@ export default function RulePage() {
         @import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:wght@400;600&family=Space+Mono:wght@400;700&display=swap");
 
         :root {
-          --deep: #0b1622;
+          --deep: #0c1b2b;
           --deep-2: #12202f;
           --steel: #2c3d4f;
           --ocean: #0d5a92;
