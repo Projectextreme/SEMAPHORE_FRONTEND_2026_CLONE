@@ -141,7 +141,7 @@ if (list.length > 0) setCollegeName(list[0]);
 
             <div className="text-center">
               <h2 className="text-2xl sm:text-3xl md:text-4xl whitespace-nowrap font-black tracking-[0.1em] uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-400 drop-shadow-[0_0_25px_rgba(0,219,233,0.8)]">
-                Register
+                Register/Login
               </h2>
               <p className="text-xs sm:text-sm font-mono tracking-[0.15em] text-cyan-200/80 mt-2">
                 SELECT YOUR COLLEGE, THEN CONTINUE WITH GOOGLE

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import WaterWave from '@/components/WaterWaveWrapper';
+import { TEAM_REGISTRATION_FEE } from '@/constants/pricing';
+import { fetchPaymentDone } from '@/lib/paymentStatus';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 
@@ -156,6 +158,10 @@ export default function EventsPage() {
   const [registeredEventMap, setRegisteredEventMap] = useState({});
   const [globalPaymentStatus, setGlobalPaymentStatus] = useState(null);
   const [globalPendingAmount, setGlobalPendingAmount] = useState(0);
+  // The team fee is charged once. If the backend says an approved payment already
+  // exists for this user or their team, every "pay ₹2000" prompt on this page has
+  // to disappear — a second event must not be billed a second time.
+  const [feeAlreadyPaid, setFeeAlreadyPaid] = useState(false);
 
   // User profile and team status
   const [userProfile, setUserProfile] = useState(null);
@@ -270,6 +276,18 @@ export default function EventsPage() {
           }
         }
 
+        // Does the team already have an approved payment on file? Asked before the
+        // registrations are mapped, so the per-event status below can be marked
+        // "covered" instead of "payment due".
+        let alreadyPaid = false;
+        try {
+          const { isPaymentDone } = await fetchPaymentDone(token);
+          alreadyPaid = isPaymentDone;
+          setFeeAlreadyPaid(isPaymentDone);
+        } catch (err) {
+          console.error("Failed to check payment status", err);
+        }
+
         // Fetch user registrations
         try {
           const regRes = await fetch(`${API_BASE_URL}/api/registrations`, {
@@ -297,6 +315,12 @@ export default function EventsPage() {
                   const hasApproved = payments.some(p => p.status === 'approved' || p.status === 'verified');
                   const hasPending = payments.some(p => p.status === 'pending' || p.status === 'submitted');
                   pStatus = hasApproved ? 'approved' : (hasPending ? 'pending' : 'unpaid');
+                }
+
+                // No payment record of its own, but the fee is already settled for
+                // this team: the event is covered, not owed.
+                if (pStatus === 'unpaid' && alreadyPaid) {
+                  pStatus = 'covered';
                 }
 
                 if (pStatus === 'unpaid') {
@@ -427,17 +451,6 @@ export default function EventsPage() {
     return true;
   };
 
-  // Calculate Total Amount based on correctly filled events
-  const calculateTotal = () => {
-    let total = 0;
-    for (const event of events) {
-      if (!registeredEventIds.includes(event._id) && isFormValid(event._id)) {
-        total += (event.registrationFee || 0);
-      }
-    }
-    return total;
-  };
-
   const getValidForms = () => {
     const valid = [];
     for (const event of events) {
@@ -515,7 +528,6 @@ export default function EventsPage() {
 
       // Extract newly registered event IDs
       const newlyRegisteredIds = validForms.map(f => f.event._id);
-      const newlyRegisteredFee = validForms.reduce((sum, f) => sum + (f.event.registrationFee || 0), 0);
 
       setRegisteredEventIds(prev => Array.from(new Set([...prev, ...newlyRegisteredIds])));
 
@@ -523,16 +535,40 @@ export default function EventsPage() {
       setRegisteredEventMap(prev => {
         const nextMap = { ...prev };
         newlyRegisteredIds.forEach(id => {
-          nextMap[id] = { status: 'unpaid' };
+          nextMap[id] = { status: feeAlreadyPaid ? 'covered' : 'unpaid' };
         });
         return nextMap;
       });
 
-      setGlobalSuccess(data.message || `Successfully registered for ${validForms.length} event(s)! Redirecting to payment...`);
       localStorage.removeItem('event_cart_draft'); // Clear global draft
 
+      // Re-check rather than trusting the flag from page load: the user may have had
+      // a payment approved while this tab sat open, and a stale "false" would bill
+      // them a second time for a fee they have already settled.
+      const { isPaymentDone } = await fetchPaymentDone(token);
+      if (isPaymentDone) {
+        setFeeAlreadyPaid(true);
+        setRegisteredEventMap(prev => {
+          const nextMap = { ...prev };
+          newlyRegisteredIds.forEach(id => {
+            nextMap[id] = { status: 'covered' };
+          });
+          return nextMap;
+        });
+        setGlobalPendingAmount(0);
+        setFormsData({});
+        setExpandedEventId(null);
+        setGlobalSuccess(
+          `Successfully registered for ${validForms.length} event(s)! Your registration fee is already paid, so there is nothing more to pay.`
+        );
+        return;
+      }
+
+      setGlobalSuccess(data.message || `Successfully registered for ${validForms.length} event(s)! Redirecting to payment...`);
+
       setTimeout(() => {
-        sessionStorage.setItem('pendingPaymentAmount', newlyRegisteredFee);
+        // One team fee covers the whole registration, however many events it holds.
+        sessionStorage.setItem('pendingPaymentAmount', TEAM_REGISTRATION_FEE);
         sessionStorage.setItem('pendingEventIds', JSON.stringify(newlyRegisteredIds));
         router.push('/user/account/payment');
       }, 1500);
@@ -551,11 +587,7 @@ export default function EventsPage() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
-  const totalAmount = calculateTotal();
-  const readyItems = getValidForms();
-  const validFormsCount = readyItems.length;
-  const selectableCount = events.filter((e) => !registeredEventIds.includes(e._id)).length;
-  const progressPct = selectableCount > 0 ? Math.round((validFormsCount / selectableCount) * 100) : 0;
+  const validFormsCount = getValidForms().length;
   const checkoutDisabled = submitting || validFormsCount === 0;
 
   return (
@@ -697,7 +729,7 @@ export default function EventsPage() {
                       const pStatus = eventRegInfo?.status || 'unpaid';
 
                       const accent = isRegistered
-                        ? (pStatus === 'approved' ? '#10b981' : pStatus === 'pending' ? '#f59e0b' : '#fb923c')
+                        ? (pStatus === 'approved' || pStatus === 'covered' ? '#10b981' : pStatus === 'pending' ? '#f59e0b' : '#fb923c')
                         : isValid
                           ? '#22d3ee'
                           : 'rgba(255,255,255,0.10)';
@@ -705,9 +737,11 @@ export default function EventsPage() {
                       const statusChip = isRegistered
                         ? (pStatus === 'approved'
                           ? { text: 'Confirmed', bg: 'rgba(16,185,129,0.15)', color: '#6ee7b7', border: 'rgba(16,185,129,0.40)' }
-                          : pStatus === 'pending'
-                            ? { text: 'Verifying', bg: 'rgba(245,158,11,0.15)', color: '#fcd34d', border: 'rgba(245,158,11,0.40)' }
-                            : { text: 'Payment due', bg: 'rgba(249,115,22,0.15)', color: '#fdba74', border: 'rgba(249,115,22,0.40)' })
+                          : pStatus === 'covered'
+                            ? { text: 'Fee paid', bg: 'rgba(16,185,129,0.15)', color: '#6ee7b7', border: 'rgba(16,185,129,0.40)' }
+                            : pStatus === 'pending'
+                              ? { text: 'Verifying', bg: 'rgba(245,158,11,0.15)', color: '#fcd34d', border: 'rgba(245,158,11,0.40)' }
+                              : { text: 'Payment due', bg: 'rgba(249,115,22,0.15)', color: '#fdba74', border: 'rgba(249,115,22,0.40)' })
                         : isValid
                           ? { text: '✓ In cart', bg: 'rgba(34,211,238,0.15)', color: '#67e8f9', border: 'rgba(34,211,238,0.40)' }
                           : participants.length > 0
@@ -758,6 +792,12 @@ export default function EventsPage() {
                               <button disabled style={{ ...styles.actionBtn, background: 'rgba(16,185,129,0.18)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.35)', cursor: 'not-allowed' }}>
                                 ✓ Registered &amp; Verified
                               </button>
+                            ) : pStatus === 'covered' ? (
+                              // The fee is already settled for this team, so this event
+                              // costs nothing extra — never show a payment button here.
+                              <button disabled style={{ ...styles.actionBtn, background: 'rgba(16,185,129,0.18)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.35)', cursor: 'not-allowed' }}>
+                                ✓ Registered — Fee Already Paid
+                              </button>
                             ) : pStatus === 'pending' ? (
                               <button disabled style={{ ...styles.actionBtn, background: 'rgba(245,158,11,0.18)', color: '#fcd34d', border: '1px solid rgba(245,158,11,0.35)', cursor: 'not-allowed' }}>
                                 ⏳ Payment Verification Pending
@@ -766,13 +806,13 @@ export default function EventsPage() {
                               <button
                                 className="reg-btn"
                                 onClick={() => {
-                                  sessionStorage.setItem('pendingPaymentAmount', event.registrationFee || 0);
+                                  sessionStorage.setItem('pendingPaymentAmount', TEAM_REGISTRATION_FEE);
                                   sessionStorage.setItem('pendingEventIds', JSON.stringify([event._id]));
                                   router.push('/user/account/payment');
                                 }}
                                 style={{ ...styles.actionBtn, background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
                               >
-                                Complete Payment (₹{event.registrationFee || 0})
+                                Complete Payment (₹{TEAM_REGISTRATION_FEE})
                               </button>
                             )
                           ) : !isExpanded ? (
@@ -890,98 +930,6 @@ export default function EventsPage() {
           {/* -------- RIGHT: checkout summary, pinned while the left column scrolls -------- */}
           <aside className="reg-summary">
             <div style={styles.summaryCard} className="reg-summary-card">
-              <div style={styles.summaryHeader}>
-                <h3 style={styles.summaryTitle}>Order Summary</h3>
-                <span
-                  style={{
-                    ...styles.summaryBadge,
-                    ...(validFormsCount === 0 ? styles.summaryBadgeIdle : null),
-                  }}
-                >
-                  {validFormsCount} ready
-                </span>
-              </div>
-
-              {/* Pips while the count is small enough to read at a glance;
-                  a continuous bar once there are too many to distinguish. */}
-              {selectableCount > 0 && selectableCount <= 10 ? (
-                <div
-                  className="reg-steps"
-                  role="progressbar"
-                  aria-valuenow={validFormsCount}
-                  aria-valuemin={0}
-                  aria-valuemax={selectableCount}
-                >
-                  {Array.from({ length: selectableCount }).map((_, i) => (
-                    <span key={i} className={`reg-step${i < validFormsCount ? ' is-done' : ''}`} />
-                  ))}
-                </div>
-              ) : (
-                <div style={styles.progressTrack}>
-                  <div style={{ ...styles.progressFill, width: `${progressPct}%` }} />
-                </div>
-              )}
-              <p style={styles.progressLabel}>
-                <strong style={styles.progressStrong}>{validFormsCount}</strong> of {selectableCount} event
-                {selectableCount === 1 ? '' : 's'} ready to check out
-              </p>
-
-              <div style={styles.summaryList} className="reg-scroll reg-summary-list" data-lenis-prevent-wheel>
-                {readyItems.length === 0 ? (
-                  <div style={styles.emptyState}>
-                    {/* Inline SVG, not an emoji: the wave glyph rendered as an
-                        unreadable blob on Windows and is off-palette besides. */}
-                    <span style={styles.emptyIconWrap}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6Z" />
-                        <path d="M12 8v8" strokeDasharray="2 3" />
-                      </svg>
-                    </span>
-                    <p style={styles.emptyText}>Your cart is empty</p>
-                    <p style={styles.emptySub}>Fill in every participant&apos;s name &amp; phone on an event to add it here.</p>
-                  </div>
-                ) : (
-                  readyItems.map(({ event, participants }) => (
-                    <button
-                      key={event._id}
-                      type="button"
-                      className="reg-summary-item"
-                      style={styles.summaryItem}
-                      onClick={() => {
-                        setExpandedEventId(event._id);
-                        scrollToEvent(event._id);
-                      }}
-                    >
-                      <span style={styles.summaryItemMain}>
-                        <span style={styles.summaryItemTitle}>{event.title}</span>
-                        <span style={styles.summaryItemMeta}>
-                          {participants.length} participant{participants.length > 1 ? 's' : ''}
-                        </span>
-                      </span>
-                      <span style={styles.summaryItemFee}>₹{event.registrationFee || 0}</span>
-                    </button>
-                  ))
-                )}
-              </div>
-
-              {globalPendingAmount > 0 && (
-                <div style={styles.pendingNote}>
-                  ⏳ ₹{globalPendingAmount} pending from earlier registrations.
-                </div>
-              )}
-
-              <div style={styles.totalRow}>
-                <span style={styles.totalLabel}>
-                  Total Amount
-                  {validFormsCount > 0 && (
-                    <span style={styles.totalMeta}>
-                      {validFormsCount} event{validFormsCount > 1 ? 's' : ''} in cart
-                    </span>
-                  )}
-                </span>
-                <span key={totalAmount} className="reg-pop" style={styles.totalValue}>₹{totalAmount}</span>
-              </div>
-
               {!hasTeam && (
                 <div style={styles.teamWarn}>Set your team name above to unlock checkout.</div>
               )}
@@ -1000,9 +948,21 @@ export default function EventsPage() {
                     ...(checkoutDisabled ? styles.checkoutBtnDisabled : null),
                   }}
                 >
-                  {submitting ? 'Processing…' : totalAmount > 0 ? `Save & Pay ₹${totalAmount}` : 'Save & Make Payment'}
+                  {submitting
+                    ? 'Processing…'
+                    : feeAlreadyPaid
+                      ? 'Confirm Registration'
+                      : 'Save & Make Payment'}
                 </button>
               </div>
+
+              {/* The fee is per team and already settled — say so where the user is
+                  about to expect a payment step. */}
+              {feeAlreadyPaid && (
+                <div style={styles.paidNotice}>
+                  ✓ Registration fee already paid — new events cost you nothing extra.
+                </div>
+              )}
 
               {/* Say what is blocking checkout. A greyed-out button on its own
                   reads as broken rather than as waiting on the user. */}
@@ -1495,6 +1455,17 @@ const styles = {
   },
   totalMeta: { fontSize: 11, fontWeight: 600, color: '#67e8f9' },
   totalValue: { fontSize: 26, fontWeight: 800, color: '#ffffff', letterSpacing: -0.5 },
+  paidNotice: {
+    marginTop: 12,
+    padding: '10px 12px',
+    borderRadius: 12,
+    backgroundColor: 'rgba(16,185,129,0.12)',
+    border: '1px solid rgba(16,185,129,0.35)',
+    color: '#6ee7b7',
+    fontSize: 12,
+    fontWeight: 600,
+    lineHeight: 1.5,
+  },
   teamWarn: {
     fontSize: 12,
     fontWeight: 600,

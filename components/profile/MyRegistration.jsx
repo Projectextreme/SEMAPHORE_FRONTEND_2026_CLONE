@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from 'next/navigation';
 import { User, Phone } from 'lucide-react';
+import { TEAM_REGISTRATION_FEE } from '@/constants/pricing';
+import { fetchPaymentDone } from '@/lib/paymentStatus';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://13.201.89.79';
 
@@ -14,6 +16,11 @@ export default function MyRegistration({ user: initialUser }) {
 
   // Modal state for viewing payment screenshot & details
   const [activeProofModal, setActiveProofModal] = useState(null);
+
+  // The fee is charged once per team. If the backend already has an approved payment
+  // for this user or a team-mate, nothing is due — however many events were added
+  // afterwards without a payment record of their own.
+  const [feeAlreadyPaid, setFeeAlreadyPaid] = useState(false);
 
   const router = useRouter();
 
@@ -91,6 +98,14 @@ export default function MyRegistration({ user: initialUser }) {
     };
 
     fetchVerifiedUserData();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchPaymentDone().then(({ isPaymentDone }) => {
+      if (!cancelled) setFeeAlreadyPaid(isPaymentDone);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   // Helper to extract clean payment info from a registration item
@@ -175,17 +190,17 @@ export default function MyRegistration({ user: initialUser }) {
     };
   }, [events]);
 
-  const totalUnpaidAmount = unpaidEvents.reduce((sum, item) => {
-    return sum + (item.eventId?.registrationFee || 0);
-  }, 0);
-
-  // Calculate true total due: unpaid events + events in rejected payments
+  // Anything still owed: events never paid for, plus events whose payment was
+  // rejected or failed.
   const rejectedGroups = paidGroups.filter(g => g.payment.status === 'rejected' || g.payment.status === 'failed');
-  const rejectedEventsAmount = rejectedGroups.reduce((total, group) => {
-    return total + group.events.reduce((sum, e) => sum + (e.eventId?.registrationFee || 0), 0);
-  }, 0);
-  
-  const trueTotalUnpaidAmount = totalUnpaidAmount + rejectedEventsAmount;
+  const rejectedEventsCount = rejectedGroups.reduce((total, group) => total + group.events.length, 0);
+  // …unless the one team fee is already paid and approved, in which case those
+  // events are simply covered by it and nothing is owed.
+  const hasOutstandingDues = !feeAlreadyPaid && (unpaidEvents.length > 0 || rejectedEventsCount > 0);
+
+  // Priced per team, not per event: an outstanding balance is the one flat fee,
+  // whatever mix of events sits behind it.
+  const trueTotalUnpaidAmount = hasOutstandingDues ? TEAM_REGISTRATION_FEE : 0;
 
   if (loading) {
     return (
@@ -430,10 +445,17 @@ export default function MyRegistration({ user: initialUser }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1.5 gap-2">
                       <h3 className="text-lg font-extrabold text-white truncate">{ev.title || 'Unknown Event'}</h3>
-                      <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-red-500/10 text-red-400 px-3 py-1 rounded-full border border-red-500/30 whitespace-nowrap self-start">
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Payment Required
-                      </span>
+                      {feeAlreadyPaid ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/30 whitespace-nowrap self-start">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
+                          Covered by Paid Fee
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-red-500/10 text-red-400 px-3 py-1 rounded-full border border-red-500/30 whitespace-nowrap self-start">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                          Payment Required
+                        </span>
+                      )}
                     </div>
                     {dateStr && (
                       <p className="text-sm text-gray-400 flex items-center gap-2.5 mb-1.5 font-medium">
@@ -516,7 +538,9 @@ export default function MyRegistration({ user: initialUser }) {
             disabled
           >
             <span className="flex items-center justify-center gap-2 font-bold">
-              All Registrations Paid & Up to Date
+              {feeAlreadyPaid
+                ? `Registration Fee Paid (₹${TEAM_REGISTRATION_FEE}) — Nothing Left to Pay`
+                : 'All Registrations Paid & Up to Date'}
             </span>
           </button>
         )}
