@@ -220,7 +220,7 @@ export default function ContactPage() {
                       key={idx} 
                       className={`flex items-start space-x-3 text-sm sm:text-base leading-relaxed tracking-wide ${isLast ? 'font-bold text-cyan-50 mt-6 pt-4 border-t border-white/10' : ''}`}
                     >
-                      <span className="text-cyan-400 mt-0.5">{isLast ? '⚠️' : '▹'}</span>
+                      <span className="text-cyan-400 mt-0.5">{isLast ? '⚠️ ' : '▹'}</span>
                       <span>{rule}</span>
                     </li>
                   );
