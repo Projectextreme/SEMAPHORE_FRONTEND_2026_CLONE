@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 
-const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, hideSocials }) => (
-  <div key={dev.id} className="relative group w-full sm:w-[calc(50%-1.25rem)] lg:w-[calc(25%-1.125rem)] min-w-[260px] max-w-[350px] flex-shrink-0 [perspective:1000px]">
+const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, hideSocials }) => {
+  return (
+    <div key={dev.id} className="relative group w-full sm:w-[calc(50%-1.25rem)] lg:w-[calc(25%-1.125rem)] min-w-[260px] max-w-[350px] flex-shrink-0 [perspective:1000px]">
 
     {/* 3D Glass Card */}
     <div
@@ -22,7 +23,7 @@ const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, 
               src={dev.image}
               alt={dev.name}
               onError={() => handleImageError(dev.id)}
-              className="w-full h-full rounded-full object-cover group-hover:scale-110 transition-transform duration-500"
+              className={`w-full h-full rounded-full object-cover transition-transform duration-500 ${dev.imagePosition || "object-top"} ${dev.imageScale || "scale-[1.15] group-hover:scale-125"}`}
             />
           ) : (
             <div className="w-full h-full rounded-full bg-gradient-to-br from-cyan-900/50 to-slate-900/50 flex items-center justify-center text-cyan-300 font-mono font-bold text-2xl shadow-inner">
@@ -42,20 +43,23 @@ const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, 
         </span>
       </div>
 
-      {/* Contact Action Icons */}
+      {/* Contact Action Icons & Hover Info */}
       {!hideAllContacts && (
-        <div className="flex items-center justify-center space-x-3 mt-6 w-full relative z-10 [transform:translateZ(20px)] transition-transform duration-500">
+        <div className="mt-6 w-full relative z-10 [transform:translateZ(20px)] transition-transform duration-500 flex flex-col items-center">
+          <div className="flex items-center justify-center space-x-3 w-full">
 
           {/* Phone / Call */}
-          <a
-            href={dev.phone}
-            title="Call"
-            className="w-9 h-9 rounded-full border border-white/10 bg-white/5 hover:bg-cyan-400 hover:border-cyan-300 hover:text-slate-950 text-cyan-100 backdrop-blur-md transition-all duration-300 flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:shadow-[0_0_15px_rgba(0,219,233,0.5)] hover:-translate-y-1 focus:outline-none"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-            </svg>
-          </a>
+          {dev.phone && (
+            <a
+              href={dev.phone}
+              title="Call"
+              className="w-9 h-9 rounded-full border border-white/10 bg-white/5 hover:bg-cyan-400 hover:border-cyan-300 hover:text-slate-950 text-cyan-100 backdrop-blur-md transition-all duration-300 flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:shadow-[0_0_15px_rgba(0,219,233,0.5)] hover:-translate-y-1 focus:outline-none"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+            </a>
+          )}
 
           {/* Email */}
           <a
@@ -69,7 +73,7 @@ const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, 
           </a>
 
           {/* GitHub */}
-          {!hideSocials && (
+          {!hideSocials && dev.github && (
             <a
               href={dev.github}
               target="_blank"
@@ -84,7 +88,7 @@ const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, 
           )}
 
           {/* LinkedIn */}
-          {!hideSocials && (
+          {!hideSocials && dev.linkedin && (
             <a
               href={dev.linkedin}
               target="_blank"
@@ -98,9 +102,23 @@ const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, 
             </a>
           )}
         </div>
+
+          {/* Hover Info (Phone and Email) */}
+          <div className="flex flex-col items-center justify-center mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none translate-y-2 group-hover:translate-y-0 h-[36px]">
+            {dev.phone && (
+              <div className="text-[10px] sm:text-xs font-mono text-cyan-200 tracking-widest drop-shadow-md">
+                {dev.phone.replace('tel:', '')}
+              </div>
+            )}
+            <div className="text-[10px] sm:text-xs font-mono text-cyan-200 tracking-widest drop-shadow-md">
+              {dev.email.replace('mailto:', '')}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   </div>
-);
+  );
+};
 
 export default DeveloperCard;
