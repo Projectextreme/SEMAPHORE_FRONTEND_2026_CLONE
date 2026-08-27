@@ -23,7 +23,6 @@ import {
   X,
   Menu as MenuIcon
 } from "lucide-react"
-
 const menuItems = [
   { label: 'Home', icon: Home, href: '/' },
   { label: 'Login', icon: FileEdit, href: '/user/register' },
@@ -31,6 +30,7 @@ const menuItems = [
   { label: 'Developers', icon: Code, href: '/developer' },
   { label: 'Info', icon: Info, href: '/contact' },
   { label: 'Events', icon: Calendar, href: '/events/register' },
+  { label: 'Rules', icon: BookOpen, href: '/rules' },
   { label: 'Profile', icon: User, href: '/user/account' },
 ]
 
