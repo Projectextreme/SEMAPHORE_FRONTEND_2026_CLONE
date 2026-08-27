@@ -2,7 +2,7 @@ export const developmentTeam = [
   {
     id: "dev-1",
     name: "Shashidhar",
-    role: "Developer",
+    role: "Authentication and Payment Management",
     image: "/assets/developer/SHASHIDHAR.png",
     imagePosition: "object-[50%_-30%]",
     initials: "SH",
@@ -14,7 +14,7 @@ export const developmentTeam = [
   {
     id: "dev-2",
     name: "Havyas",
-    role: "Developer",
+    role: "Event Registration and Functionality",
     image: "/assets/developer/havyas.png",
     initials: "HA",
     phone: "",
@@ -25,7 +25,7 @@ export const developmentTeam = [
   {
     id: "dev-3",
     name: "Swasthik NJ",
-    role: "Developer",
+    role: "Design Systems Engineer",
     image: "/assets/developer/swasthik.png",
     initials: "SN",
     phone: "",
@@ -36,7 +36,7 @@ export const developmentTeam = [
   {
     id: "dev-4",
     name: "Sumanth",
-    role: "Developer",
+    role: "3D Designer",
     image: "/assets/developer/sumanth.png",
     imagePosition: "object-[50%_-20%]",
     initials: "SU",
@@ -48,7 +48,7 @@ export const developmentTeam = [
   {
     id: "dev-5",
     name: "Thushar R Poojary",
-    role: "Developer",
+    role: "UI/UX Engineer",
     image: "/assets/developer/ChatGPT_Image_Aug_7__2026__08_20_21_PM-removebg-preview.png",
     initials: "TP",
     phone: "",
@@ -59,7 +59,7 @@ export const developmentTeam = [
   {
     id: "dev-6",
     name: "Sharan",
-    role: "Developer",
+    role: "Frontend Developer",
     image: "/assets/developer/sharan.png",
     imagePosition: "object-[50%_-20%]",
     initials: "SH",
@@ -71,7 +71,7 @@ export const developmentTeam = [
   {
     id: "dev-7",
     name: "Udith R Poojary",
-    role: "Developer",
+    role: "Frontend Developer",
     image: "/assets/developer/udith.png",
     imagePosition: "object-[50%_-30%]",
     initials: "UP",
@@ -83,7 +83,7 @@ export const developmentTeam = [
   {
     id: "dev-8",
     name: "Dattatreya",
-    role: "Developer",
+    role: "Database Management",
     image: "/assets/developer/DATTATREYA.png",
     initials: "DA",
     phone: "",
@@ -94,7 +94,7 @@ export const developmentTeam = [
   {
     id: "dev-9",
     name: "Hanson Vas",
-    role: "Developer",
+    role: "Tester",
     image: "/assets/developer/HANSON VAZ.png",
     imagePosition: "object-[50%_-10%]",
     initials: "HV",
@@ -106,7 +106,7 @@ export const developmentTeam = [
   {
     id: "dev-10",
     name: "Gaurav",
-    role: "Developer",
+    role: "Frontend Developer",
     image: "/assets/developer/gaurav.png",
     initials: "GA",
     phone: "",
@@ -117,7 +117,7 @@ export const developmentTeam = [
   {
     id: "dev-11",
     name: "Jeevan",
-    role: "Developer",
+    role: "UI Developer",
     image: "/assets/developer/jeevan.png",
     initials: "JE",
     phone: "",
