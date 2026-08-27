@@ -158,10 +158,12 @@ export default function EventsPage() {
   const [registeredEventMap, setRegisteredEventMap] = useState({});
   const [globalPaymentStatus, setGlobalPaymentStatus] = useState(null);
   const [globalPendingAmount, setGlobalPendingAmount] = useState(0);
-  // The team fee is charged once. If the backend says an approved payment already
-  // exists for this user or their team, every "pay ₹2000" prompt on this page has
-  // to disappear — a second event must not be billed a second time.
-  const [feeAlreadyPaid, setFeeAlreadyPaid] = useState(false);
+  // The team fee is charged once. If a payment already exists for this user or their
+  // team, every "pay ₹2000" prompt on this page has to disappear — a second event
+  // must not be billed a second time. This holds while the payment is still waiting
+  // on admin approval too: the money has left the user's account either way.
+  const [feeHandled, setFeeHandled] = useState(false);
+  const [feeAwaitingApproval, setFeeAwaitingApproval] = useState(false);
 
   // User profile and team status
   const [userProfile, setUserProfile] = useState(null);
@@ -276,14 +278,17 @@ export default function EventsPage() {
           }
         }
 
-        // Does the team already have an approved payment on file? Asked before the
-        // registrations are mapped, so the per-event status below can be marked
-        // "covered" instead of "payment due".
-        let alreadyPaid = false;
+        // Does the team already have a payment on file — approved, or submitted and
+        // still in the approval queue? Asked before the registrations are mapped, so
+        // the per-event status below can be marked covered instead of payment due.
+        let paidAndApproved = false;
+        let paidAwaitingApproval = false;
         try {
-          const { isPaymentDone } = await fetchPaymentDone(token);
-          alreadyPaid = isPaymentDone;
-          setFeeAlreadyPaid(isPaymentDone);
+          const { isPaymentDone, isPaymentPending } = await fetchPaymentDone(token);
+          paidAndApproved = isPaymentDone;
+          paidAwaitingApproval = isPaymentPending;
+          setFeeHandled(isPaymentDone || isPaymentPending);
+          setFeeAwaitingApproval(!isPaymentDone && isPaymentPending);
         } catch (err) {
           console.error("Failed to check payment status", err);
         }
@@ -317,10 +322,14 @@ export default function EventsPage() {
                   pStatus = hasApproved ? 'approved' : (hasPending ? 'pending' : 'unpaid');
                 }
 
-                // No payment record of its own, but the fee is already settled for
-                // this team: the event is covered, not owed.
-                if (pStatus === 'unpaid' && alreadyPaid) {
+                // No payment record of its own, but the team has already paid:
+                // the event is covered, not owed. An approved payment confirms it
+                // outright; one still in the queue leaves it verifying, which is the
+                // same state an event with its own unapproved payment sits in.
+                if (pStatus === 'unpaid' && paidAndApproved) {
                   pStatus = 'covered';
+                } else if (pStatus === 'unpaid' && paidAwaitingApproval) {
+                  pStatus = 'pending';
                 }
 
                 if (pStatus === 'unpaid') {
@@ -535,23 +544,24 @@ export default function EventsPage() {
       setRegisteredEventMap(prev => {
         const nextMap = { ...prev };
         newlyRegisteredIds.forEach(id => {
-          nextMap[id] = { status: feeAlreadyPaid ? 'covered' : 'unpaid' };
+          nextMap[id] = { status: feeHandled ? (feeAwaitingApproval ? 'pending' : 'covered') : 'unpaid' };
         });
         return nextMap;
       });
 
       localStorage.removeItem('event_cart_draft'); // Clear global draft
 
-      // Re-check rather than trusting the flag from page load: the user may have had
-      // a payment approved while this tab sat open, and a stale "false" would bill
-      // them a second time for a fee they have already settled.
-      const { isPaymentDone } = await fetchPaymentDone(token);
-      if (isPaymentDone) {
-        setFeeAlreadyPaid(true);
+      // Re-check rather than trusting the flag from page load: the user may have paid
+      // (or had a payment approved) while this tab sat open, and a stale "false"
+      // would bill them a second time for a fee they have already settled.
+      const { isPaymentDone, isPaymentPending } = await fetchPaymentDone(token);
+      if (isPaymentDone || isPaymentPending) {
+        setFeeHandled(true);
+        setFeeAwaitingApproval(!isPaymentDone && isPaymentPending);
         setRegisteredEventMap(prev => {
           const nextMap = { ...prev };
           newlyRegisteredIds.forEach(id => {
-            nextMap[id] = { status: 'covered' };
+            nextMap[id] = { status: isPaymentDone ? 'covered' : 'pending' };
           });
           return nextMap;
         });
@@ -559,7 +569,9 @@ export default function EventsPage() {
         setFormsData({});
         setExpandedEventId(null);
         setGlobalSuccess(
-          `Successfully registered for ${validForms.length} event(s)! Your registration fee is already paid, so there is nothing more to pay.`
+          isPaymentDone
+            ? `Successfully registered for ${validForms.length} event(s)! Your registration fee is already paid, so there is nothing more to pay.`
+            : `Successfully registered for ${validForms.length} event(s)! Your payment is already submitted and awaiting approval — don't pay again.`
         );
         return;
       }
@@ -950,17 +962,20 @@ export default function EventsPage() {
                 >
                   {submitting
                     ? 'Processing…'
-                    : feeAlreadyPaid
+                    : feeHandled
                       ? 'Confirm Registration'
                       : 'Save & Make Payment'}
                 </button>
               </div>
 
               {/* The fee is per team and already settled — say so where the user is
-                  about to expect a payment step. */}
-              {feeAlreadyPaid && (
-                <div style={styles.paidNotice}>
-                  ✓ Registration fee already paid — new events cost you nothing extra.
+                  about to expect a payment step. A payment still in the approval
+                  queue counts: the user has paid, an admin just hasn't looked yet. */}
+              {feeHandled && (
+                <div style={feeAwaitingApproval ? styles.pendingNotice : styles.paidNotice}>
+                  {feeAwaitingApproval
+                    ? '⏳ Payment already submitted and awaiting admin approval — do not pay again. New events are covered by it.'
+                    : '✓ Registration fee already paid — new events cost you nothing extra.'}
                 </div>
               )}
 
@@ -1275,7 +1290,10 @@ const styles = {
     outline: 'none',
   },
   inputInvalid: {
-    borderColor: 'rgba(248,113,113,0.65)',
+    // Full shorthand, not just borderColor: inputHalf sets `border`, and mixing the
+    // two means React strips the longhand on rerender while the shorthand stays —
+    // which leaves a stale border and logs a styling warning.
+    border: '1px solid rgba(248,113,113,0.65)',
     backgroundColor: 'rgba(248,113,113,0.08)',
   },
   fieldError: {
@@ -1455,6 +1473,17 @@ const styles = {
   },
   totalMeta: { fontSize: 11, fontWeight: 600, color: '#67e8f9' },
   totalValue: { fontSize: 26, fontWeight: 800, color: '#ffffff', letterSpacing: -0.5 },
+  pendingNotice: {
+    marginTop: 12,
+    padding: '10px 12px',
+    borderRadius: 12,
+    backgroundColor: 'rgba(245,158,11,0.12)',
+    border: '1px solid rgba(245,158,11,0.35)',
+    color: '#fcd34d',
+    fontSize: 12,
+    fontWeight: 600,
+    lineHeight: 1.5,
+  },
   paidNotice: {
     marginTop: 12,
     padding: '10px 12px',
