@@ -50,6 +50,7 @@ export const developmentTeam = [
     name: "Thushar R Poojary",
     role: "UI/UX Engineer",
     image: "/assets/developer/thushar.png",
+    imagePosition: "object-[50%_-90%]",
     initials: "TP",
     phone: "",
     email: "mailto:thusharrpoojary@gmail.com",
