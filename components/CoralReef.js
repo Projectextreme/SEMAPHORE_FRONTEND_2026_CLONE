@@ -5,28 +5,40 @@ const coralColors = [
   0x0b6b4c, 0x1f8a4d, 0xd45063, 0x915c83, 0x4842b8, 0xccaf83, 0xe07a5f, 0x3d405b, 0x81b29a, 0xf2cc8f
 ];
 
-export async function addCoralReef(scene, parentGroup) {
-  const loader = new GLTFLoader();
-  const models = [];
-  
-  // Load the 7 coral GLBs
-  for (let i = 0; i < 7; i++) {
-    try {
-      const gltf = await loader.loadAsync(`/models/coral/Coral${i}.glb`);
-      let mesh = null;
-      gltf.scene.traverse((child) => {
-        if (child.isMesh && !mesh) {
-          mesh = child;
-        }
-      });
-      if (mesh) {
-        models.push(mesh.geometry);
-      }
-    } catch (e) {
-      console.warn(`Failed to load Coral${i}.glb`, e);
-    }
-  }
+let cachedModelsPromise = null;
 
+async function loadCoralModels() {
+  if (cachedModelsPromise) return cachedModelsPromise;
+
+  cachedModelsPromise = (async () => {
+    const loader = new GLTFLoader();
+    const models = [];
+    
+    // Load the 7 coral GLBs
+    for (let i = 0; i < 7; i++) {
+      try {
+        const gltf = await loader.loadAsync(`/models/coral/Coral${i}.glb`);
+        let mesh = null;
+        gltf.scene.traverse((child) => {
+          if (child.isMesh && !mesh) {
+            mesh = child;
+          }
+        });
+        if (mesh) {
+          models.push(mesh.geometry);
+        }
+      } catch (e) {
+        console.warn(`Failed to load Coral${i}.glb`, e);
+      }
+    }
+    return models;
+  })();
+
+  return cachedModelsPromise;
+}
+
+export async function addCoralReef(scene, parentGroup) {
+  const models = await loadCoralModels();
   if (models.length === 0) return;
 
   const totalCorals = 50;
@@ -46,10 +58,9 @@ export async function addCoralReef(scene, parentGroup) {
     for (let i = 0; i < coralCount; i++) {
       let x = (Math.random() - 0.5) * 160; 
       let z = (Math.random() - 0.5) * 80 - 10;
-      
-      // Keep away from the central path
-      if (Math.abs(x) < 25 && z > -15) {
-        x += (x > 0 ? 25 : -25);
+      // Keep completely away from the central path so the portal view is unobstructed
+      if (Math.abs(x) < 30) {
+        x += (x >= 0 ? 30 : -30);
       }
 
       let y = -40 + Math.random() * 8;
@@ -78,4 +89,68 @@ export async function addCoralReef(scene, parentGroup) {
     instancedMesh.instanceColor.needsUpdate = true;
     parentGroup.add(instancedMesh);
   });
+}
+
+export async function addCliffCorals(parentGroup, isRight, xPos, yPos, zCenter) {
+  const models = await loadCoralModels();
+  if (models.length === 0) return;
+
+  const count = 12; // same count as the cones we removed
+  
+  for (let c = 0; c < count; c++) {
+    const modelIndex = c % models.length;
+    
+    // Skip grass-like models (Coral4 and Coral6) only near the IT Quiz (Left Cliff, zCenter = -600)
+    if (xPos === -66 && zCenter === -600 && (modelIndex === 4 || modelIndex === 6)) {
+      continue;
+    }
+
+    const geometry = models[modelIndex];
+    const material = new THREE.MeshStandardMaterial({
+      roughness: 0.9,
+      metalness: 0.1,
+      flatShading: true,
+      color: coralColors[Math.floor(Math.random() * coralColors.length)],
+    });
+    
+    const coralMesh = new THREE.Mesh(geometry, material);
+    
+    // Scale matching the near-portal corals (0.15 to 0.40)
+    const scl = 0.15 + Math.random() * 0.25;
+    
+    // Position along the cliff face shelves using exact surface fitting
+    const coralY = yPos + 40 - Math.random() * 80;
+    const coralZ = zCenter + (Math.random() - 0.5) * 140;
+    
+    // Compute exact local coordinates relative to the cliff center
+    const localY = coralY - yPos;
+    const localZ = coralZ - zCenter;
+    const localX = isRight ? -17 : 17; // Inner face of BoxGeometry
+    
+    // Compute the exact cliff bump noise value at this Y, Z
+    const bump =
+      Math.sin(localY * 0.08) * Math.cos(localZ * 0.08) * 5.0 +
+      Math.sin(localY * 0.2 + localX * 0.1) * 2.0;
+      
+    // Left cliff inner face is at X = -49 + bump
+    // Right cliff inner face is at X = 49 - bump
+    const surfaceX = isRight ? (49 - bump) : (-49 + bump);
+    
+    // Place the coral on the surface, adding a small outward offset based on its scale
+    // Left cliff faces right (+X), so offset is positive. Right cliff faces left (-X), so offset is negative.
+    const outwardOffset = (0.5 + Math.random() * 0.4) * scl;
+    const coralX = isRight ? (surfaceX - outwardOffset) : (surfaceX + outwardOffset);
+    
+    coralMesh.position.set(coralX, coralY, coralZ);
+    coralMesh.scale.set(scl, scl, scl);
+    
+    // Rotation tilts slightly inwards towards the center of the canyon
+    coralMesh.rotation.set(
+      (Math.random() - 0.5) * 0.4,
+      Math.random() * Math.PI * 2,
+      isRight ? -0.4 : 0.4
+    );
+    
+    parentGroup.add(coralMesh);
+  }
 }
