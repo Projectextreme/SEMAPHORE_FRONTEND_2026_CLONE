@@ -361,16 +361,7 @@ export default function PaymentSubmission() {
         </div>
       )}
 
-      {eventTitles.length > 0 && (
-        <div className="mb-6 p-3.5 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-xs text-gray-300 font-medium">
-          <span className="font-bold block mb-1 text-cyan-400">Paying for Events ({eventTitles.length}):</span>
-          <ul className="list-disc list-inside space-y-0.5 text-gray-400">
-            {eventTitles.map((title, idx) => (
-              <li key={idx}>{title}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {/* eventTitles list removed as payment is a flat team fee */}
       
       {error && (
         <div className="mb-6 p-4 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-xl flex flex-col gap-2">
@@ -492,28 +483,34 @@ export default function PaymentSubmission() {
           </div>
         </div>
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={loading || !file || !amount || !utr || utr.trim().length < 12 || utr.trim().length > 22}
-          className={`w-full py-4 px-6 rounded-xl flex items-center justify-center font-bold tracking-widest uppercase transition-all duration-300 shadow-md border ${
-            loading || !file || !amount || !utr || utr.trim().length < 12 || utr.trim().length > 22
-              ? "bg-white/5 border-white/10 text-gray-500 cursor-not-allowed"
-              : "bg-cyan-500/20 hover:bg-cyan-500/30 border-cyan-500/50 text-cyan-400 shadow-[0_4px_15px_rgba(13,148,136,0.1)]"
-          }`}
-        >
-          {loading ? (
-            <span className="flex items-center gap-3 text-cyan-400">
-              <svg className="animate-spin h-5 w-5 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Submitting...
-            </span>
-          ) : (
-            "Submit Payment"
-          )}
-        </button>
+        {/* Submit Button Section */}
+        <div className="pt-4 flex flex-col gap-4">
+          <button
+            type="submit"
+            disabled={loading || !file || !amount || !utr || utr.trim().length < 12 || utr.trim().length > 22}
+            className={`w-full py-4 px-6 rounded-xl flex items-center justify-center font-bold tracking-widest uppercase transition-all duration-300 shadow-md border ${
+              loading || !file || !amount || !utr || utr.trim().length < 12 || utr.trim().length > 22
+                ? "bg-white/5 border-white/10 text-gray-500 cursor-not-allowed"
+                : "bg-cyan-500/20 hover:bg-cyan-500/30 border-cyan-500/50 text-cyan-400 shadow-[0_4px_15px_rgba(13,148,136,0.1)]"
+            }`}
+          >
+            {loading ? (
+              <span className="flex items-center gap-3 text-cyan-400">
+                <svg className="animate-spin h-5 w-5 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Submitting...
+              </span>
+            ) : (
+              "Submit Payment"
+            )}
+          </button>
+          
+          <div className="text-center text-xs font-medium text-gray-400 mt-2">
+            Facing any issues? <a href="/info" className="text-cyan-400 hover:text-cyan-300 hover:underline transition-colors font-bold">Contact Us</a>
+          </div>
+        </div>
       </form>
     </div>
   );

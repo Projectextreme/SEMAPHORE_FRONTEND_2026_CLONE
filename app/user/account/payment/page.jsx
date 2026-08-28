@@ -142,7 +142,7 @@ export default function PaymentPage() {
           </div>
           
           <p className="text-sm text-gray-400 font-medium text-center mt-6">
-            Scan the QR code or use the account details to pay for your registered events. After successful payment, enter the exact amount and the UTR transaction number in the form.
+            Scan the QR code or use the account details to pay for your registered events. After successful payment, enter the exact UTR transaction number in the form.
           </p>
         </div>
 
