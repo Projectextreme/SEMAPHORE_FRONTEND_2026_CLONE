@@ -508,7 +508,7 @@ export default function PaymentSubmission() {
           </button>
           
           <div className="text-center text-xs font-medium text-gray-400 mt-2">
-            Facing any issues? <a href="/info" className="text-cyan-400 hover:text-cyan-300 hover:underline transition-colors font-bold">Contact Us</a>
+            Facing any issues? <a href="/contact" className="text-cyan-400 hover:text-cyan-300 hover:underline transition-colors font-bold">Contact Us</a>
           </div>
         </div>
       </form>
