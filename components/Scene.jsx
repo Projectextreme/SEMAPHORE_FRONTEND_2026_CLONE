@@ -4963,7 +4963,7 @@ export default function Scene() {
           >
 
 
-            <main className="relative flex flex-col items-center justify-center text-center my-auto w-full py-20">
+            <main className="relative flex flex-col items-center justify-center text-center my-auto w-full py-20 translate-y-20 md:translate-y-26">
               {/* Dark gradient behind text to ensure readability against the bright moon */}
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(2,6,23,0.85)_0%,_rgba(0,0,0,0)_70%)] -z-10 pointer-events-none" />
 
@@ -4977,6 +4977,17 @@ export default function Scene() {
               <span className="font-mono text-xs md:text-sm tracking-[0.3em] text-cyan-50 uppercase font-bold drop-shadow-[0_2px_5px_rgba(0,0,0,1)]">
                 NATIONAL LEVEL MCA TECH FEST - NMAMIT NITTE
               </span>
+
+              {/* Scroll Indicator below text */}
+              <div className="flex flex-col items-center mt-15 gap-2 opacity-90 pointer-events-none transition-all duration-500 font-mono select-none">
+                <div className="relative w-6 h-10 rounded-full border-2 border-cyan-400/80 shadow-[0_0_15px_rgba(0,255,255,0.4)] flex justify-center pt-2 bg-[#010c18]/90">
+                  <div className="w-1.5 h-3 rounded-full bg-cyan-300 animate-bounce shadow-[0_0_8px_rgba(0,255,255,0.9)]" />
+                </div>
+                <div className="flex items-center gap-1 text-[11px] font-bold tracking-[0.25em] text-cyan-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] uppercase mt-2">
+                  <span>SCROLL TO DIVE</span>
+                  <span className="text-cyan-400 text-xs animate-bounce">↓</span>
+                </div>
+              </div>
             </main>
 
             <footer className="flex justify-between items-end w-full">
@@ -4990,19 +5001,6 @@ export default function Scene() {
 
 
 
-            {/* Animated Scroll Down Mouse Logo (Visible only at beginning surface view, scrollProgress < 10) */}
-            <div
-              className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none transition-all duration-500 font-mono select-none ${scrollProgress < 10 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-                }`}
-            >
-              <div className="relative w-6 h-10 rounded-full border-2 border-cyan-400/80 shadow-[0_0_15px_rgba(0,255,255,0.4)] flex justify-center pt-2 bg-[#010c18]/90">
-                <div className="w-1.5 h-3 rounded-full bg-cyan-300 animate-bounce shadow-[0_0_8px_rgba(0,255,255,0.9)]" />
-              </div>
-              <div className="flex items-center gap-1 text-[11px] font-bold tracking-[0.25em] text-cyan-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] uppercase">
-                <span>SCROLL TO DIVE</span>
-                <span className="text-cyan-400 text-xs animate-bounce">↓</span>
-              </div>
-            </div>
 
             {/* Right-Side Down Telemetry HUD Readout (Clean Panel-less design) */}
             <div className="fixed bottom-6 md:bottom-8 right-6 md:right-10 z-50 flex flex-col items-end gap-1.5 font-mono text-right select-none pointer-events-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
