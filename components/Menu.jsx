@@ -41,14 +41,22 @@ export default function Menu() {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // Initial check on mount
     setIsLoggedIn(!!localStorage.getItem('token'));
   }, []);
+
+  const handleOpenChange = (newOpen) => {
+    if (newOpen) {
+      // Re-check auth status every time the menu is opened
+      setIsLoggedIn(!!localStorage.getItem('token'));
+    }
+    setOpen(newOpen);
+  };
 
   return (
     <Drawer
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={handleOpenChange}
       showSwipeHandle={isMobile}
       swipeDirection={isMobile ? "down" : "right"}
     >
