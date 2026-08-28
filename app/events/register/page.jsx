@@ -115,8 +115,8 @@ const pageCss = `
      in a short column would just trap it against the fold. Both panes now scroll
      with the page. */
   @media (max-width: 1024px) {
-    .reg-layout { grid-template-columns: minmax(0, 1fr); gap: 18px; }
-    .reg-main { gap: 18px; }
+    .reg-layout { display: flex; flex-direction: column-reverse; gap: 24px; }
+    .reg-main { gap: 18px; width: 100%; }
     .reg-summary { position: static; }
     .reg-summary-card { max-height: none; overflow: visible; }
     .reg-summary-list { max-height: none; overflow: visible; }

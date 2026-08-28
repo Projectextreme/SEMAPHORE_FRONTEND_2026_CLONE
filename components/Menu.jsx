@@ -26,8 +26,8 @@ import {
 
 const menuItems = [
   { label: 'Home', icon: Home, href: '/' },
-  { label: 'Info', icon: Info, href: '/contact' },
-  { label: 'Brochure', icon: BookOpen, href: '#' },
+  { label: 'Contact', icon: Info, href: '/contact' },
+  { label: 'Brochure', icon: BookOpen, href: 'https://drive.google.com/drive/folders/10TI0S_y-zrwvnXzYgdP_TbtJpKcFNQuM?usp=drive_link', external: true },
   { label: 'Developers', icon: Code, href: '/developer' },
   { label: 'Events', icon: Calendar, href: '/events/register' },
   { label: 'Rules', icon: BookOpen, href: '/rules' },
@@ -90,6 +90,7 @@ export default function Menu() {
               <a
                 key={index}
                 href={item.href}
+                {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                 className="group relative flex items-center gap-4 px-6 py-4 bg-[#010c18]/90 backdrop-blur-md hover:bg-cyan-950/60 border border-cyan-400/10 hover:border-cyan-400/60 rounded-2xl transition-all duration-300 overflow-hidden"
                 style={{
                   animation: `menuFadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards ${index * 0.08}s`,
