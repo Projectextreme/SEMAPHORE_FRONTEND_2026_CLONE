@@ -944,10 +944,10 @@ export default function Scene() {
     // the curtain had already lifted, so the moon visibly popped in.
     const moonTexture = new THREE.Texture();
     moonTexture.colorSpace = THREE.SRGBColorSpace;
-    const moonGeo = new THREE.SphereGeometry(60, 64, 64);
+    const moonGeo = new THREE.SphereGeometry(90, 64, 64); // Larger moon
     const moonMat = new THREE.MeshBasicMaterial({
       map: moonTexture,
-      color: 0xffffff,
+      color: new THREE.Color(2.0, 2.0, 2.0), // Brighter, purer white for realism under ACES
     });
     const moonMesh = new THREE.Mesh(moonGeo, moonMat);
     // Center it above the horizon line in the distance
@@ -972,14 +972,14 @@ export default function Scene() {
     const glowTexture = new THREE.CanvasTexture(glowCanvas);
     const glowMaterial = new THREE.SpriteMaterial({
       map: glowTexture,
-      color: 0xccddff,
+      color: new THREE.Color(1.5, 1.6, 2.0), // Whiter, brighter lunar glow
       transparent: true,
       blending: THREE.AdditiveBlending,
-      opacity: 0.6,
+      opacity: 0.9,
       depthWrite: false,
     });
     const glowSprite = new THREE.Sprite(glowMaterial);
-    glowSprite.scale.set(220, 220, 1);
+    glowSprite.scale.set(340, 340, 1); // Larger halo to match new moon size
     glowSprite.position.set(0, 130, -610); // Slightly behind the moon
     skyGroup.add(glowSprite);
 
@@ -4967,12 +4967,13 @@ export default function Scene() {
               {/* Dark gradient behind text to ensure readability against the bright moon */}
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(2,6,23,0.85)_0%,_rgba(0,0,0,0)_70%)] -z-10 pointer-events-none" />
 
-              <h1 className="font-mono text-5xl md:text-[7rem] font-black tracking-[0.2em] text-white drop-shadow-[0_0_30px_rgba(0,255,255,0.9)] mb-2 select-none leading-none">
-                SEMAPHORE
-              </h1>
-              <h2 className="font-mono text-xl md:text-3xl font-extrabold tracking-[0.4em] text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] mb-6 select-none ml-2">
-                2 K 2 6
-              </h2>
+              <div className="flex justify-center items-center mb-6 select-none pointer-events-none">
+                <img
+                  src="https://res.cloudinary.com/zuxdlzob/image/upload/v1787802540/semaphore_logo.png"
+                  alt="Semaphore 2026 Logo"
+                  className="w-[80vw] max-w-[600px] h-auto object-contain relative z-10 drop-shadow-[0_0_25px_rgba(0,255,255,0.4)] hover:scale-105 transition-transform duration-700"
+                />
+              </div>
               <span className="font-mono text-xs md:text-sm tracking-[0.3em] text-cyan-50 uppercase font-bold drop-shadow-[0_2px_5px_rgba(0,0,0,1)]">
                 NATIONAL LEVEL MCA TECH FEST - NMAMIT NITTE
               </span>
