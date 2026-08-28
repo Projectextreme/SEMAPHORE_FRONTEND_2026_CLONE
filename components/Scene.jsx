@@ -11,7 +11,7 @@ import EventInfoModal from "./EventInfoModal";
 import { Info, Link } from "lucide-react";
 import { CRITICAL_ASSETS, loadAssets, blobToTexture, pruneOldCaches } from "./assetLoader";
 
-import { addCoralReef, addCliffCorals, addEventPlatformGrass } from "./CoralReef";
+import { addCoralReef, addCliffCorals } from "./CoralReef";
 import {
   seabedVertex,
   seabedFragment,
@@ -1655,7 +1655,7 @@ export default function Scene() {
     const CANYON_HALF_WIDTH = 40;
     // Water surface is at y = -2; stay well under it, and stop short of the canyon
     // floor. This band is what the schools are spread across.
-    const FISH_TOP_Y = -16;
+    const FISH_TOP_Y = -30;
     const FISH_BOTTOM_Y = -96;
     // How far a school may drift vertically from its lane before the bob turns it back.
     const FISH_BOB_AMPLITUDE = 4.0;
@@ -2403,9 +2403,6 @@ export default function Scene() {
 
     eventNodes.forEach((node) => {
       createEventPlatformAndBanner(node);
-      if (["event-8", "event-9", "event-10"].includes(node.id)) {
-        addEventPlatformGrass(newWorldGroup, node);
-      }
     });
 
     // Distant, post-portal atmosphere only. These occupy open background space
