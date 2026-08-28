@@ -381,9 +381,9 @@ export default function EventsPage() {
       // Initialize participants if not already present in formsData
       if (!formsData[event._id]) {
         const minLen = event.minParticipants || 1;
-        const initialParticipants = Array.from({ length: minLen }).map((_, idx) => ({
-          name: idx === 0 ? (userProfile?.name || '') : '',
-          phone: idx === 0 ? (userProfile?.phone || '') : ''
+        const initialParticipants = Array.from({ length: minLen }).map(() => ({
+          name: '',
+          phone: ''
         }));
         setFormsData(prev => ({
           ...prev,
@@ -628,7 +628,7 @@ export default function EventsPage() {
           <h1 style={styles.pageTitle}>Events</h1>
           <p style={styles.pageSubtitle}>Discover and register for the latest events.</p>
         </div>
-      
+
         {/* ===== MAIN LAYOUT: team + events scroll together | summary stays pinned ===== */}
         <div className="reg-layout">
 
@@ -868,53 +868,54 @@ export default function EventsPage() {
                                         : null;
 
                                   return (
-                                  <div key={index} style={styles.participantBlock} className="reg-participant">
-                                    <div style={styles.participantHeader}>
-                                      <span style={styles.participantLabel}>
-                                        Participant {index + 1} {index === 0 && '(Lead)'}
-                                      </span>
-                                      {participants.length > event.minParticipants && (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleRemoveParticipant(index, event)}
-                                          style={styles.removeBtn}
-                                        >
-                                          Remove
-                                        </button>
+                                    <div key={index} style={styles.participantBlock} className="reg-participant">
+                                      <div style={styles.participantHeader}>
+                                        <span style={styles.participantLabel}>
+                                          Participant {index + 1} {index === 0 && '(Lead)'}
+                                        </span>
+                                        {participants.length > event.minParticipants && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleRemoveParticipant(index, event)}
+                                            style={styles.removeBtn}
+                                          >
+                                            Remove
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      <div style={styles.row} className="reg-input-row">
+                                        <input
+                                          className="reg-input"
+                                          style={styles.inputHalf}
+                                          placeholder="Full Name"
+                                          autoComplete="off"
+                                          value={p.name}
+                                          onChange={(e) => handleChange(index, 'name', e.target.value, event._id)}
+                                        />
+                                        <input
+                                          className="reg-input"
+                                          style={{
+                                            ...styles.inputHalf,
+                                            ...(phoneError ? styles.inputInvalid : null),
+                                          }}
+                                          type="tel"
+                                          inputMode="numeric"
+                                          autoComplete="tel"
+                                          maxLength={12}
+                                          placeholder="10-digit mobile number"
+                                          aria-invalid={phoneError ? 'true' : 'false'}
+                                          value={p.phone}
+                                          onChange={(e) => handleChange(index, 'phone', e.target.value, event._id)}
+                                        />
+                                      </div>
+
+                                      {/* Stays quiet until there is something to correct,
+                                        so a half-typed number is not flagged mid-entry. */}
+                                      {phoneError && (
+                                        <span style={styles.fieldError}>{phoneError}</span>
                                       )}
                                     </div>
-
-                                    <div style={styles.row} className="reg-input-row">
-                                      <input
-                                        className="reg-input"
-                                        style={styles.inputHalf}
-                                        placeholder="Full Name"
-                                        value={p.name}
-                                        onChange={(e) => handleChange(index, 'name', e.target.value, event._id)}
-                                      />
-                                      <input
-                                        className="reg-input"
-                                        style={{
-                                          ...styles.inputHalf,
-                                          ...(phoneError ? styles.inputInvalid : null),
-                                        }}
-                                        type="tel"
-                                        inputMode="numeric"
-                                        autoComplete="tel"
-                                        maxLength={12}
-                                        placeholder="10-digit mobile number"
-                                        aria-invalid={phoneError ? 'true' : 'false'}
-                                        value={p.phone}
-                                        onChange={(e) => handleChange(index, 'phone', e.target.value, event._id)}
-                                      />
-                                    </div>
-
-                                    {/* Stays quiet until there is something to correct,
-                                        so a half-typed number is not flagged mid-entry. */}
-                                    {phoneError && (
-                                      <span style={styles.fieldError}>{phoneError}</span>
-                                    )}
-                                  </div>
                                   );
                                 })}
 

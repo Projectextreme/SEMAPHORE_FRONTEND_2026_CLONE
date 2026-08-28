@@ -27,12 +27,12 @@ import {
 const menuItems = [
   { label: 'Home', icon: Home, href: '/' },
   { label: 'Info', icon: Info, href: '/contact' },
-  { label: 'Login', icon: FileEdit, href: '/user/register' },
   { label: 'Brochure', icon: BookOpen, href: '#' },
   { label: 'Developers', icon: Code, href: '/developer' },
   { label: 'Events', icon: Calendar, href: '/events/register' },
   { label: 'Rules', icon: BookOpen, href: '/rules' },
   { label: 'Profile', icon: User, href: '/user/account' },
+  { label: 'Login', icon: FileEdit, href: '/user/register' },
 ]
 
 export default function Menu() {
@@ -72,7 +72,11 @@ export default function Menu() {
           <DrawerTitle>Menu</DrawerTitle>
         </DrawerHeader>
         <nav className="flex min-h-0 flex-1 flex-col gap-3 w-full max-w-sm mx-auto overflow-y-auto no-scrollbar md:max-w-none px-2 pb-4 mt-6 md:mt-24">
-          {menuItems.filter(item => !(isLoggedIn && item.label === 'Login')).map((item, index) => {
+          {menuItems.filter(item => {
+            if (isLoggedIn && item.label === 'Login') return false;
+            if (!isLoggedIn && item.label === 'Profile') return false;
+            return true;
+          }).map((item, index) => {
             const Icon = item.icon
             return (
               <a
