@@ -1,14 +1,14 @@
 export const developmentTeam = [
   {
     id: "dev-1",
-    name: "Shashidhar K",
+    name: "Shashidhar",
     role: "Authentication and Payment Management",
     image: "/assets/developer/SHASHIDHAR.png",
     imagePosition: "object-[50%_-30%]",
     initials: "SH",
     phone: "",
     email: "mailto:shashidharak334@gmail.com",
-    github: "",
+    github: "https://github.com/Shashidharak89",
     linkedin: "https://www.linkedin.com/in/shashidhara-k-a2374b31b"
   },
   {
@@ -19,18 +19,18 @@ export const developmentTeam = [
     initials: "HA",
     phone: "",
     email: "mailto:havyasu2005@gmail.com",
-    github: "",
+    github: "https://github.com/HavyasU",
     linkedin: "https://www.linkedin.com/in/havyasu/"
   },
   {
     id: "dev-3",
     name: "Swasthik NJ",
-    role: "Design Systems Engineer and core design",
+    role: "Design Systems Engineer",
     image: "/assets/developer/swasthik.png",
     initials: "SN",
     phone: "",
     email: "mailto:swastiknj76@gmail.com",
-    github: "",
+    github: "https://github.com/swasthik-nj",
     linkedin: "https://www.linkedin.com/in/swasthik-nj/"
   },
   {
@@ -42,7 +42,7 @@ export const developmentTeam = [
     initials: "SU",
     phone: "",
     email: "mailto:sumanthpoojary965@gmail.com",
-    github: "",
+    github: "https://github.com/sumanth965",
     linkedin: "https://www.linkedin.com/in/sumanth-poojary-2a1052246"
   },
   {
@@ -54,7 +54,7 @@ export const developmentTeam = [
     initials: "TP",
     phone: "",
     email: "mailto:thusharrpoojary@gmail.com",
-    github: "",
+    github: "https://github.com/thushar-r-poojary",
     linkedin: "https://www.linkedin.com/in/thushar-r-poojary-972b74245/"
   },
   {
@@ -66,7 +66,7 @@ export const developmentTeam = [
     initials: "SH",
     phone: "",
     email: "mailto:sharansalyan1@gmail.com",
-    github: "",
+    github: "https://github.com/sharansalyan102-star",
     linkedin: "https://www.linkedin.com/in/sharan-salyan-3162a42b9"
   },
   {
@@ -78,7 +78,7 @@ export const developmentTeam = [
     initials: "UP",
     phone: "",
     email: "mailto:udithrpoojary@gmail.com",
-    github: "",
+    github: "https://github.com/udithrpoojary04",
     linkedin: "https://www.linkedin.com/in/udith-r-poojary-8a4053246"
   },
   {
@@ -89,12 +89,12 @@ export const developmentTeam = [
     initials: "DA",
     phone: "",
     email: "mailto:dattatreyagokhale@gmail.com",
-    github: "",
+    github: "https://github.com/Dattu5",
     linkedin: "https://www.linkedin.com/in/dattatreya-gokhale-501b79341"
   },
   {
     id: "dev-9",
-    name: "Hanson Vas",
+    name: "Hanson Vaz",
     role: "Tester",
     image: "/assets/developer/HANSON VAZ.png",
     imagePosition: "object-[50%_-10%]",
@@ -112,7 +112,7 @@ export const developmentTeam = [
     initials: "GA",
     phone: "",
     email: "mailto:gauravsk615@gmail.com",
-    github: "",
+    github: "https://github.com/gautam606",
     linkedin: "https://www.linkedin.com/in/gaurav-sk-891720333/"
   },
   {
@@ -123,7 +123,7 @@ export const developmentTeam = [
     initials: "JE",
     phone: "",
     email: "mailto:jeevanshetty9481@gmail.com",
-    github: "",
+    github: "https://github.com/Jeevan-Shetty07",
     linkedin: "https://www.linkedin.com/in/jeevan-shetty-241613229/"
   }
 ];
