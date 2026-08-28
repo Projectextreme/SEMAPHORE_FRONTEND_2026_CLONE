@@ -41,54 +41,85 @@ export async function addCoralReef(scene, parentGroup) {
   const models = await loadCoralModels();
   if (models.length === 0) return;
 
-  const totalCorals = 50;
-  const dummy = new THREE.Object3D();
-  const color = new THREE.Color();
+  const grassGeo = models[4];
+  const branchGeo = models[6];
   
-  models.forEach((geometry) => {
-    const coralCount = Math.floor(totalCorals / models.length);
-    const material = new THREE.MeshStandardMaterial({
-      roughness: 0.9,
-      metalness: 0.1,
-      flatShading: true,
-    });
-    
-    const instancedMesh = new THREE.InstancedMesh(geometry, material, coralCount);
-    
-    for (let i = 0; i < coralCount; i++) {
-      let x = (Math.random() - 0.5) * 160; 
-      let z = (Math.random() - 0.5) * 80 - 10;
-      // Keep completely away from the central path so the portal view is unobstructed
-      if (Math.abs(x) < 30) {
-        x += (x >= 0 ? 30 : -30);
-      }
+  // Fallback if models aren't strictly loaded
+  if (!grassGeo || !branchGeo) return;
 
-      let y = -40 + Math.random() * 8;
-      // Make corals climb slightly on the sides and back
-      if (Math.abs(x) > 40) y += 8 + Math.random() * 10;
-      if (z < -15) y += 5 + Math.random() * 8;
+  const dummy = new THREE.Object3D();
+  
+  // 1. Green Bushy Grass (Ground layer framing the stairs)
+  const greenMat = new THREE.MeshStandardMaterial({
+    roughness: 0.9, metalness: 0.1, flatShading: true,
+    color: 0x1f8b4c // Vibrant dark green matching the mockup
+  });
+  const grassCount = 40; // 20 per side
+  const grassMesh = new THREE.InstancedMesh(grassGeo, greenMat, grassCount);
+  
+  for (let i = 0; i < grassCount; i++) {
+    const isLeft = i % 2 === 0;
+    const sideSign = isLeft ? -1 : 1;
+    
+    // Tightly cluster around the edges of the stairs
+    const x = sideSign * (14 + Math.random() * 18);
+    const z = -5 - Math.random() * 25;
+    const y = -40 + Math.random() * 4;
+    
+    const scl = 0.25 + Math.random() * 0.2;
+    dummy.position.set(x, y, z);
+    dummy.rotation.set(
+      (Math.random() - 0.5) * 0.2, 
+      Math.random() * Math.PI * 2, 
+      isLeft ? -0.2 : 0.2 // Tilt outwards slightly
+    );
+    dummy.scale.set(scl, scl, scl);
+    dummy.updateMatrix();
+    grassMesh.setMatrixAt(i, dummy.matrix);
+  }
+  parentGroup.add(grassMesh);
 
-      const scl = 0.15 + Math.random() * 0.25;
-      dummy.position.set(x, y, z);
-      dummy.rotation.set(
-        (Math.random() - 0.5) * 0.4,
-        Math.random() * Math.PI * 2,
-        (Math.random() - 0.5) * 0.4
-      );
-      dummy.scale.set(scl, scl, scl);
-      dummy.updateMatrix();
-      
-      instancedMesh.setMatrixAt(i, dummy.matrix);
-      
-      const col = coralColors[Math.floor(Math.random() * coralColors.length)];
-      color.setHex(col);
-      instancedMesh.setColorAt(i, color);
+  // 2. Pink/Purple Large Branches (Towering behind the grass and on walls)
+  const purpleMat = new THREE.MeshStandardMaterial({
+    roughness: 0.9, metalness: 0.1, flatShading: true,
+    color: 0x915c83 // Deep purple/pink matching the mockup
+  });
+  const branchCount = 30; // 15 per side
+  const branchMesh = new THREE.InstancedMesh(branchGeo, purpleMat, branchCount);
+  
+  for (let i = 0; i < branchCount; i++) {
+    const isLeft = i % 2 === 0;
+    const sideSign = isLeft ? -1 : 1;
+    
+    let x, y, z, scl, rotZ;
+    
+    if (i < 18) { 
+      // Massive ground framing behind the grass
+      x = sideSign * (22 + Math.random() * 18);
+      z = -12 - Math.random() * 25;
+      y = -39 + Math.random() * 3;
+      scl = 0.5 + Math.random() * 0.4; // Very large to loom over the path
+      rotZ = isLeft ? -0.3 : 0.3;
+    } else {
+      // Crawling up the cavern walls in the background
+      x = sideSign * (38 + Math.random() * 20);
+      z = -20 - Math.random() * 35;
+      y = -25 + Math.random() * 25;
+      scl = 0.3 + Math.random() * 0.2;
+      rotZ = isLeft ? -0.8 : 0.8; // Tilt heavily out from the wall
     }
     
-    instancedMesh.instanceMatrix.needsUpdate = true;
-    instancedMesh.instanceColor.needsUpdate = true;
-    parentGroup.add(instancedMesh);
-  });
+    dummy.position.set(x, y, z);
+    dummy.rotation.set(
+      (Math.random() - 0.5) * 0.4, 
+      Math.random() * Math.PI * 2, 
+      rotZ
+    );
+    dummy.scale.set(scl, scl, scl);
+    dummy.updateMatrix();
+    branchMesh.setMatrixAt(i, dummy.matrix);
+  }
+  parentGroup.add(branchMesh);
 }
 
 export async function addCliffCorals(parentGroup, isRight, xPos, yPos, zCenter) {
@@ -152,5 +183,46 @@ export async function addCliffCorals(parentGroup, isRight, xPos, yPos, zCenter) 
     );
     
     parentGroup.add(coralMesh);
+  }
+}
+
+export async function addEventPlatformGrass(parentGroup, node) {
+  const models = await loadCoralModels();
+  if (models.length === 0) return;
+  
+  const count = 12; // 6 per corner
+  for (let i = 0; i < count; i++) {
+    const geometry = models[Math.floor(Math.random() * models.length)];
+    
+    const material = new THREE.MeshStandardMaterial({
+      roughness: 0.9,
+      metalness: 0.1,
+      flatShading: true,
+      color: coralColors[Math.floor(Math.random() * coralColors.length)],
+    });
+
+    const mesh = new THREE.Mesh(geometry, material);
+    
+    // Cluster into two corner areas (left and right)
+    const isLeftCorner = i % 2 === 0;
+    const xOffset = (isLeftCorner ? -1 : 1) * (18 + Math.random() * 6);
+    const zOffset = 5 + Math.random() * 10; // Slightly in front
+    
+    let px = node.pos.x + xOffset;
+    let pz = node.pos.z + zOffset;
+    
+    const py = node.pos.y - 2 - Math.random() * 4;
+
+    mesh.position.set(px, py, pz);
+    
+    // Reduced size as requested
+    const scl = 0.15 + Math.random() * 0.15;
+    mesh.scale.set(scl, scl, scl);
+    
+    mesh.rotation.y = Math.random() * Math.PI * 2;
+    mesh.rotation.x = (Math.random() - 0.5) * 0.5;
+    mesh.rotation.z = (Math.random() - 0.5) * 0.5;
+    
+    parentGroup.add(mesh);
   }
 }

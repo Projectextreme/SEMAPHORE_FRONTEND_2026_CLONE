@@ -11,7 +11,7 @@ import EventInfoModal from "./EventInfoModal";
 import { Info, Link } from "lucide-react";
 import { CRITICAL_ASSETS, loadAssets, blobToTexture, pruneOldCaches } from "./assetLoader";
 
-import { addCoralReef, addCliffCorals } from "./CoralReef";
+import { addCoralReef, addCliffCorals, addEventPlatformGrass } from "./CoralReef";
 import {
   seabedVertex,
   seabedFragment,
@@ -1879,12 +1879,12 @@ export default function Scene() {
               setupFishSchoolInstance(scene, gltf, startX, startY, startZ, scale, phase);
             }
 
-            // Generate 15 fish schools for the deep canyon (visible after scrolling down).
+            // Generate 25 fish schools for the deep canyon (visible after scrolling down).
             // Stratified by depth for the same reason as above.
-            const DEEP_COUNT = 15;
+            const DEEP_COUNT = 25;
             for (let i = 0; i < DEEP_COUNT; i++) {
               const laneT = (i + 0.5) / DEEP_COUNT;
-              const startZ = -200 - Math.random() * 800; // Spread from z: -200 to -1000
+              const startZ = -200 - Math.random() * 1150; // Spread from z: -200 to -1350
               const startX = (Math.random() * 2 - 1) * CANYON_HALF_WIDTH;
               const startY = -60 - laneT * 150 + (Math.random() - 0.5) * 12; // Deep down
               const scale = 0.4 + Math.random() * 0.6;   // Smaller in deep
@@ -2403,6 +2403,9 @@ export default function Scene() {
 
     eventNodes.forEach((node) => {
       createEventPlatformAndBanner(node);
+      if (["event-8", "event-9", "event-10"].includes(node.id)) {
+        addEventPlatformGrass(newWorldGroup, node);
+      }
     });
 
     // Distant, post-portal atmosphere only. These occupy open background space
