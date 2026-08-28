@@ -1,175 +1,183 @@
-[
+export const developmentTeam = [
   {
-    "id": "Code Wave",
-    "name": "Code Wave",
-    "category": "Coding",
-    "description": "Where every line creates a Wave",
-    "rules": [
-      "Basic knowledge of C/C++, Java, Python, and JavaScript is required (questions can be from any of these).",
-      "Good understanding of Computer Science fundamentals is required.",
-      "Experience in Data Structures & Algorithms and basic competitive coding is necessary.",
-      "Rules for each round will be explained on the spot."
-    ],
-    "heads": ["Havyas U - 7483989780", "Shashidhara K - 7760770725"],
-    "participants": 2
+    id: "dev-1",
+    name: "Shashidhar",
+    role: "Authentication and Payment Management",
+    image: "/assets/developer/SHASHIDHAR.png",
+    imagePosition: "object-[50%_-30%]",
+    initials: "SH",
+    phone: "",
+    email: "mailto:shashidharak334@gmail.com",
+    github: "https://github.com/Shashidharak89",
+    linkedin: "https://www.linkedin.com/in/shashidhara-k-a2374b31b"
   },
   {
-    "id": "Coral Canvas",
-    "name": "Coral Canvas",
-    "category": "Web Design",
-    "description": "Where every pixel shapes a Reef",
-    "rules": [
-      "Participants must have knowledge in HTML, CSS, and JavaScript.",
-      "The rounds and design tasks will be provided on the spot.",
-      "Electronic gadgets are not allowed."
-    ],
-    "heads": ["Swasthik NJ - 8951192848", "Udith R Poojary - 8088575178"],
-    "participants": 2
+    id: "dev-2",
+    name: "Havyas",
+    role: "Event Registration and Functionality",
+    image: "/assets/developer/havyas.png",
+    initials: "HA",
+    phone: "",
+    email: "mailto:havyasu2005@gmail.com",
+    github: "https://github.com/HavyasU",
+    linkedin: "https://www.linkedin.com/in/havyasu/"
   },
   {
-    "id": "Aqua Byte",
-    "name": "Aqua Byte",
-    "category": "IT Quiz",
-    "description": "Where knowledge meets the Unknown",
-    "rules": [
-     
-      "The questions will cover General Knowledge, Technical Knowledge, Programming, Information Technology, Computer Science, and other IT-related topics",
-      "The use of mobile phones, smartwatches, or any electronic gadgets is strictly prohibited during the event",
-      "The decision of the judges shall be final and binding",
-      "Any malpractice or violation of the quiz rules will lead to disqualification"
-    ],
-    "heads": ["Thushar R Poojary- 7019512573", "Prathiksha - 6363428734"],
-    "participants": 2
+    id: "dev-3",
+    name: "Swasthik NJ",
+    role: "Design Systems Engineer",
+    image: "/assets/developer/swasthik.png",
+    initials: "SN",
+    phone: "",
+    email: "mailto:swastiknj76@gmail.com",
+    github: "https://github.com/swasthik-nj",
+    linkedin: "https://www.linkedin.com/in/swasthik-nj/"
   },
   {
-    "id": "Abyss Arena",
-    "name": "Abyss Arena",
-    "category": "Gaming",
-    "description": "Battle beyond the Depths",
-    "rules": [
-      "A team must consist of 4 players",
-      "Participants should bring their laptops and other necessary equipment",
-      "Any use of hacking will result in disqualification",
-      "Participants should bring their own ethernet adapter if their laptop doesn't have an ethernet port"
-    ],
-    "heads": ["Jithesh Kotian - 7619168599", "Keerthan Kulal - 8792839166"],
-    "participants": 4
+    id: "dev-4",
+    name: "Sumanth",
+    role: "3D Designer",
+    image: "/assets/developer/sumanth.png",
+    imagePosition: "object-[50%_-20%]",
+    initials: "SU",
+    phone: "",
+    email: "mailto:sumanthpoojary965@gmail.com",
+    github: "https://github.com/sumanth965",
+    linkedin: "https://www.linkedin.com/in/sumanth-poojary-2a1052246"
   },
   {
-    "id": "AquaVerse",
-    "name": "AquaVerse",
-    "category": "Tech Talk",
-    "description": "Only the boldest minds can conquer the future",
-    "rules": [
-      "The topic for each round will be disclosed a few minutes before the round begins",
-      "Judges decisions are final and binding. No objections or disputes will be entertained",
-      "Participants must always maintain a respectful and professional demeanour",
-      "Use of offensive language, inappropriate content, cheating, or disrespectful behaviour will result in immediate disqualification"
-    ],
-    "heads": ["Krupa - 8296612368", "Hruthika - 9353480749"],
-    "participants": 1
+    id: "dev-5",
+    name: "Thushar R Poojary",
+    role: "UI/UX Engineer",
+    image: "/assets/developer/thushar.png",
+    imagePosition: "object-[50%_-90%]",
+    initials: "TP",
+    phone: "",
+    email: "mailto:thusharrpoojary@gmail.com",
+    github: "https://github.com/thushar-r-poojary",
+    linkedin: "https://www.linkedin.com/in/thushar-r-poojary-972b74245/"
   },
   {
-    "id": "Ocean Enigma",
-    "name": "Ocean Enigma",
-    "category": "Surprise Event",
-    "description": "The Ultimate Surprise Challenge",
-    "rules": [
-      
-      "Mystery will be revealed only at the event",
-      "Surprise bonus challenges may appear anytime",
-      "Use your brain, not gadgets, electronic devices are not allowed.",
-      "Some tasks will be time-based",
-      "Judges' decisions are final and binding.",
-      "Maintain fair play and sportsmanship throughout the event"
-    ],
-    "heads": ["Sameeksha Jain - 7676292225", "Dheemanth Bhatta - 9480463974"],
-    "participants": 2
+    id: "dev-6",
+    name: "Sharan",
+    role: "Frontend Developer",
+    image: "/assets/developer/sharan.png",
+    imagePosition: "object-[50%_-20%]",
+    initials: "SH",
+    phone: "",
+    email: "mailto:sharansalyan1@gmail.com",
+    github: "https://github.com/sharansalyan102-star",
+    linkedin: "https://www.linkedin.com/in/sharan-salyan-3162a42b9"
   },
   {
-    "id": "Leviathan",
-    "name": "Leviathan",
-    "category": "IT Manager",
-    "description": "Only one can rule the depths",
-    "rules": [
-      "This is a solo event, and each participant will compete individually",
-      "Participants must report on time for all rounds with their own laptops",
-      "No communication or teamwork is allowed during rounds",
-      "Judges' decisions are final and cannot be challenged",
-      "Any form of cheating, unfair practice, or misconduct will result in disqualification",
-      "Participants are not allowed to join any other event"
-    ],
-    "heads": ["Jathin - 6364058375", "Hasth - 7338371775"],
-    "participants": 1
-  },
-{
-  "id": "The Meg Pitch",
-  "name": "The Meg Pitch",
-  "category": "StartUp",
-  "description": "The Deep Sea of Innovation",
-  "rules": [
-    "The event will have 2 rounds, with teams of 2 participants each.",
-    "Participants must bring their own laptops to create and pitch their ideas.",
-    "For the 1st round, each team will prepare and present their startup idea using a single slide."
-  ],
-  "heads": ["Sumanth Acharya - 8748059243", "Shahavez - 7349342520"],
-  "participants": 2
-},
-  {
-    "id": "Submarine",
-    "name": "Submarine",
-    "category": "Photography",
-    "description": "Enter the tagline/description here",
-    "rules": [
-      "Per team 1 participant",
-      "Participant should have photography and videography knowledge",
-      "DSLR can be used"
-    ],
-    "heads": ["Goutam Hegde - 9242288471", "Bhargavi Pai - 9632081787"],
-    "participants": 1
+    id: "dev-7",
+    name: "Udith R Poojary",
+    role: "Frontend Developer",
+    image: "/assets/developer/udith.png",
+    imagePosition: "object-[50%_-30%]",
+    initials: "UP",
+    phone: "",
+    email: "mailto:udithrpoojary@gmail.com",
+    github: "https://github.com/udithrpoojary04",
+    linkedin: "https://www.linkedin.com/in/udith-r-poojary-8a4053246"
   },
   {
-    "id": "Narcissa",
-    "name": "Narcissa",
-    "category": "Fashin Show",
-    "description": "Only the Boldest can own the Depths",
-    "rules": [
-    "The team must have a minimum of 4 members and a maximum of 8 members.",
-    "The time limit is 4+1. Timing starts as soon as the team enters the stage.",
-    "Any dance style is allowed, including Eastern, Western, or Fusion.",
-    "Performances must not contain any vulgarity, offensive gestures, or content targeting any community or religion.",
-    "No extra preparation time will be given on stage.",
-    "Props are allowed but must be safe and manageable by the team. Participants are responsible for bringing and handling their own props.",
-    "Teams must submit their audio track in MP3 format 2 days before the event.",
-    "The decision of the judges will be final."
-  ],
-    "heads": ["Prapthi Shetty - 9632081932", "Prathiksha - 9483505763"],
-    "participants": 2
+    id: "dev-8",
+    name: "Dattatreya",
+    role: "Database Management",
+    image: "/assets/developer/DATTATREYA.png",
+    initials: "DA",
+    phone: "",
+    email: "mailto:dattatreyagokhale@gmail.com",
+    github: "https://github.com/Dattu5",
+    linkedin: "https://www.linkedin.com/in/dattatreya-gokhale-501b79341"
   },
   {
-    "id": "general-rules",
-    "name": "General Guidelines",
-    "category": "Fest Rules",
-    "description": "Please read through the general guidelines and rules for participation in Semaphore 2026.",
-    "rules": [
-      "A team should consist of a maximum of 15 members.",
-      "The fest is open to all MCA students.",
-      "Teams must confirm their participation through our website: semaphore2k26.in",
-      "The registration fee is ₹2000 per team.",
-      "All participants must be present before 8:00 AM.",
-      "The overall championship will be decided based on the cumulative participation of each team across all events.",
-      "For the Fashion show event, anyone from other events can join. But those in IT Manager and Photography can’t join any other events.",
-      "Participants are required to produce their college ID on the fest day.",
-      "All participants must be available on campus for both days of the event.",
-      "The department/convenor reserves the right to take action in case of any misconduct.",
-      "The decisions of the judges will be final and binding.",
-      "For any issues regarding the payment of registration fees, please contact the core committee members.",
-      "A cash prize and trophy will be awarded to the overall champions and runners-up.",
-      "Participants must bring a permission letter from their respective colleges.",
-      "Participants must bring accessories such as pens, laptops, chargers, etc. themselves.",
-      "NOTE: The rules may be changed by the authorities at any time if necessary. Any changes will be notified."
-    ],
-    "heads": [],
-    "participants": 0
+    id: "dev-9",
+    name: "Hanson Vaz",
+    role: "Tester",
+    image: "/assets/developer/HANSON VAZ.png",
+    imagePosition: "object-[50%_-10%]",
+    initials: "HV",
+    phone: "",
+    email: "mailto:hansonvaz0704@gmail.com",
+    github: "",
+    linkedin: "https://www.linkedin.com/in/hanson-vaz"
+  },
+  {
+    id: "dev-10",
+    name: "Gaurav",
+    role: "Frontend Developer",
+    image: "/assets/developer/gaurav.png",
+    initials: "GA",
+    phone: "",
+    email: "mailto:gauravsk615@gmail.com",
+    github: "https://github.com/gautam606",
+    linkedin: "https://www.linkedin.com/in/gaurav-sk-891720333/"
+  },
+  {
+    id: "dev-11",
+    name: "Jeevan",
+    role: "UI Developer",
+    image: "/assets/developer/jeevan.png",
+    initials: "JE",
+    phone: "",
+    email: "mailto:jeevanshetty9481@gmail.com",
+    github: "https://github.com/Jeevan-Shetty07",
+    linkedin: "https://www.linkedin.com/in/jeevan-shetty-241613229/"
   }
-]
+];
+
+export const staffCoordinators = [
+  {
+    id: "staff-1",
+    name: "Roshan Suvaris",
+    role: "Staff Coordinator",
+    image: "/assets/images/roshan-sir.png",
+    imagePosition: "object-[50%_-70%]",
+    initials: "SN",
+    phone: "tel:+91 9663484343",
+    email: "mailto:roshan.suaris@nitte.edu.in",
+    github: "https://github.com",
+    linkedin: ""
+  }
+];
+
+export const studentCoordinators = [
+  {
+    id: "student-1",
+    name: "Vansh Shetty",
+    role: "President",
+    image: "/assets/images/vanshh.png",
+    imageScale: "scale-[1.15] group-hover:scale-125",
+    initials: "S1",
+    phone: "tel:+91 9019720766",
+    email: "mailto:nn25mca171@nmamit.in",
+    github: "https://github.com",
+    linkedin: ""
+  },
+  {
+    id: "student-2",
+    name: "Vaibhav Jain",
+    role: "Secretary",
+    image: "/assets/images/vaibhav.png",
+    imagePosition: "object-top",
+    initials: "S2",
+    phone: "tel:+91 7019489127",
+    email: "mailto:nn25mca170@nmamit.in",
+    github: "https://github.com",
+    linkedin: ""
+  },
+  {
+    id: "student-3",
+    name: "Nikhil",
+    role: "Technical Coordinator",
+    image: "/assets/images/nikhil.png",
+    imagePosition: "object-[50%_40%]",
+    initials: "S3",
+    phone: "tel:+91 7019480750",
+    email: "mailto:nn25mca081@nmamit.in",
+    github: "https://github.com",
+    linkedin: ""
+  }
+];
