@@ -54,7 +54,7 @@ export async function addCoralReef(scene, parentGroup) {
     roughness: 0.9, metalness: 0.1, flatShading: true,
     color: 0x1f8b4c // Vibrant dark green matching the mockup
   });
-  const grassCount = 40; // 20 per side
+  const grassCount = 18; // 9 per side (reduced)
   const grassMesh = new THREE.InstancedMesh(grassGeo, greenMat, grassCount);
   
   for (let i = 0; i < grassCount; i++) {
@@ -62,8 +62,8 @@ export async function addCoralReef(scene, parentGroup) {
     const sideSign = isLeft ? -1 : 1;
     
     // Tightly cluster around the edges of the stairs
-    const x = sideSign * (14 + Math.random() * 18);
-    const z = -5 - Math.random() * 25;
+    const x = sideSign * (16 + Math.random() * 12);
+    const z = -8 - Math.random() * 18;
     const y = -40 + Math.random() * 4;
     
     const scl = 0.25 + Math.random() * 0.2;
@@ -84,7 +84,7 @@ export async function addCoralReef(scene, parentGroup) {
     roughness: 0.9, metalness: 0.1, flatShading: true,
     color: 0x915c83 // Deep purple/pink matching the mockup
   });
-  const branchCount = 30; // 15 per side
+  const branchCount = 12; // 6 per side (reduced)
   const branchMesh = new THREE.InstancedMesh(branchGeo, purpleMat, branchCount);
   
   for (let i = 0; i < branchCount; i++) {
@@ -93,20 +93,20 @@ export async function addCoralReef(scene, parentGroup) {
     
     let x, y, z, scl, rotZ;
     
-    if (i < 18) { 
-      // Massive ground framing behind the grass
-      x = sideSign * (22 + Math.random() * 18);
-      z = -12 - Math.random() * 25;
+    if (i < 8) { 
+      // Ground framing behind the grass
+      x = sideSign * (24 + Math.random() * 12);
+      z = -14 - Math.random() * 16;
       y = -39 + Math.random() * 3;
-      scl = 0.5 + Math.random() * 0.4; // Very large to loom over the path
+      scl = 0.35 + Math.random() * 0.25;
       rotZ = isLeft ? -0.3 : 0.3;
     } else {
       // Crawling up the cavern walls in the background
-      x = sideSign * (38 + Math.random() * 20);
-      z = -20 - Math.random() * 35;
-      y = -25 + Math.random() * 25;
-      scl = 0.3 + Math.random() * 0.2;
-      rotZ = isLeft ? -0.8 : 0.8; // Tilt heavily out from the wall
+      x = sideSign * (38 + Math.random() * 14);
+      z = -22 - Math.random() * 20;
+      y = -25 + Math.random() * 20;
+      scl = 0.2 + Math.random() * 0.15;
+      rotZ = isLeft ? -0.8 : 0.8;
     }
     
     dummy.position.set(x, y, z);
