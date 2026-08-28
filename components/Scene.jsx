@@ -582,6 +582,13 @@ export default function Scene() {
   const pinRefs = useRef([]);
   const activeEventRef = useRef("event-1");
   const userMutedRef = useRef(false);
+
+  // --- IMMERSIVE HOLD LOGIC REFS ---
+  const pausedEventsRef = useRef(new Set());
+  const lastScrollPRef = useRef(0);
+  const isHeldRef = useRef(false);
+  // ---------------------------------
+
   const [activeEvent, setActiveEvent] = useState("event-1");
 
   const [progress, setProgress] = useState(0);
@@ -2888,6 +2895,10 @@ export default function Scene() {
         scrub: isMobile ? 1.0 : 0.8,
         onUpdate: (self) => {
           const updateStart = performance.now();
+
+          // --- IMMERSIVE EVENT SCROLL HOLD LOGIC REMOVED FROM HERE ---
+          // Logic moved to animate loop for dynamic physical position detection
+
           const currentProgress = Math.floor(self.progress * 100);
           // PERF: Only trigger React re-render when integer value actually changes
           if (currentProgress !== lastScrollInt) {
@@ -4593,6 +4604,57 @@ export default function Scene() {
         setActiveEvent(currentActiveId);
       }
 
+      // --- IMMERSIVE DYNAMIC HOLD CAPTURE ---
+      let activeEventForHold = null;
+      if (camState.z < -245) {
+        for (const node of eventNodes) {
+          const dist = Math.sqrt(
+            Math.pow(smoothCamPos.x - node.pos.x, 2) +
+            Math.pow(smoothCamPos.y - node.pos.y, 2) +
+            Math.pow(smoothCamPos.z - node.pos.z, 2)
+          );
+          if (dist <= 65) {
+            activeEventForHold = node.id;
+            break;
+          }
+        }
+      }
+
+      if (activeEventForHold && !pausedEventsRef.current.has(activeEventForHold) && !isHeldRef.current) {
+        const st = ScrollTrigger.getAll()[0];
+        // Only trigger if user is actively scrolling downwards or stationary
+        if (st && st.direction !== -1 && window.__lenis) {
+          isHeldRef.current = true;
+          pausedEventsRef.current.add(activeEventForHold);
+
+          // Snap native scroll back to EXACTLY where the visual camera currently is,
+          // preventing the jarring jump caused by inaccurate minScroll values.
+          const targetPixel = st.start + (st.end - st.start) * tl.progress();
+          window.__lenis.scrollTo(targetPixel, { immediate: true });
+          window.__lenis.stop();
+
+          // Absolutely prevent native scroll hijacking during the hold
+          const _preventScroll = (e) => e.preventDefault();
+          const _preventKeys = (e) => {
+            if (["Space", "ArrowUp", "ArrowDown", "PageUp", "PageDown"].includes(e.code)) {
+              e.preventDefault();
+            }
+          };
+          window.addEventListener('wheel', _preventScroll, { passive: false });
+          window.addEventListener('touchmove', _preventScroll, { passive: false });
+          window.addEventListener('keydown', _preventKeys, { passive: false });
+
+          setTimeout(() => {
+            isHeldRef.current = false;
+            window.removeEventListener('wheel', _preventScroll);
+            window.removeEventListener('touchmove', _preventScroll);
+            window.removeEventListener('keydown', _preventKeys);
+            if (window.__lenis) window.__lenis.start();
+          }, 2000); // 2 second hold
+        }
+      }
+      // --------------------------------------
+
       // Ensure all event banners remain visible on their respective rock platforms
       eventNodes.forEach((node) => {
         const group = eventBannerGroups[node.id];
@@ -4998,14 +5060,14 @@ export default function Scene() {
             <div className="z-10 mb-12 relative flex items-center justify-center">
               <div className="absolute w-3/4 h-3/4 bg-cyan-400/20 blur-[100px] rounded-full animate-pulse pointer-events-none" />
               <img
-  src="https://res.cloudinary.com/zuxdlzob/image/upload/v1787802540/semaphore_logo.png"
-  alt="Semaphore 2026 Logo"
-  className="w-[80vw] max-w-[600px] h-auto object-contain relative z-10 drop-shadow-[0_0_25px_rgba(0,255,255,0.4)] hover:scale-105 transition-transform duration-700"
-/>
+                src="https://res.cloudinary.com/zuxdlzob/image/upload/v1787802540/semaphore_logo.png"
+                alt="Semaphore 2026 Logo"
+                className="w-[80vw] max-w-[600px] h-auto object-contain relative z-10 drop-shadow-[0_0_25px_rgba(0,255,255,0.4)] hover:scale-105 transition-transform duration-700"
+              />
             </div>
 
             {/* Standalone Visual Register Button (No link) */}
-            <a 
+            <a
               href="/events/register"
               className="z-10 px-12 py-4 bg-cyan-600/80 hover:bg-cyan-500 text-white font-mono font-bold tracking-[0.2em] rounded-lg transition-all duration-500 shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.8)] hover:-translate-y-1 text-xl md:text-2xl border border-cyan-400/30 hover:border-cyan-300"
             >
