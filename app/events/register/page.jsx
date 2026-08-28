@@ -772,9 +772,7 @@ export default function EventsPage() {
                         >
                           <div style={styles.cardHeader}>
                             <h3 style={styles.cardTitle}>{event.title}</h3>
-                            <span style={styles.feeBadge}>
-                              {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free'}
-                            </span>
+
                           </div>
 
                           <p style={styles.description}>{event.description}</p>
