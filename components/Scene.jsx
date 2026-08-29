@@ -637,19 +637,14 @@ export default function Scene() {
         audioRef.current.paused &&
         !isPlayPendingRef.current
       ) {
-        console.log("[Performance] Triggering Audio Play...");
-        console.time("[Performance] Audio Play Promise");
         isPlayPendingRef.current = true;
         audioRef.current
           .play()
           .then(() => {
-            console.timeEnd("[Performance] Audio Play Promise");
             setIsAudioPlaying(true);
             isPlayPendingRef.current = false;
           })
           .catch((err) => {
-            console.timeEnd("[Performance] Audio Play Promise");
-            console.log("Audio autoplay blocked (expected if no user interaction yet):", err.message);
             isPlayPendingRef.current = false;
           });
       }
@@ -1787,7 +1782,8 @@ export default function Scene() {
         baseRotY: baseRotY,
         targetRotY: baseRotY,
         speed: 5.0 + Math.random() * 5.0,
-        offset: Math.random() * Math.PI * 2
+        offset: Math.random() * Math.PI * 2,
+        animationElapsed: 0,
       });
     }
 
@@ -1904,9 +1900,8 @@ export default function Scene() {
     }
 
     // --- FLOW FIELD WATER PARTICLES ---
-    const flowFieldCount = isMobile ? 1800 : 4200;
+    const flowFieldCount = isMobile ? 1500 : 3200;
     const flowFieldPositions = new Float32Array(flowFieldCount * 3);
-    const flowFieldVelocities = new Float32Array(flowFieldCount * 3);
     const flowFieldSizes = new Float32Array(flowFieldCount);
     const flowFieldAlphas = new Float32Array(flowFieldCount);
     const flowFieldTypes = new Float32Array(flowFieldCount);
@@ -1917,10 +1912,6 @@ export default function Scene() {
       flowFieldPositions[i3 + 1] = -520 + Math.random() * 540;
       flowFieldPositions[i3 + 2] = -30 - Math.random() * 990;
 
-      flowFieldVelocities[i3] = (Math.random() - 0.5) * 0.1;
-      flowFieldVelocities[i3 + 1] = (Math.random() - 0.5) * 0.1;
-      flowFieldVelocities[i3 + 2] = (Math.random() - 0.5) * 0.1;
-
       flowFieldTypes[i] = Math.random();
       flowFieldSizes[i] = Math.random() < 0.7 ? 1.2 + Math.random() * 2.0 : 3.2 + Math.random() * 3.5;
       flowFieldAlphas[i] = 0.35 + Math.random() * 0.55;
@@ -1928,7 +1919,6 @@ export default function Scene() {
 
     const flowFieldGeo = new THREE.BufferGeometry();
     flowFieldGeo.setAttribute("position", new THREE.BufferAttribute(flowFieldPositions, 3));
-    flowFieldGeo.setAttribute("velocity", new THREE.BufferAttribute(flowFieldVelocities, 3));
     flowFieldGeo.setAttribute("size", new THREE.BufferAttribute(flowFieldSizes, 1));
     flowFieldGeo.setAttribute("alpha", new THREE.BufferAttribute(flowFieldAlphas, 1));
     flowFieldGeo.setAttribute("particleType", new THREE.BufferAttribute(flowFieldTypes, 1));
@@ -2346,15 +2336,24 @@ export default function Scene() {
       infoCanvas.width = 128;
       infoCanvas.height = 128;
       const iCtx = infoCanvas.getContext("2d");
+      const iconGlow = iCtx.createRadialGradient(64, 64, 18, 64, 64, 64);
+      iconGlow.addColorStop(0, "rgba(0, 240, 255, 0.38)");
+      iconGlow.addColorStop(0.55, "rgba(0, 220, 255, 0.16)");
+      iconGlow.addColorStop(1, "rgba(0, 220, 255, 0)");
+      iCtx.fillStyle = iconGlow;
+      iCtx.fillRect(0, 0, 128, 128);
       iCtx.beginPath();
       iCtx.arc(64, 64, 56, 0, Math.PI * 2);
-      iCtx.strokeStyle = "#00f0ff";
-      iCtx.lineWidth = 6;
+      iCtx.strokeStyle = "rgba(50, 246, 255, 0.98)";
+      iCtx.lineWidth = 7;
+      iCtx.shadowColor = "#00f0ff";
+      iCtx.shadowBlur = 24;
       iCtx.stroke();
-      iCtx.fillStyle = "rgba(0, 240, 255, 0.2)";
+      iCtx.shadowBlur = 0;
+      iCtx.fillStyle = "rgba(0, 240, 255, 0.28)";
       iCtx.fill();
       iCtx.shadowColor = "#00f0ff";
-      iCtx.shadowBlur = 10;
+      iCtx.shadowBlur = 20;
       iCtx.fillStyle = "#ffffff";
       iCtx.font = "bold 72px monospace";
       iCtx.textAlign = "center";
@@ -2517,7 +2516,7 @@ export default function Scene() {
 
 
     // --- RISING BUBBLES PARTICLE STREAM ---
-    const bubbleCount = isMobile ? 6000 : 15000;
+    const bubbleCount = isMobile ? 5000 : 12000;
     const bubbleGeo = new THREE.BufferGeometry();
     const bubbleInitialPos = new Float32Array(bubbleCount * 3);
     const bubbleSizes = new Float32Array(bubbleCount);
@@ -2565,7 +2564,7 @@ export default function Scene() {
     scene.add(bubblePoints);
 
     // --- SHINING WATER PARTICLES (twinkling light-catching motes) ---
-    const shimmerCount = isMobile ? 900 : 2200;
+    const shimmerCount = isMobile ? 750 : 1800;
     const shimmerGeo = new THREE.BufferGeometry();
     const shimmerPositions = new Float32Array(shimmerCount * 3);
     const shimmerSizes = new Float32Array(shimmerCount);
@@ -2603,7 +2602,7 @@ export default function Scene() {
     scene.add(shimmerMesh);
 
     // --- FLOATING UNDERWATER DUST & PLANKTON ---
-    const dustCount = isMobile ? 1600 : 4000;
+    const dustCount = isMobile ? 1400 : 3200;
     const dustGeo = new THREE.BufferGeometry();
     const dustPositions = new Float32Array(dustCount * 3);
     const dustVelocities = new Float32Array(dustCount * 3);
@@ -2654,7 +2653,7 @@ export default function Scene() {
     scene.add(dustPoints);
 
     // --- FLOATING AQUATIC SMALL WATER BALLS ---
-    const ballCount = isMobile ? 3000 : 7000;
+    const ballCount = isMobile ? 2400 : 5600;
     const ballGeo = new THREE.BufferGeometry();
     const ballPositions = new Float32Array(ballCount * 3);
     const ballSizes = new Float32Array(ballCount);
@@ -2696,8 +2695,8 @@ export default function Scene() {
     scene.add(ballMesh);
 
     // --- BIOLUMINESCENT WAVE SEABED PLANE ---
-    const waveGridCols = isMobile ? 80 : 160;
-    const waveGridRows = isMobile ? 80 : 160;
+    const waveGridCols = isMobile ? 72 : 144;
+    const waveGridRows = isMobile ? 72 : 144;
     const waveCount = waveGridCols * waveGridRows;
     const waveWidth = 400;
     const waveDepth = 1000;
@@ -2750,7 +2749,7 @@ export default function Scene() {
     scene.add(seabedWaveMesh);
 
     // --- FLOATING AMBIENT BUBBLES & AQUATIC DUST ---
-    const floatParticleCount = isMobile ? 600 : 1800;
+    const floatParticleCount = isMobile ? 500 : 1500;
 
     const floatPositions = new Float32Array(floatParticleCount * 3);
     const floatSizes = new Float32Array(floatParticleCount);
@@ -2894,68 +2893,17 @@ export default function Scene() {
         end: "bottom bottom",
         scrub: isMobile ? 1.0 : 0.8,
         onUpdate: (self) => {
-          const updateStart = performance.now();
-
           // --- IMMERSIVE EVENT SCROLL HOLD LOGIC REMOVED FROM HERE ---
           // Logic moved to animate loop for dynamic physical position detection
 
           const currentProgress = Math.floor(self.progress * 100);
-          // PERF: Only trigger React re-render when integer value actually changes
-          if (currentProgress !== lastScrollInt) {
-            lastScrollInt = currentProgress;
-            setScrollProgress(currentProgress);
+          // Only these UI states are consumed by React: surface, HUD visible, and end screen.
+          // Keeping the same thresholds avoids component rerenders for every percent of scrolling.
+          const nextUiProgress = currentProgress >= 99 ? 99 : currentProgress >= 4 ? 4 : 0;
+          if (nextUiProgress !== lastScrollInt) {
+            lastScrollInt = nextUiProgress;
+            setScrollProgress(nextUiProgress);
           }
-          const updateTime = performance.now() - updateStart;
-          if (updateTime > 8) {
-            console.warn(`[Performance] Slow ScrollTrigger onUpdate: ${updateTime.toFixed(2)}ms (progress: ${currentProgress}%)`);
-          }
-
-
-
-          // --- COMPREHENSIVE SCROLL LOGGER ---
-          const p = self.progress;
-          let currentSection = "Surface Hero Ocean View (0% - 2.5%)";
-          if (p >= 0.025 && p < 0.065) currentSection = "Underwater Cave Descent (2.5% - 6.5%)";
-          else if (p >= 0.065 && p < 0.069) currentSection = "Pre-Portal Stargate Gate (6.5% - 6.9%)";
-          else if (p >= 0.069 && p < 0.078) currentSection = "Stargate Singularity Warp Transition (6.9% - 7.8%)";
-          else if (p >= 0.50 && p < 0.55) currentSection = "Event 01: Coding Platform (50% - 55%)";
-          else if (p >= 0.55 && p < 0.60) currentSection = "Event 02: Web Design Platform (55% - 60%)";
-          else if (p >= 0.60 && p < 0.65) currentSection = "Event 03: IT Quiz Platform (60% - 65%)";
-          else if (p >= 0.65 && p < 0.70) currentSection = "Event 04: Gaming Platform (65% - 70%)";
-          else if (p >= 0.70 && p < 0.75) currentSection = "Event 05: Tech Talk Platform (70% - 75%)";
-          else if (p >= 0.75 && p < 0.80) currentSection = "Event 06: Surprise Platform (75% - 80%)";
-          else if (p >= 0.80 && p < 0.85) currentSection = "Event 07: IT Manager Platform (80% - 85%)";
-          else if (p >= 0.85 && p < 0.90) currentSection = "Event 08: Startup Platform (85% - 90%)";
-          else if (p >= 0.90 && p < 0.95) currentSection = "Event 09: Dance Platform (90% - 95%)";
-          else if (p >= 0.95) currentSection = "Event 10: Photography & Finale (95% - 100%)";
-
-          console.log(
-            `%c[SCROLL] ${(p * 100).toFixed(1)}% | ${self.direction === 1 ? "FORWARD ↓" : "BACKWARD ↑"} | ${currentSection}`,
-            "color: #00ffff; font-weight: bold; background: #011728; padding: 2px 6px; border-radius: 3px;",
-            {
-              section: currentSection,
-              scrollProgress: `${(p * 100).toFixed(2)}%`,
-              direction: self.direction === 1 ? "FORWARD ↓" : "BACKWARD ↑",
-              velocity: self.getVelocity ? Math.round(self.getVelocity()) : 0,
-              cameraPosition: {
-                x: +(camState.x || 0).toFixed(1),
-                y: +(camState.y || 0).toFixed(1),
-                z: +(camState.z || 0).toFixed(1),
-              },
-              elements: {
-                "Water Surface": { visible: water ? water.visible : true, hidden: water ? !water.visible : false },
-                "Water Ceiling": { visible: waterCeilingMesh ? waterCeilingMesh.visible : true, hidden: waterCeilingMesh ? !waterCeilingMesh.visible : false, opacity: +(waterCeilingMat?.opacity || 0).toFixed(2) },
-                "Water Underside": { visible: waterUnderside ? waterUnderside.visible : true, hidden: waterUnderside ? !waterUnderside.visible : false },
-                "Cave Walls (caveMesh)": { visible: caveMesh ? caveMesh.visible : true, hidden: caveMesh ? !caveMesh.visible : false, opacity: +(caveMaterial?.opacity || 1).toFixed(2) },
-                "Side Cliff Walls": { visible: sideCliffGroup ? sideCliffGroup.visible : true, hidden: sideCliffGroup ? !sideCliffGroup.visible : false },
-                "Background Mountains": { visible: bgMountainsGroup ? bgMountainsGroup.visible : true, hidden: bgMountainsGroup ? !bgMountainsGroup.visible : false },
-                "Portal Stargate": { visible: portalGroup ? portalGroup.visible : true, hidden: portalGroup ? !portalGroup.visible : false },
-                "Event World (newWorldGroup)": { visible: newWorldGroup ? newWorldGroup.visible : false, hidden: newWorldGroup ? !newWorldGroup.visible : true },
-                "Portal Backdrop": { visible: portalBackdropMesh ? portalBackdropMesh.visible : true, hidden: portalBackdropMesh ? !portalBackdropMesh.visible : false },
-                "Hero UI Overlay": { visible: heroUiRef.current ? parseFloat(heroUiRef.current.style.opacity || "1") > 0.05 : true, opacity: heroUiRef.current?.style.opacity || "1.0" }
-              }
-            }
-          );
         },
       },
     });
@@ -4104,22 +4052,6 @@ export default function Scene() {
       outerRingMesh.rotation.z = -t * 0.25;
       flowFieldMat.uniforms.uTime.value = t;
 
-      // Update Flow Field Water Particle position drift in 3D currents
-      const ffPositions = flowFieldGeo.attributes.position.array;
-      for (let i = 0; i < flowFieldCount; i++) {
-        const i3 = i * 3;
-        ffPositions[i3] += Math.sin(t * 0.6 + i) * 0.05;
-        ffPositions[i3 + 1] += Math.cos(t * 0.4 + i) * 0.04 + 0.02;
-        ffPositions[i3 + 2] += Math.sin(t * 0.5 + i * 2) * 0.05;
-
-        if (ffPositions[i3 + 1] > 30) {
-          ffPositions[i3 + 1] = -520;
-        }
-      }
-
-
-      flowFieldGeo.attributes.position.needsUpdate = true;
-
       // --- POD FORMATION DOLPHIN SWIMMING IN OPEN VIEWABLE CANYON ---
       const podSpeed = 0.45;
       const podTime = t * podSpeed;
@@ -4139,8 +4071,21 @@ export default function Scene() {
       const podUp = _podUp.crossVectors(podRight, podForward).normalize();
 
       allFishSchools.forEach((school) => {
-        if (school.mixer) school.mixer.update(delta);
         if (school.group) {
+          const dx = school.group.position.x - camera.position.x;
+          const dy = school.group.position.y - camera.position.y;
+          const dz = school.group.position.z - camera.position.z;
+          const isNearCamera = dx * dx + dy * dy + dz * dz < 90000;
+          school.animationElapsed += delta;
+
+          // Keep nearby fish at full animation fidelity. Distant schools retain
+          // elapsed animation time but only update at 15 FPS, where individual
+          // skeletal motion is not perceptible.
+          if (school.mixer && (isNearCamera || school.animationElapsed >= 1 / 15)) {
+            school.mixer.update(school.animationElapsed);
+            school.animationElapsed = 0;
+          }
+
           // Slight wobble to look alive, instead of continuously spinning
           school.group.rotation.y = Math.sin(t * 0.5 + school.offset) * 0.1;
 
@@ -4579,12 +4524,7 @@ export default function Scene() {
       );
       camera.rotation.z = floatRotZ + currentBank;
 
-      const renderStart = performance.now();
       renderer.render(scene, camera);
-      const renderTime = performance.now() - renderStart;
-      if (renderTime > 16.6 && scrollProgress > 0) {
-        console.warn(`[Performance] Slow frame render inside animate loop: ${renderTime.toFixed(2)}ms`);
-      }
 
       // Active Event state determination based on camera Z position depth
       let currentActiveId = null;
