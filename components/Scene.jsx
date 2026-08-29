@@ -2799,6 +2799,20 @@ export default function Scene() {
     const mouseVector = new THREE.Vector2();
 
     function handlePortalClick(event) {
+      // absolute guard: if we are at the top of the page, only stargate click is allowed
+      if (window.scrollY < 300) {
+        mouseVector.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouseVector.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouseVector, camera);
+
+        const intersects = raycaster.intersectObjects([portalRingMesh], true);
+        if (intersects.length > 0) {
+          const targetY = window.innerHeight * 5;
+          window.scrollTo({ top: targetY, behavior: "smooth" });
+        }
+        return;
+      }
+
       mouseVector.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouseVector.y = -(event.clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouseVector, camera);
@@ -2807,10 +2821,24 @@ export default function Scene() {
       if (intersects.length > 0) {
         const hit = intersects[0].object;
         if (hit === portalRingMesh) {
-          const targetY = window.innerHeight * 5;
-          window.scrollTo({ top: targetY, behavior: "smooth" });
+          const zDist = Math.abs(camera.position.z - (-190));
+          if (zDist < 250) {
+            const targetY = window.innerHeight * 5;
+            window.scrollTo({ top: targetY, behavior: "smooth" });
+          }
         } else if (hit.userData && hit.userData.eventData) {
-          setSelectedEvent(hit.userData.eventData);
+          const node = hit.userData.eventData;
+          const zDist = Math.abs(camera.position.z - node.pos.z);
+          console.log("[Portal Click Debug]", {
+            nodeName: node.name,
+            zDist: zDist,
+            camZ: camera.position.z,
+            nodeZ: node.pos.z,
+            isWithinRange: zDist < 100
+          });
+          if (zDist < 100) {
+            setSelectedEvent(node);
+          }
         }
       }
     }
@@ -2854,12 +2882,50 @@ export default function Scene() {
       mouseVector.y = targetMouse.y;
       raycaster.setFromCamera(mouseVector, camera);
 
+      // absolute guard: if we are at the top of the page, only stargate hover is allowed
+      if (window.scrollY < 300) {
+        const intersects = raycaster.intersectObjects([portalRingMesh], true);
+        if (intersects.length > 0) {
+          const hit = intersects[0].object;
+          const zDist = Math.abs(camera.position.z - (-190));
+          if (zDist < 250) {
+            document.body.style.cursor = "pointer";
+          } else {
+            document.body.style.cursor = "default";
+          }
+        } else {
+          document.body.style.cursor = "default";
+        }
+        setHoveredNode(null);
+        return;
+      }
+
       const intersects = raycaster.intersectObjects([portalRingMesh, ...crystalShrineMeshes, ...bannerMeshes, ...infoMeshes], true);
       if (intersects.length > 0) {
-        document.body.style.cursor = "pointer";
         const hit = intersects[0].object;
-        if (hit.userData && hit.userData.eventData) {
-          setHoveredNode(hit.userData.eventData.name);
+        let isInteractive = false;
+
+        if (hit === portalRingMesh) {
+          const zDist = Math.abs(camera.position.z - (-190));
+          if (zDist < 250) {
+            isInteractive = true;
+          }
+        } else if (hit.userData && hit.userData.eventData) {
+          const node = hit.userData.eventData;
+          const zDist = Math.abs(camera.position.z - node.pos.z);
+          if (zDist < 100) {
+            isInteractive = true;
+          }
+        }
+
+        if (isInteractive) {
+          document.body.style.cursor = "pointer";
+          if (hit.userData && hit.userData.eventData) {
+            setHoveredNode(hit.userData.eventData.name);
+          }
+        } else {
+          document.body.style.cursor = "default";
+          setHoveredNode(null);
         }
       } else {
         document.body.style.cursor = "default";
@@ -4918,8 +4984,11 @@ export default function Scene() {
                 NATIONAL LEVEL MCA TECH FEST - NMAMIT NITTE
               </span>
 
+            </main>
+
+            <footer className="flex justify-center items-end w-full">
               {/* Scroll Indicator below text */}
-              <div className="flex flex-col items-center mt-15 gap-2 opacity-90 pointer-events-none transition-all duration-500 font-mono select-none">
+              <div className="flex flex-col items-center gap-2 opacity-90 pointer-events-none transition-all duration-500 font-mono select-none">
                 <div className="relative w-6 h-10 rounded-full border-2 border-cyan-400/80 shadow-[0_0_15px_rgba(0,255,255,0.4)] flex justify-center pt-2 bg-[#010c18]/90">
                   <div className="w-1.5 h-3 rounded-full bg-cyan-300 animate-bounce shadow-[0_0_8px_rgba(0,255,255,0.9)]" />
                 </div>
@@ -4928,9 +4997,6 @@ export default function Scene() {
                   <span className="text-cyan-400 text-xs animate-bounce">↓</span>
                 </div>
               </div>
-            </main>
-
-            <footer className="flex justify-between items-end w-full">
             </footer>
           </div>
 
