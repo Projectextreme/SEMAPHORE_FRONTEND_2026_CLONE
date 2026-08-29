@@ -12,17 +12,6 @@ export const developmentTeam = [
     linkedin: "https://www.linkedin.com/in/shashidhara-k-a2374b31b"
   },
   {
-    id: "dev-2",
-    name: "Havyas",
-    role: "Event Registration and Functionality",
-    image: "/assets/developer/havyas.png",
-    initials: "HA",
-    phone: "",
-    email: "mailto:havyasu2005@gmail.com",
-    github: "https://github.com/HavyasU",
-    linkedin: "https://www.linkedin.com/in/havyasu/"
-  },
-  {
     id: "dev-3",
     name: "Swasthik NJ",
     role: "Design Systems Engineer",
@@ -56,6 +45,17 @@ export const developmentTeam = [
     email: "mailto:thusharrpoojary@gmail.com",
     github: "https://github.com/thushar-r-poojary",
     linkedin: "https://www.linkedin.com/in/thushar-r-poojary-972b74245/"
+  },
+  {
+    id: "dev-2",
+    name: "Havyas",
+    role: "Event Registration and Functionality",
+    image: "/assets/developer/havyas.png",
+    initials: "HA",
+    phone: "",
+    email: "mailto:havyasu2005@gmail.com",
+    github: "https://github.com/HavyasU",
+    linkedin: "https://www.linkedin.com/in/havyasu/"
   },
   {
     id: "dev-6",
