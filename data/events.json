@@ -5,12 +5,15 @@
     "category": "Coding",
     "description": "Where every line creates a Wave",
     "rules": [
-      "Basic knowledge of C/C++, Java, Python, and JavaScript is required (questions can be from any of these).",
-      "Good understanding of Computer Science fundamentals is required.",
-      "Experience in Data Structures & Algorithms and basic competitive coding is necessary.",
-      "Rules for each round will be explained on the spot."
+      "Participants may use any one of the following: C, Java, or Python.",
+      "Basic knowledge of Data Structures & Algorithms is expected.",
+      "Internet, AI tools, and external assistance are not allowed.",
+      "Round-specific rules will be announced before each round."
     ],
-    "heads": ["Havyas U - 7483989780", "Shashidhara K - 7760770725"],
+    "heads": [
+      "Havyas U - 7483989780",
+      "Shashidhara K - 7760770725"
+    ],
     "participants": 2
   },
   {
@@ -21,9 +24,13 @@
     "rules": [
       "Participants must have knowledge in HTML, CSS, and JavaScript.",
       "The rounds and design tasks will be provided on the spot.",
-      "Electronic gadgets are not allowed."
+      "Electronic gadgets are not allowed.",
+      "Rules and decisions of the organizers will be final"
     ],
-    "heads": ["Swasthik NJ - 8951192848", "Udith R Poojary - 8088575178"],
+    "heads": [
+      "Swasthik NJ - 8951192848",
+      "Udith R Poojary - 8088575178"
+    ],
     "participants": 2
   },
   {
@@ -32,13 +39,15 @@
     "category": "IT Quiz",
     "description": "Where knowledge meets the Unknown",
     "rules": [
-     
       "The questions will cover General Knowledge, Technical Knowledge, Programming, Information Technology, Computer Science, and other IT-related topics",
       "The use of mobile phones, smartwatches, or any electronic gadgets is strictly prohibited during the event",
       "The decision of the judges shall be final and binding",
       "Any malpractice or violation of the quiz rules will lead to disqualification"
     ],
-    "heads": ["Thushar R Poojary- 7019512573", "Prathiksha - 6363428734"],
+    "heads": [
+      "Thushar R Poojary- 7019512573",
+      "Prathiksha - 6363428734"
+    ],
     "participants": 2
   },
   {
@@ -47,12 +56,16 @@
     "category": "Gaming",
     "description": "Battle beyond the Depths",
     "rules": [
-      "A team must consist of 4 players",
-      "Participants should bring their laptops and other necessary equipment",
-      "Any use of hacking will result in disqualification",
-      "Participants should bring their own ethernet adapter if their laptop doesn't have an ethernet port"
+      "Team: Each team must consist of 4 players.",
+      "Devices: Emulators, iPads, and triggers are not allowed;players must bring their own mobile devices and accessories.",
+      "Game Setup: Devices must support the latest game version, with all required maps downloaded.",
+      "Connectivity: Players should have their own internet connection as a backup.",
+      "Fair Play: Misconduct or unfair play will lead to disqualification, and organizers’ decisions are final."
     ],
-    "heads": ["Jithesh Kotian - 7619168599", "Keerthan Kulal - 8792839166"],
+    "heads": [
+      "Jithesh Kotian - 7619168599",
+      "Keerthan Kulal - 8792839166"
+    ],
     "participants": 4
   },
   {
@@ -66,7 +79,10 @@
       "Participants must always maintain a respectful and professional demeanour",
       "Use of offensive language, inappropriate content, cheating, or disrespectful behaviour will result in immediate disqualification"
     ],
-    "heads": ["Krupa - 8296612368", "Hruthika - 9353480749"],
+    "heads": [
+      "Krupa - 8296612368",
+      "Hruthika - 9353480749"
+    ],
     "participants": 1
   },
   {
@@ -75,7 +91,6 @@
     "category": "Surprise Event",
     "description": "The Ultimate Surprise Challenge",
     "rules": [
-      
       "Mystery will be revealed only at the event",
       "Surprise bonus challenges may appear anytime",
       "Use your brain, not gadgets, electronic devices are not allowed.",
@@ -83,7 +98,10 @@
       "Judges' decisions are final and binding.",
       "Maintain fair play and sportsmanship throughout the event"
     ],
-    "heads": ["Sameeksha Jain - 7676292225", "Dheemanth Bhatta - 9480463974"],
+    "heads": [
+      "Sameeksha Jain - 7676292225",
+      "Dheemanth Bhatta - 9480463974"
+    ],
     "participants": 2
   },
   {
@@ -99,33 +117,46 @@
       "Any form of cheating, unfair practice, or misconduct will result in disqualification",
       "Participants are not allowed to join any other event"
     ],
-    "heads": ["Jathin - 6364058375", "Hasth - 7338371775"],
+    "heads": [
+      "Jathin - 6364058375",
+      "Hasth - 7338371775"
+    ],
     "participants": 1
   },
-{
-  "id": "The Meg Pitch",
-  "name": "The Meg Pitch",
-  "category": "StartUp",
-  "description": "The Deep Sea of Innovation",
-  "rules": [
-    "The event will have 2 rounds, with teams of 2 participants each.",
-    "Participants must bring their own laptops to create and pitch their ideas.",
-    "For the 1st round, each team will prepare and present their startup idea using a single slide."
-  ],
-  "heads": ["Sumanth Acharya - 8748059243", "Shahavez - 7349342520"],
-  "participants": 2
-},
+  {
+    "id": "The Meg Pitch",
+    "name": "The Meg Pitch",
+    "category": "StartUp",
+    "description": "The Deep Sea of Innovation",
+    "rules": [
+      "Participants must bring their own laptop and have stable internet connection.",
+      "The round details will be disclosed on spot.",
+      "Participants must always maintain a respectful and professional demeanour.",
+      "Use of offensive language, inappropriate content, cheating, or disrespectful behaviour will result in immediate disqualification.",
+      "Judges' decisions are final and binding. No objections or disputes will be entertained.",
+      "Professional attire will be appreciated."
+    ],
+    "heads": [
+      "Sumanth Acharya - 8748059243",
+      "Shahavez - 7349342520"
+    ],
+    "participants": 2
+  },
   {
     "id": "Submarine",
     "name": "Submarine",
     "category": "Photography",
     "description": "Enter the tagline/description here",
     "rules": [
-      "Per team 1 participant",
-      "Participant should have photography and videography knowledge",
-      "DSLR can be used"
+      "1 participant from team",
+      " DSLR or mirrorless cameras only.",
+      "Shot on the NMAMIT Nitte campus.",
+      "1 raw photo, 1 raw video, and 1 edited video should be submitted"
     ],
-    "heads": ["Goutam Hegde - 9242288471", "Bhargavi Pai - 9632081787"],
+    "heads": [
+      "Goutam Hegde - 9242288471",
+      "Bhargavi Pai - 9632081787"
+    ],
     "participants": 1
   },
   {
@@ -134,16 +165,21 @@
     "category": "Fashin Show",
     "description": "Only the Boldest can own the Depths",
     "rules": [
-    "The team must have a minimum of 4 members and a maximum of 8 members.",
-    "The time limit is 4+1. Timing starts as soon as the team enters the stage.",
-    "Any dance style is allowed, including Eastern, Western, or Fusion.",
-    "Performances must not contain any vulgarity, offensive gestures, or content targeting any community or religion.",
-    "No extra preparation time will be given on stage.",
-    "Props are allowed but must be safe and manageable by the team. Participants are responsible for bringing and handling their own props.",
-    "Teams must submit their audio track in MP3 format 2 days before the event.",
-    "The decision of the judges will be final."
-  ],
-    "heads": ["Prapthi Shetty - 9632081932", "Prathiksha - 9483505763"],
+      "Each team must consist of 2 members",
+      "Each team gets 2+1 minutes on stage",
+      "Outfits must follow a corporate/professional theme",
+      "Participants can experiment with formal wear, business casual, modern office fashion, and power dressing",
+      "Both members should have some coordination in their outfits, colours, styling, or overall concept",
+      "Confidence, posture, walking style, and presentation will be judged",
+      "Outfits must be suitable for a college event and maintain a professional appearance",
+      "Teams must submit selected ramp walk songs/music in advance",
+      "Teams must report to the venue before their assigned time",
+      "The judges decision will be final."
+    ],
+    "heads": [
+      "Prapthi Shetty - 9632081932",
+      "Prathiksha - 9483505763"
+    ],
     "participants": 2
   },
   {

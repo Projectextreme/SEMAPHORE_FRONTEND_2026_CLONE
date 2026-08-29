@@ -38,9 +38,9 @@ const DeveloperCard = ({ dev, imageErrorMap, handleImageError, hideAllContacts, 
         </h3>
 
         {/* Role Badge - Glass Pill */}
-        <span className="font-mono text-[10px] sm:text-xs text-cyan-200 font-semibold tracking-widest uppercase bg-white/5 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+        <div className="font-mono text-center text-[10px] sm:text-xs text-cyan-200 font-semibold tracking-widest uppercase bg-white/5 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
           {dev.role}
-        </span>
+        </div>
       </div>
 
       {/* Contact Action Icons & Hover Info */}
