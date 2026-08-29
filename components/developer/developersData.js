@@ -101,7 +101,7 @@ export const developmentTeam = [
     initials: "HV",
     phone: "",
     email: "mailto:hansonvaz0704@gmail.com",
-    github: "",
+    github: "https://github.com/hanson0704",
     linkedin: "https://www.linkedin.com/in/hanson-vaz"
   },
   {
