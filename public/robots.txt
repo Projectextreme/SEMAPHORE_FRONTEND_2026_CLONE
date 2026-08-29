@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /user/
+Disallow: /_next/
+Disallow: /private/
+
+Sitemap: https://www.semaphore2k26.in/sitemap.xml
+Host: https://www.semaphore2k26.in
