@@ -330,7 +330,7 @@ void main() {
 
 export const flowFieldVertex = `
 #include <fog_pars_vertex>
-attribute vec3 velocity;
+uniform float uTime;
 attribute float size;
 attribute float alpha;
 attribute float particleType;
@@ -343,10 +343,18 @@ void main() {
   vAlpha = alpha;
   vParticleType = particleType;
 
-  // Smoothly fade out as particles approach ocean surface from below
-  vSurfaceFade = smoothstep(-5.0, -22.0, position.y);
+  // Keep the current drifting-water appearance on the GPU. The previous CPU loop
+  // rewrote and re-uploaded every particle position each frame.
+  float phase = particleType * 23.0;
+  vec3 animatedPosition = position;
+  animatedPosition.x += sin(uTime * 0.6 + phase) * 5.0;
+  animatedPosition.y = mod(position.y + 520.0 + uTime * 1.2 + cos(uTime * 0.4 + phase) * 4.0, 540.0) - 520.0;
+  animatedPosition.z += sin(uTime * 0.5 + phase * 2.0) * 5.0;
 
-  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+  // Smoothly fade out as particles approach ocean surface from below
+  vSurfaceFade = smoothstep(-5.0, -22.0, animatedPosition.y);
+
+  vec4 mvPosition = modelViewMatrix * vec4(animatedPosition, 1.0);
   gl_PointSize = size * (90.0 / -mvPosition.z) * vSurfaceFade;
   gl_PointSize = max(gl_PointSize, 0.0);
   gl_Position = projectionMatrix * mvPosition;
@@ -379,12 +387,7 @@ void main() {
   float shimmer = sin(uTime * 2.0 + vParticleType * 100.0) * 0.15 + 0.85;
   alpha *= shimmer;
 
-<<<<<<< HEAD:src/Shaders/index.js
   gl_FragColor = vec4(uColor, alpha * vSurfaceFade);
-=======
-  gl_FragColor = vec4(uColor, alpha);
-  #include <fog_fragment>
->>>>>>> f2a14e43e3019c33a09554478d9815c6d61d20cb:src/Shaders/index.ts
 }
 `;
 
