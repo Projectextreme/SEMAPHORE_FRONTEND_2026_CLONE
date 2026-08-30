@@ -4503,10 +4503,14 @@ export default function Scene() {
       const floatRotZ = Math.sin(t * 0.2) * 0.008;
 
       // Smooth Dynamic Camera FOV Transitions (Fast travel vs Hero Close-up)
-      if (camState.fov && Math.abs(camera.fov - camState.fov) > 0.05) {
-        const fovLerp = (isMobile ? 0.10 : 0.07) * (camState.z < -245 && camState.z > -560 ? 0.4 : 1.0);
-        camera.fov += (camState.fov - camera.fov) * fovLerp;
-        camera.updateProjectionMatrix();
+      if (camState.fov) {
+        // Widen the field of view on mobile (portrait) so events aren't cropped out horizontally
+        const targetFov = isMobile ? Math.min(camState.fov * 1.45, 100) : camState.fov;
+        if (Math.abs(camera.fov - targetFov) > 0.05) {
+          const fovLerp = (isMobile ? 0.10 : 0.07) * (camState.z < -245 && camState.z > -560 ? 0.4 : 1.0);
+          camera.fov += (targetFov - camera.fov) * fovLerp;
+          camera.updateProjectionMatrix();
+        }
       }
 
       // Parallax Mouse/Touch Camera Drifting
