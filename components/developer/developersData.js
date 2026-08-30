@@ -1,7 +1,7 @@
 export const developmentTeam = [
   {
     id: "dev-1",
-    name: "Shashidhar",
+    name: "Shashidhara K",
     role: "Authentication and Payment Management",
     image: "/assets/developer/SHASHIDHAR.webp",
     imagePosition: "object-[50%_-30%]",
