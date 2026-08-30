@@ -60,7 +60,7 @@ export const CRITICAL_ASSETS = [
   // (22MB of the 31MB file) that Scene.jsx discarded anyway — it rebuilds every fish
   // material from the four external .webp files under /assets/models/textures. Same
   // Draco geometry and animation, byte for byte; just none of the dead weight.
-  { key: "fishSchool", url: "/assets/models/fish_school_opt.glb", kind: "buffer", bytes: 9765992 },
+  { key: "fishSchool", url: "/assets/models/fish_school_opt.glb", kind: "buffer", bytes: 1730992 },
   // The HDR is awaited before the curtain lifts, so it belongs in the tracked set.
   // Fetching it outside meant ~1.5MB of work the progress bar could not see, which is
   // why the bar used to sit at 100% while the screen stayed dark.

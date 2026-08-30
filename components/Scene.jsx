@@ -811,6 +811,9 @@ export default function Scene() {
     water.renderOrder = 0; // Surface water layer — rendered first
     scene.add(water);
 
+    const causticUniforms = { uTime: { value: 0 } };
+    const shaftUniforms = { uTime: { value: 0 } };
+
     // --- UNDERWATER CEILING CAUSTICS PLANE (VIEWED FROM BELOW WATER) ---
     const waterCeilingGeo = new THREE.PlaneGeometry(800, 800);
     const waterCeilingMat = new THREE.ShaderMaterial({
@@ -1042,6 +1045,49 @@ export default function Scene() {
       metalness: 0.25,
       flatShading: true,
     });
+
+    cliffWallMat.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = causticUniforms.uTime;
+      
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <common>',
+        `#include <common>
+         varying vec3 vWorldPositionCustom;`
+      );
+      
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <worldpos_vertex>',
+        `#include <worldpos_vertex>
+         vWorldPositionCustom = (modelMatrix * vec4(transformed, 1.0)).xyz;`
+      );
+      
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <common>',
+        `#include <common>
+         varying vec3 vWorldPositionCustom;
+         uniform float uTime;
+         
+         float getCaustics(vec2 uv, float time) {
+           vec2 p = uv * 0.12;
+           float c = 0.0;
+           c += sin(p.x * 2.5 - time * 1.5 + sin(p.y * 3.5 - time * 0.8));
+           c += sin(p.y * 3.5 - time * 1.2 + sin(p.x * 2.8 - time * 0.5));
+           c += sin((p.x + p.y) * 2.0 - time * 1.0);
+           return pow(c * 0.25 + 0.5, 2.0);
+         }
+        `
+      );
+      
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <dithering_fragment>',
+        `#include <dithering_fragment>
+         float causticPattern = getCaustics(vWorldPositionCustom.xz, uTime);
+         float zFade = smoothstep(-220.0, -150.0, vWorldPositionCustom.z);
+         vec3 causticGlow = vec3(0.0, 0.45, 0.75) * causticPattern * 0.35 * zFade;
+         gl_FragColor.rgb += causticGlow;
+        `
+      );
+    };
 
     function createSideCliffWall(xPos, isRight, zCenter = -120, yPos = -95) {
       const cliffWallGeo = new THREE.BoxGeometry(34, 180, 160, 12, 16, 12);
@@ -1744,13 +1790,15 @@ export default function Scene() {
       return dolphinObj;
     }
 
-    function setupFishSchoolInstance(parentGroup, gltf, x, y, z, scale = 1.5, phaseOffset = 0) {
+    function setupFishSchoolInstance(parentGroup, gltf, x, y, z, scale = 1.5, phaseOffset = 0, isCanyonSwim = false, minZ = -1118, maxZ = -870) {
       const fGroup = new THREE.Group();
       fGroup.position.set(x, y, z);
       parentGroup.add(fGroup);
 
       const direction = Math.random() > 0.5 ? 1 : -1;
-      const baseRotY = direction > 0 ? (Math.PI / 2) : (-Math.PI / 2);
+      const baseRotY = isCanyonSwim
+        ? (direction > 0 ? 0 : Math.PI)
+        : (direction > 0 ? (Math.PI / 2) : (-Math.PI / 2));
 
       let fModel;
       if (cloneSkeleton) {
@@ -1784,6 +1832,9 @@ export default function Scene() {
         speed: 5.0 + Math.random() * 5.0,
         offset: Math.random() * Math.PI * 2,
         animationElapsed: 0,
+        isCanyonSwim: isCanyonSwim,
+        minZ: minZ,
+        maxZ: maxZ,
       });
     }
 
@@ -1857,17 +1908,13 @@ export default function Scene() {
               }
             });
 
-            // Generate 15 fish schools for the upper ocean (visible immediately).
-            // Lanes are stratified rather than random so the schools genuinely spread
-            // down the whole water column; pure Math.random() clumped them into a band
-            // near the surface and left the rest of the view empty.
-            const UPPER_COUNT = 15;
+            // Generate 5 fish schools for the upper ocean (visible immediately).
+            const UPPER_COUNT = 5;
             for (let i = 0; i < UPPER_COUNT; i++) {
               const laneT = (i + 0.5) / UPPER_COUNT;
               const startY =
                 FISH_TOP_Y + laneT * (FISH_BOTTOM_Y - FISH_TOP_Y) + (Math.random() - 0.5) * 6;
               const startZ = -20 - Math.random() * 120;  // Upper ocean z spread
-              // Start inside the canyon corridor, never in the rock.
               const startX = (Math.random() * 2 - 1) * CANYON_HALF_WIDTH;
               const scale = 0.3 + Math.random() * 0.5;   // Smaller at surface
               const phase = Math.random() * 5;
@@ -1876,7 +1923,6 @@ export default function Scene() {
             }
 
             // Generate 25 fish schools for the deep canyon (visible after scrolling down).
-            // Stratified by depth for the same reason as above.
             const DEEP_COUNT = 25;
             for (let i = 0; i < DEEP_COUNT; i++) {
               const laneT = (i + 0.5) / DEEP_COUNT;
@@ -1887,6 +1933,30 @@ export default function Scene() {
               const phase = Math.random() * 5;
 
               setupFishSchoolInstance(newWorldGroup, gltf, startX, startY, startZ, scale, phase);
+            }
+
+            // Generate 3 fish schools specifically clustered near the Startup Event (z: -1018)
+            const CLUSTER_UPPER = 3;
+            for (let i = 0; i < CLUSTER_UPPER; i++) {
+              const startZ = -970 - Math.random() * 80; // Spread around event-8 (z: -1018)
+              const startX = 0; // Centered
+              const startY = -368 + (Math.random() - 0.5) * 8; // Near Startup Event platform depth (-390)
+              const scale = 0.5 + Math.random() * 0.5;
+              const phase = Math.random() * 5;
+
+              setupFishSchoolInstance(newWorldGroup, gltf, startX, startY, startZ, scale, phase, true, -1060, -960);
+            }
+
+            // Generate 1 fish school clustered near the Dance/Photography Events (z: -1118 to -1218)
+            const CLUSTER_LOWER = 1;
+            for (let i = 0; i < CLUSTER_LOWER; i++) {
+              const startZ = -1180 - Math.random() * 100; // Spread around event-10 (z: -1218)
+              const startX = 0; // Centered
+              const startY = -448 + (Math.random() - 0.5) * 8; // Near Photography Event platform depth (-470)
+              const scale = 0.5 + Math.random() * 0.5;
+              const phase = Math.random() * 5;
+
+              setupFishSchoolInstance(newWorldGroup, gltf, startX, startY, startZ, scale, phase, true, -1290, -1170);
             }
 
             resolve(true);
@@ -1992,7 +2062,7 @@ export default function Scene() {
     // Shrine/cage top: 10.7, poster underside: 14.2 — leaving a deliberate 3.5 unit air gap.
     const posterAnchorY = 17.8;
 
-    const causticUniforms = { uTime: { value: 0 } };
+    // causticUniforms and shaftUniforms are declared at the top of useEffect
     const causticMat = new THREE.ShaderMaterial({
       uniforms: causticUniforms,
       transparent: true,
@@ -2015,7 +2085,6 @@ export default function Scene() {
       `,
     });
 
-    const shaftUniforms = { uTime: { value: 0 } };
     const lightShaftMat = new THREE.ShaderMaterial({
       uniforms: shaftUniforms,
       transparent: true,
@@ -2506,6 +2575,7 @@ export default function Scene() {
       metalness: 0.1,
       flatShading: true,
     });
+    terrainMat.onBeforeCompile = cliffWallMat.onBeforeCompile;
     const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
     terrainMesh.position.set(0, -385, -450);
     scene.add(terrainMesh);
@@ -2559,6 +2629,107 @@ export default function Scene() {
     const bubblePoints = new THREE.Points(bubbleGeo, bubbleMat);
     bubblePoints.frustumCulled = false;
     scene.add(bubblePoints);
+
+    // --- PRE-PORTAL ATMOSPHERIC BUBBLES ---
+    const prePortalCount = isMobile ? 800 : 2000;
+    const prePortalGeo = new THREE.BufferGeometry();
+    const prePortalInitialPos = new Float32Array(prePortalCount * 3);
+    const prePortalSizes = new Float32Array(prePortalCount);
+    const prePortalSpeeds = new Float32Array(prePortalCount);
+    const prePortalOffsets = new Float32Array(prePortalCount);
+
+    for (let i = 0; i < prePortalCount; i++) {
+      const zPos = -Math.random() * 220;
+      const startY = -180 + Math.random() * 190;
+      
+      let xPos;
+      if (Math.random() < 0.25) {
+        xPos = (Math.random() - 0.5) * 12;
+      } else {
+        xPos = (Math.random() > 0.5 ? 1 : -1) * (15 + Math.random() * 30);
+      }
+
+      prePortalInitialPos[i * 3] = xPos;
+      prePortalInitialPos[i * 3 + 1] = startY;
+      prePortalInitialPos[i * 3 + 2] = zPos;
+
+      prePortalSizes[i] = 2.0 + Math.random() * 7.0;
+      prePortalSpeeds[i] = 0.25 + Math.random() * 0.75;
+      prePortalOffsets[i] = Math.random() * 100.0;
+    }
+
+    prePortalGeo.setAttribute("position", new THREE.BufferAttribute(prePortalInitialPos, 3));
+    prePortalGeo.setAttribute("aInitialPos", new THREE.BufferAttribute(prePortalInitialPos, 3));
+    prePortalGeo.setAttribute("aSize", new THREE.BufferAttribute(prePortalSizes, 1));
+    prePortalGeo.setAttribute("aSpeed", new THREE.BufferAttribute(prePortalSpeeds, 1));
+    prePortalGeo.setAttribute("aOffset", new THREE.BufferAttribute(prePortalOffsets, 1));
+
+    const prePortalBubbles = new THREE.Points(prePortalGeo, bubbleMat);
+    prePortalBubbles.frustumCulled = false;
+    scene.add(prePortalBubbles);
+
+    // --- PRE-PORTAL VOLUMETRIC LIGHT RAYS ---
+    const lightRayGroup = new THREE.Group();
+    const rayGeo = new THREE.CylinderGeometry(0.5, 8.0, 160, 8, 1, true);
+    rayGeo.translate(0, -80, 0);
+
+    const rayMat = new THREE.ShaderMaterial({
+      vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vWorldPosition;
+        void main() {
+          vUv = uv;
+          vec4 worldPos = modelMatrix * vec4(position, 1.0);
+          vWorldPosition = worldPos.xyz;
+          gl_Position = projectionMatrix * viewMatrix * worldPos;
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform float uProgress;
+        varying vec2 vUv;
+        varying vec3 vWorldPosition;
+
+        void main() {
+          float verticalFade = smoothstep(1.0, 0.0, vUv.y);
+          float shimmer = sin(vWorldPosition.x * 0.15 + uTime * 0.6) * 0.15 
+                        + cos(vWorldPosition.z * 0.12 - uTime * 0.4) * 0.15 
+                        + 0.7;
+          float radialFade = sin(vUv.x * 3.14159);
+          float alpha = verticalFade * radialFade * shimmer * 0.09 * uProgress;
+          vec3 blueCyan = vec3(0.02, 0.45, 0.80);
+          gl_FragColor = vec4(blueCyan, alpha);
+        }
+      `,
+      uniforms: {
+        uTime: shaftUniforms.uTime,
+        uProgress: { value: 0.3 },
+      },
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+
+    const rayPositions = [
+      { x: -18, y: -2, z: -30, rotZ: 0.08, rotX: -0.05 },
+      { x: 18, y: -2, z: -60, rotZ: -0.08, rotX: 0.05 },
+      { x: -22, y: -2, z: -90, rotZ: 0.06, rotX: -0.07 },
+      { x: 22, y: -2, z: -120, rotZ: -0.06, rotX: 0.07 },
+      { x: -14, y: -2, z: -150, rotZ: 0.07, rotX: -0.05 },
+      { x: 14, y: -2, z: -175, rotZ: -0.07, rotX: 0.05 },
+      { x: -8, y: -2, z: -190, rotZ: 0.05, rotX: -0.04 },
+      { x: 8, y: -2, z: -200, rotZ: -0.05, rotX: 0.04 }
+    ];
+
+    rayPositions.forEach((pos) => {
+      const rayMesh = new THREE.Mesh(rayGeo, rayMat);
+      rayMesh.position.set(pos.x, pos.y, pos.z);
+      rayMesh.rotation.set(pos.rotX, 0, pos.rotZ);
+      lightRayGroup.add(rayMesh);
+    });
+
+    scene.add(lightRayGroup);
 
     // --- SHINING WATER PARTICLES (twinkling light-catching motes) ---
     const shimmerCount = isMobile ? 750 : 1800;
@@ -2840,6 +3011,16 @@ export default function Scene() {
       }
     }
     window.addEventListener("click", handlePortalClick);
+
+    function handleScrollCloseModal() {
+      setSelectedEvent((prev) => {
+        if (prev !== null) {
+          return null;
+        }
+        return prev;
+      });
+    }
+    window.addEventListener("scroll", handleScrollCloseModal, { passive: true });
 
     // --- CAMERA & GSAP SCROLL JOURNEY: CONTINUOUS DESCENDING DEEP THROUGH THE STARGATE & EVENT LOCATIONS ---
     camera.position.set(0, 2, 0);
@@ -4155,22 +4336,43 @@ export default function Scene() {
           school.group.position.y =
             school.baseY + Math.sin(t * 1.5 + school.offset) * FISH_BOB_AMPLITUDE;
 
-          // Move horizontally (X axis)
-          school.group.position.x += school.direction * school.speed * delta;
+          if (school.isCanyonSwim) {
+            // Move vertically along Z-axis
+            school.group.position.z += school.direction * school.speed * delta;
 
-          // Turn back at the canyon walls rather than wrapping to the far side.
-          // Wrapping only worked while the loop points (±150) sat far outside the
-          // view; inside the corridor the same trick would read as the school
-          // teleporting across the screen, so the school banks around instead —
-          // which is also what a real school does when it meets a rock face.
-          if (school.direction > 0 && school.group.position.x > CANYON_HALF_WIDTH) {
-            school.group.position.x = CANYON_HALF_WIDTH;
-            school.direction = -1;
-            school.targetRotY = -Math.PI / 2;
-          } else if (school.direction < 0 && school.group.position.x < -CANYON_HALF_WIDTH) {
-            school.group.position.x = -CANYON_HALF_WIDTH;
-            school.direction = 1;
-            school.targetRotY = Math.PI / 2;
+            // Weave slightly left/right in the center corridor (X axis) to look natural and avoid sides
+            school.group.position.x = Math.sin(t * 0.35 + school.offset) * 4.5;
+
+            // Turn back at custom Z limits
+            const minZ = school.minZ !== undefined ? school.minZ : -1118;
+            const maxZ = school.maxZ !== undefined ? school.maxZ : -870;
+            if (school.direction > 0 && school.group.position.z > maxZ) {
+              school.group.position.z = maxZ;
+              school.direction = -1;
+              school.targetRotY = Math.PI; // Swim in -Z direction
+            } else if (school.direction < 0 && school.group.position.z < minZ) {
+              school.group.position.z = minZ;
+              school.direction = 1;
+              school.targetRotY = 0; // Swim in +Z direction
+            }
+          } else {
+            // Move horizontally (X axis)
+            school.group.position.x += school.direction * school.speed * delta;
+
+            // Turn back at the canyon walls rather than wrapping to the far side.
+            // Wrapping only worked while the loop points (±150) sat far outside the
+            // view; inside the corridor the same trick would read as the school
+            // teleporting across the screen, so the school banks around instead —
+            // which is also what a real school does when it meets a rock face.
+            if (school.direction > 0 && school.group.position.x > CANYON_HALF_WIDTH) {
+              school.group.position.x = CANYON_HALF_WIDTH;
+              school.direction = -1;
+              school.targetRotY = -Math.PI / 2;
+            } else if (school.direction < 0 && school.group.position.x < -CANYON_HALF_WIDTH) {
+              school.group.position.x = -CANYON_HALF_WIDTH;
+              school.direction = 1;
+              school.targetRotY = Math.PI / 2;
+            }
           }
 
           // Ease into the new heading so the turn reads as a bank, not a snap.
@@ -4231,6 +4433,16 @@ export default function Scene() {
       floatingParticlesMat.uniforms.uTime.value = t;
       causticUniforms.uTime.value = t;
       shaftUniforms.uTime.value = t;
+
+      if (rayMat && rayMat.uniforms && rayMat.uniforms.uProgress) {
+        let prog = 0.2;
+        if (camera.position.z > -190) {
+          prog = THREE.MathUtils.lerp(0.2, 1.0, THREE.MathUtils.clamp(camera.position.z / -190.0, 0.0, 1.0));
+        } else {
+          prog = THREE.MathUtils.lerp(1.0, 0.0, THREE.MathUtils.clamp((camera.position.z - (-190)) / -40.0, 0.0, 1.0));
+        }
+        rayMat.uniforms.uProgress.value = prog;
+      }
 
       // Pulse Portal Ring Backlight
       portalBackLight.intensity = 8.0 + Math.sin(t * 2.5) * 3.0;
@@ -4892,6 +5104,7 @@ export default function Scene() {
       if (resizeRafId !== null) cancelAnimationFrame(resizeRafId);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("click", handlePortalClick);
+      window.removeEventListener("scroll", handleScrollCloseModal);
       if (isMobile) {
         window.removeEventListener("touchmove", handleTouchMove);
         window.removeEventListener("touchend", handleTouchEnd);
@@ -4953,6 +5166,9 @@ export default function Scene() {
       terrainMat.dispose();
       bubbleGeo.dispose();
       bubbleMat.dispose();
+      prePortalGeo.dispose();
+      rayGeo.dispose();
+      rayMat.dispose();
       shimmerGeo.dispose();
       shimmerMat.dispose();
       dustGeo.dispose();
