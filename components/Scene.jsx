@@ -1048,19 +1048,19 @@ export default function Scene() {
 
     cliffWallMat.onBeforeCompile = (shader) => {
       shader.uniforms.uTime = causticUniforms.uTime;
-      
+
       shader.vertexShader = shader.vertexShader.replace(
         '#include <common>',
         `#include <common>
          varying vec3 vWorldPositionCustom;`
       );
-      
+
       shader.vertexShader = shader.vertexShader.replace(
         '#include <worldpos_vertex>',
         `#include <worldpos_vertex>
          vWorldPositionCustom = (modelMatrix * vec4(transformed, 1.0)).xyz;`
       );
-      
+
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <common>',
         `#include <common>
@@ -1077,7 +1077,7 @@ export default function Scene() {
          }
         `
       );
-      
+
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <dithering_fragment>',
         `#include <dithering_fragment>
@@ -2641,7 +2641,7 @@ export default function Scene() {
     for (let i = 0; i < prePortalCount; i++) {
       const zPos = -Math.random() * 220;
       const startY = -180 + Math.random() * 190;
-      
+
       let xPos;
       if (Math.random() < 0.25) {
         xPos = (Math.random() - 0.5) * 12;
@@ -5327,7 +5327,7 @@ export default function Scene() {
               href="/events/register"
               className="z-10 px-12 py-4 bg-cyan-600/80 hover:bg-cyan-500 text-white font-mono font-bold tracking-[0.2em] rounded-lg transition-all duration-500 shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.8)] hover:-translate-y-1 text-xl md:text-2xl border border-cyan-400/30 hover:border-cyan-300"
             >
-              REGISTER
+              REGISTER Now
             </a>
           </div>
 
