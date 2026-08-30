@@ -12,26 +12,26 @@ async function loadCoralModels() {
 
   cachedModelsPromise = (async () => {
     const loader = new GLTFLoader();
-    const models = [];
     
-    // Load the 7 coral GLBs
-    for (let i = 0; i < 7; i++) {
-      try {
-        const gltf = await loader.loadAsync(`/models/coral/Coral${i}.glb`);
-        let mesh = null;
-        gltf.scene.traverse((child) => {
-          if (child.isMesh && !mesh) {
-            mesh = child;
-          }
-        });
-        if (mesh) {
-          models.push(mesh.geometry);
-        }
-      } catch (e) {
-        console.warn(`Failed to load Coral${i}.glb`, e);
-      }
-    }
-    return models;
+    // Load the 7 coral GLBs in parallel
+    const promises = Array.from({ length: 7 }, (_, i) => 
+      loader.loadAsync(`/models/coral/Coral${i}.glb`)
+        .then((gltf) => {
+          let mesh = null;
+          gltf.scene.traverse((child) => {
+            if (child.isMesh && !mesh) {
+              mesh = child;
+            }
+          });
+          return mesh ? mesh.geometry : null;
+        })
+        .catch((e) => {
+          console.warn(`Failed to load Coral${i}.glb`, e);
+          return null; // Keep null placeholder to avoid index shifting
+        })
+    );
+
+    return await Promise.all(promises);
   })();
 
   return cachedModelsPromise;
@@ -137,6 +137,8 @@ export async function addCliffCorals(parentGroup, isRight, xPos, yPos, zCenter) 
     }
 
     const geometry = models[modelIndex];
+    if (!geometry) continue; // Safeguard if this model failed to load
+
     const material = new THREE.MeshStandardMaterial({
       roughness: 0.9,
       metalness: 0.1,
@@ -193,6 +195,7 @@ export async function addEventPlatformGrass(parentGroup, node) {
   const count = 12; // 6 per corner
   for (let i = 0; i < count; i++) {
     const geometry = models[Math.floor(Math.random() * models.length)];
+    if (!geometry) continue; // Safeguard if this model failed to load
     
     const material = new THREE.MeshStandardMaterial({
       roughness: 0.9,
