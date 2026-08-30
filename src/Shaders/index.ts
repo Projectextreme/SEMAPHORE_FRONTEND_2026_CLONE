@@ -561,6 +561,9 @@ void main() {
   gl_PointSize = clamp(gl_PointSize, 2.0, 28.0);
 
   gl_Position = projectionMatrix * mvPosition;
+  if (pos.y > -3.0) {
+    gl_PointSize = 0.0;
+  }
   #include <fog_vertex>
 }
 `;
