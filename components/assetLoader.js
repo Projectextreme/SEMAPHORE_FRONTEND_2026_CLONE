@@ -65,6 +65,17 @@ export const CRITICAL_ASSETS = [
   // Fetching it outside meant ~1.5MB of work the progress bar could not see, which is
   // why the bar used to sit at 100% while the screen stayed dark.
   { key: "hdri", url: "/hdri/spiaggia_di_mondello_1k.hdr", kind: "buffer", bytes: 1533242 },
+  // Event Banner Textures: cached via preloader to avoid pop-in on scroll
+  { key: "banner_event-1", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802488/coding.png", kind: "texture", bytes: 65000 },
+  { key: "banner_event-2", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802485/webdesigning.png", kind: "texture", bytes: 45000 },
+  { key: "banner_event-3", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802490/itquiz.png", kind: "texture", bytes: 75000 },
+  { key: "banner_event-4", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802491/gaming.png", kind: "texture", bytes: 80000 },
+  { key: "banner_event-5", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802515/techtalk.png", kind: "texture", bytes: 55000 },
+  { key: "banner_event-6", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802513/surpriseevent.png", kind: "texture", bytes: 55000 },
+  { key: "banner_event-7", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802487/itmanager.png", kind: "texture", bytes: 60000 },
+  { key: "banner_event-8", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802510/startup.png", kind: "texture", bytes: 50000 },
+  { key: "banner_event-9", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802490/fashion.png", kind: "texture", bytes: 85000 },
+  { key: "banner_event-10", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802512/photography.png", kind: "texture", bytes: 70000 },
 ];
 
 async function openCache() {

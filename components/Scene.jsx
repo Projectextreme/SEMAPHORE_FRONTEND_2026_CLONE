@@ -2305,13 +2305,9 @@ export default function Scene() {
         },
       };
 
-      let bannerTexture;
-      if (logoConfig[node.id]) {
-        bannerTexture = new THREE.TextureLoader().load(logoConfig[node.id].src);
-        bannerTexture.colorSpace = THREE.SRGBColorSpace;
-      } else {
-        bannerTexture = createEventBannerTexture(node);
-      }
+      // Initialize with the canvas fallback texture to avoid dynamic network requests during mount.
+      // The preloader will swap this with the high-res preloaded texture before the curtain lifts.
+      const bannerTexture = createEventBannerTexture(node);
       if (renderer) {
         bannerTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
       }
@@ -2327,6 +2323,7 @@ export default function Scene() {
       const bannerWidth = logoConfig[node.id] ? 7.2 * logoConfig[node.id].aspect : 18.4;
       const bannerPlaneGeo = new THREE.PlaneGeometry(bannerWidth, 7.2);
       const bannerMesh = new THREE.Mesh(bannerPlaneGeo, bannerMat);
+      bannerMesh.name = "bannerMesh"; // Named reference for later dynamic texture swapping
       bannerMesh.userData = { eventData: node };
       bannerGroup.add(bannerMesh);
       bannerMeshes.push(bannerMesh);
@@ -4728,15 +4725,53 @@ export default function Scene() {
         }
         setProgress(82);
 
-        // Decode the four fish materials from preloaded bytes, in mesh order.
-        const fishTextures = [];
-        for (const key of ["fishTex0", "fishTex5", "fishTex9", "fishTex13"]) {
-          if (!results[key]) { fishTextures.push(null); continue; }
-          // flipY matches what TextureLoader produced before, so the fish keep the
-          // same UV orientation they had.
-          const tex = await blobToTexture(THREE, results[key], { srgb: true, flipY: true });
-          fishTextures.push(tex);
-        }
+        // Decode the four fish materials and the 10 event banner textures from preloaded bytes in parallel.
+        const fishKeys = ["fishTex0", "fishTex5", "fishTex9", "fishTex13"];
+        const fishPromises = fishKeys.map(async (key) => {
+          if (!results[key]) return null;
+          try {
+            return await blobToTexture(THREE, results[key], { srgb: true, flipY: true });
+          } catch (e) {
+            console.warn(`Failed to decode fish texture ${key}`, e);
+            return null;
+          }
+        });
+
+        const bannerTextures = {};
+        const bannerPromises = eventNodes.map(async (node) => {
+          const key = `banner_${node.id}`;
+          if (results[key]) {
+            try {
+              const tex = await blobToTexture(THREE, results[key], { srgb: true, flipY: true });
+              if (renderer) {
+                tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+              }
+              bannerTextures[node.id] = tex;
+            } catch (e) {
+              console.warn(`Failed to decode banner_${node.id}`, e);
+            }
+          }
+        });
+
+        // Resolve all fish and banner decodes concurrently
+        const [fishTextures] = await Promise.all([
+          Promise.all(fishPromises),
+          Promise.all(bannerPromises)
+        ]);
+
+        // Swap the canvas-based fallback textures with the preloaded textures before the curtain lifts
+        eventNodes.forEach((node) => {
+          const group = eventBannerGroups[node.id];
+          const mesh = group ? group.getObjectByName("bannerMesh") : null;
+          if (mesh && bannerTextures[node.id]) {
+            if (mesh.material.map) {
+              mesh.material.map.dispose();
+            }
+            mesh.material.map = bannerTextures[node.id];
+            mesh.material.needsUpdate = true;
+          }
+        });
+
         setProgress(84);
 
         // Draco decode of the fish school is the longest single step after download,
