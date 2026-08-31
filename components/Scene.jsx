@@ -1048,19 +1048,19 @@ export default function Scene() {
 
     cliffWallMat.onBeforeCompile = (shader) => {
       shader.uniforms.uTime = causticUniforms.uTime;
-      
+
       shader.vertexShader = shader.vertexShader.replace(
         '#include <common>',
         `#include <common>
          varying vec3 vWorldPositionCustom;`
       );
-      
+
       shader.vertexShader = shader.vertexShader.replace(
         '#include <worldpos_vertex>',
         `#include <worldpos_vertex>
          vWorldPositionCustom = (modelMatrix * vec4(transformed, 1.0)).xyz;`
       );
-      
+
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <common>',
         `#include <common>
@@ -1077,7 +1077,7 @@ export default function Scene() {
          }
         `
       );
-      
+
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <dithering_fragment>',
         `#include <dithering_fragment>
@@ -2641,7 +2641,7 @@ export default function Scene() {
     for (let i = 0; i < prePortalCount; i++) {
       const zPos = -Math.random() * 220;
       const startY = -180 + Math.random() * 190;
-      
+
       let xPos;
       if (Math.random() < 0.25) {
         xPos = (Math.random() - 0.5) * 12;
@@ -4503,10 +4503,14 @@ export default function Scene() {
       const floatRotZ = Math.sin(t * 0.2) * 0.008;
 
       // Smooth Dynamic Camera FOV Transitions (Fast travel vs Hero Close-up)
-      if (camState.fov && Math.abs(camera.fov - camState.fov) > 0.05) {
-        const fovLerp = (isMobile ? 0.10 : 0.07) * (camState.z < -245 && camState.z > -560 ? 0.4 : 1.0);
-        camera.fov += (camState.fov - camera.fov) * fovLerp;
-        camera.updateProjectionMatrix();
+      if (camState.fov) {
+        // Widen the field of view on mobile (portrait) so events aren't cropped out horizontally
+        const targetFov = isMobile ? Math.min(camState.fov * 1.45, 100) : camState.fov;
+        if (Math.abs(camera.fov - targetFov) > 0.05) {
+          const fovLerp = (isMobile ? 0.10 : 0.07) * (camState.z < -245 && camState.z > -560 ? 0.4 : 1.0);
+          camera.fov += (targetFov - camera.fov) * fovLerp;
+          camera.updateProjectionMatrix();
+        }
       }
 
       // Parallax Mouse/Touch Camera Drifting
@@ -5303,18 +5307,18 @@ export default function Scene() {
             />
           )}
 
-          {/* Final End Screen after the event scroll (Fades in at the very bottom) */}
+          {/* Final End Screen after the event scroll (Cinematic Reveal) */}
           <div
-            className={`fixed inset-0 bg-[#010a13] flex flex-col items-center justify-center z-[100] transition-opacity duration-1000 ${scrollProgress >= 99 ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            className={`fixed inset-0 bg-[#010a13] flex flex-col items-center justify-center z-[100] transition-all duration-[1500ms] ease-out ${scrollProgress >= 99 ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
               }`}
           >
             {/* Subtle atmospheric lighting background */}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(0,180,255,0.15)_0%,_rgba(0,0,0,0)_60%)] -z-10 pointer-events-none" />
             <div className="absolute inset-0 bg-[url('/textures/waternormals.jpg')] opacity-5 bg-cover bg-center mix-blend-overlay pointer-events-none" />
 
-            {/* Semaphore Logo */}
-            <div className="z-10 mb-12 relative flex items-center justify-center">
-              <div className="absolute w-3/4 h-3/4 bg-cyan-400/20 blur-[100px] rounded-full animate-pulse pointer-events-none" />
+            {/* Cinematic Semaphore Logo Reveal */}
+            <div className={`z-10 mb-12 relative flex items-center justify-center transition-all duration-[2000ms] delay-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${scrollProgress >= 99 ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-12 scale-90"}`}>
+              <div className={`absolute w-3/4 h-3/4 bg-cyan-400/20 blur-[100px] rounded-full animate-pulse pointer-events-none transition-opacity duration-[2000ms] delay-700 ${scrollProgress >= 99 ? "opacity-100" : "opacity-0"}`} />
               <img
                 src="https://res.cloudinary.com/zuxdlzob/image/upload/v1787802540/semaphore_logo.png"
                 alt="Semaphore 2026 Logo"
@@ -5322,12 +5326,12 @@ export default function Scene() {
               />
             </div>
 
-            {/* Standalone Visual Register Button (No link) */}
+            {/* Standalone Visual Register Button Reveal */}
             <a
               href="/events/register"
-              className="z-10 px-12 py-4 bg-cyan-600/80 hover:bg-cyan-500 text-white font-mono font-bold tracking-[0.2em] rounded-lg transition-all duration-500 shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.8)] hover:-translate-y-1 text-xl md:text-2xl border border-cyan-400/30 hover:border-cyan-300"
+              className={`z-10 px-12 py-4 bg-cyan-600/80 hover:bg-cyan-500 text-white font-mono font-bold tracking-[0.2em] rounded-lg shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.8)] text-xl md:text-2xl border border-cyan-400/30 hover:border-cyan-300 transition-all duration-[1200ms] ease-out delay-[1200ms] ${scrollProgress >= 99 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
             >
-              REGISTER
+              REGISTER Now
             </a>
           </div>
 
