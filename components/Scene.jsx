@@ -1671,6 +1671,7 @@ export default function Scene() {
     scene.add(portalGroup);
 
     let dolphinMixer = null;
+    let crabData = null;
     let dolphinMesh = null;
     let dolphinSparkles = null;
     let dolphinLines = null;
@@ -1833,6 +1834,60 @@ export default function Scene() {
         isCanyonSwim: isCanyonSwim,
         minZ: minZ,
         maxZ: maxZ,
+      });
+    }
+
+    function setupCrabInstance(parentGroup, gltf, x, y, z) {
+      const crabMesh = gltf.scene;
+      crabMesh.scale.set(1.0, 1.0, 1.0); 
+      crabMesh.position.set(x, y, z);
+      crabMesh.rotation.y = Math.PI / 4;
+      crabMesh.rotation.x = -0.1; // slight tilt to match rock
+      
+      parentGroup.add(crabMesh);
+      
+      let mixer = null;
+      let walkAction = null;
+      let idleAction = null;
+      if (gltf.animations && gltf.animations.length > 0) {
+        mixer = new THREE.AnimationMixer(crabMesh);
+        walkAction = mixer.clipAction(gltf.animations[0]); // Derecha
+        if (gltf.animations.length > 2) {
+          idleAction = mixer.clipAction(gltf.animations[2]); // Ataque
+        }
+        walkAction.play();
+      }
+
+      crabData = {
+        mesh: crabMesh,
+        mixer: mixer,
+        walkAction: walkAction,
+        idleAction: idleAction,
+        state: 'moving',
+        timer: 3.0,
+        originPos: new THREE.Vector3(x, y, z),
+        targetPos: new THREE.Vector3(x, y, z),
+        speed: 1.0
+      };
+    }
+
+    function buildCrabFromBuffer(arrayBuffer) {
+      return new Promise((resolve) => {
+        if (!GLTFLoaderClass || !arrayBuffer) return resolve(false);
+        const gltfLoader = new GLTFLoaderClass(manager);
+        gltfLoader.parse(
+          arrayBuffer,
+          "",
+          (gltf) => {
+            // Portal top step is near { x: 0, y: -121.5, z: -188 }
+            setupCrabInstance(newWorldGroup, gltf, 0, -121.5, -188);
+            resolve(true);
+          },
+          (err) => {
+            console.error("[Aquasaga] crab parse failed:", err);
+            resolve(false);
+          }
+        );
       });
     }
 
@@ -2168,7 +2223,8 @@ export default function Scene() {
       lowerRockGeo.computeVertexNormals();
 
       const lowerRockMesh = new THREE.Mesh(lowerRockGeo, cliffRockMat);
-      lowerRockMesh.position.set(0, isEvent1 ? -58 : -8, 0);
+      const lowerY = isEvent1 ? -58 : (node.id === "event-7" ? -12 : -8);
+      lowerRockMesh.position.set(0, lowerY, 0);
       eventGroup.add(lowerRockMesh);
       cliffMeshes.push(lowerRockMesh);
 
@@ -2179,7 +2235,7 @@ export default function Scene() {
 
       // TECH TALK SPECIAL: Grand Hollow Underwater Cavern Grotto / Cave Hole Archway
       if (node.id === "event-5") {
-        const techCaveArchGeo = new THREE.TorusGeometry(18, 5.0, 10, 24, Math.PI * 1.15);
+        const techCaveArchGeo = new THREE.TorusGeometry(18, 5.0, 10, 24, Math.PI * 2);
         const techArchMesh = new THREE.Mesh(techCaveArchGeo, cliffRockMat);
         techArchMesh.position.set(0, 12, -2);
         techArchMesh.rotation.z = Math.PI * 0.08;
@@ -4407,6 +4463,56 @@ export default function Scene() {
           dolphin.mixer.update(delta);
         }
 
+        if (crabData) {
+          if (crabData.mixer) crabData.mixer.update(delta);
+
+          crabData.timer -= delta;
+          if (crabData.timer <= 0) {
+            if (crabData.state === 'idle') {
+              crabData.state = 'moving';
+              crabData.timer = 2 + Math.random() * 3;
+              // Restrict angle to 0 - PI so sin(angle) is positive, keeping the crab 
+              // strictly moving towards +Z (forward along the steps) and NEVER into the portal (-Z)
+              const angle = Math.random() * Math.PI;
+              const radius = 1 + Math.random() * 4;
+              crabData.targetPos.set(
+                crabData.originPos.x + Math.cos(angle) * radius,
+                crabData.originPos.y,
+                crabData.originPos.z + Math.sin(angle) * radius
+              );
+              if (crabData.walkAction) { crabData.walkAction.reset(); crabData.walkAction.play(); }
+              if (crabData.idleAction) crabData.idleAction.stop();
+            } else {
+              crabData.state = 'idle';
+              crabData.timer = 2 + Math.random() * 3;
+              if (crabData.walkAction) crabData.walkAction.stop();
+              if (crabData.idleAction) { crabData.idleAction.reset(); crabData.idleAction.play(); }
+            }
+          }
+
+          if (crabData.state === 'moving') {
+            const mesh = crabData.mesh;
+            const target = crabData.targetPos;
+            const dir = new THREE.Vector3().subVectors(target, mesh.position);
+            dir.y = 0;
+            const dist = dir.length();
+            
+            if (dist > 0.1) {
+              dir.normalize();
+              const targetAngle = Math.atan2(dir.x, dir.z);
+              // "Derecha" (animation 0) means sidestep right. Crab's forward vector should be 90deg offset from movement.
+              const desiredRot = targetAngle + Math.PI / 2;
+              const diff = desiredRot - mesh.rotation.y;
+              const normDiff = Math.atan2(Math.sin(diff), Math.cos(diff));
+              mesh.rotation.y += normDiff * delta * 4.0;
+              
+              mesh.position.addScaledVector(dir, crabData.speed * delta);
+            } else {
+              crabData.timer = 0; // force idle
+            }
+          }
+        }
+
         // Pod offset formation vectors (Leader + Left Wing + Right Wing)
         let offFwd = 0;
         let offRight = 0;
@@ -4906,6 +5012,10 @@ export default function Scene() {
 
         if (results.dolphin) {
           await buildDolphinsFromBuffer(await results.dolphin.arrayBuffer());
+        }
+        
+        if (results.crab) {
+          await buildCrabFromBuffer(await results.crab.arrayBuffer());
         }
         setProgress(82);
 
