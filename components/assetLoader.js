@@ -56,6 +56,7 @@ export const CRITICAL_ASSETS = [
   { key: "fishTex9", url: "/assets/models/textures/gltf_embedded_9.webp", kind: "texture", bytes: 38936 },
   { key: "fishTex13", url: "/assets/models/textures/gltf_embedded_13.webp", kind: "texture", bytes: 62988 },
   { key: "dolphin", url: "/assets/models/dolphin_anim.glb", kind: "buffer", bytes: 146932 },
+  { key: "crab", url: "/assets/models/Realstic_crab.glb", kind: "buffer", bytes: 704032 },
   // Texture-stripped build of "school of fish_opt.glb". The original embedded 18 PNGs
   // (22MB of the 31MB file) that Scene.jsx discarded anyway — it rebuilds every fish
   // material from the four external .webp files under /assets/models/textures. Same

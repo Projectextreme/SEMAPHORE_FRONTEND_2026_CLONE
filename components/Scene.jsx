@@ -584,9 +584,7 @@ export default function Scene() {
   const userMutedRef = useRef(false);
 
   // --- IMMERSIVE HOLD LOGIC REFS ---
-  const pausedEventsRef = useRef(new Set());
-  const lastScrollPRef = useRef(0);
-  const isHeldRef = useRef(false);
+
   // ---------------------------------
 
   const [activeEvent, setActiveEvent] = useState("event-1");
@@ -1673,6 +1671,7 @@ export default function Scene() {
     scene.add(portalGroup);
 
     let dolphinMixer = null;
+    let crabData = null;
     let dolphinMesh = null;
     let dolphinSparkles = null;
     let dolphinLines = null;
@@ -1835,6 +1834,60 @@ export default function Scene() {
         isCanyonSwim: isCanyonSwim,
         minZ: minZ,
         maxZ: maxZ,
+      });
+    }
+
+    function setupCrabInstance(parentGroup, gltf, x, y, z) {
+      const crabMesh = gltf.scene;
+      crabMesh.scale.set(1.0, 1.0, 1.0); 
+      crabMesh.position.set(x, y, z);
+      crabMesh.rotation.y = Math.PI / 4;
+      crabMesh.rotation.x = -0.1; // slight tilt to match rock
+      
+      parentGroup.add(crabMesh);
+      
+      let mixer = null;
+      let walkAction = null;
+      let idleAction = null;
+      if (gltf.animations && gltf.animations.length > 0) {
+        mixer = new THREE.AnimationMixer(crabMesh);
+        walkAction = mixer.clipAction(gltf.animations[0]); // Derecha
+        if (gltf.animations.length > 2) {
+          idleAction = mixer.clipAction(gltf.animations[2]); // Ataque
+        }
+        walkAction.play();
+      }
+
+      crabData = {
+        mesh: crabMesh,
+        mixer: mixer,
+        walkAction: walkAction,
+        idleAction: idleAction,
+        state: 'moving',
+        timer: 3.0,
+        originPos: new THREE.Vector3(x, y, z),
+        targetPos: new THREE.Vector3(x, y, z),
+        speed: 1.0
+      };
+    }
+
+    function buildCrabFromBuffer(arrayBuffer) {
+      return new Promise((resolve) => {
+        if (!GLTFLoaderClass || !arrayBuffer) return resolve(false);
+        const gltfLoader = new GLTFLoaderClass(manager);
+        gltfLoader.parse(
+          arrayBuffer,
+          "",
+          (gltf) => {
+            // Portal top step is near { x: 0, y: -121.5, z: -188 }
+            setupCrabInstance(newWorldGroup, gltf, 0, -121.5, -188);
+            resolve(true);
+          },
+          (err) => {
+            console.error("[Aquasaga] crab parse failed:", err);
+            resolve(false);
+          }
+        );
       });
     }
 
@@ -2170,7 +2223,8 @@ export default function Scene() {
       lowerRockGeo.computeVertexNormals();
 
       const lowerRockMesh = new THREE.Mesh(lowerRockGeo, cliffRockMat);
-      lowerRockMesh.position.set(0, isEvent1 ? -58 : -8, 0);
+      const lowerY = isEvent1 ? -58 : (node.id === "event-7" ? -12 : -8);
+      lowerRockMesh.position.set(0, lowerY, 0);
       eventGroup.add(lowerRockMesh);
       cliffMeshes.push(lowerRockMesh);
 
@@ -2181,7 +2235,7 @@ export default function Scene() {
 
       // TECH TALK SPECIAL: Grand Hollow Underwater Cavern Grotto / Cave Hole Archway
       if (node.id === "event-5") {
-        const techCaveArchGeo = new THREE.TorusGeometry(18, 5.0, 10, 24, Math.PI * 1.15);
+        const techCaveArchGeo = new THREE.TorusGeometry(18, 5.0, 10, 24, Math.PI * 2);
         const techArchMesh = new THREE.Mesh(techCaveArchGeo, cliffRockMat);
         techArchMesh.position.set(0, 12, -2);
         techArchMesh.rotation.z = Math.PI * 0.08;
@@ -3135,7 +3189,7 @@ export default function Scene() {
         trigger: wrapper,
         start: "top top",
         end: "bottom bottom",
-        scrub: isMobile ? 1.0 : 0.8,
+        scrub: true,
         onUpdate: (self) => {
           // --- IMMERSIVE EVENT SCROLL HOLD LOGIC REMOVED FROM HERE ---
           // Logic moved to animate loop for dynamic physical position detection
@@ -3257,13 +3311,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -30,
-        y: -99,
-        z: -282,
+        x: -18,
+        y: -103,
+        z: -260,
         targetX: -22,
-        targetY: -104,
+        targetY: -103,
         targetZ: -318,
-        fov: 54,
+        fov: 62,
         duration: 1.3,
         ease: "power2.out",
       },
@@ -3284,9 +3338,9 @@ export default function Scene() {
         y: -91,
         z: -300,
         targetX: -22,
-        targetY: -104,
+        targetY: -94,
         targetZ: -318,
-        fov: 51,
+        fov: 65,
         duration: 1.1,
         ease: "power2.inOut",
       },
@@ -3300,9 +3354,9 @@ export default function Scene() {
         y: -88,
         z: -307,
         targetX: -22,
-        targetY: -104,
+        targetY: -94,
         targetZ: -318,
-        fov: 49,
+        fov: 63,
         duration: 1.2,
         ease: "sine.inOut",
       },
@@ -3316,9 +3370,9 @@ export default function Scene() {
         y: -96,
         z: -296,
         targetX: -22,
-        targetY: -104,
+        targetY: -94,
         targetZ: -318,
-        fov: 48,
+        fov: 62,
         duration: 1.2,
         ease: "sine.inOut",
       },
@@ -3344,17 +3398,18 @@ export default function Scene() {
       11.2
     );
 
+    
     // EVENT 02 — WEB DESIGN: Wide Arrival → Right Flank Orbit → Hero Inspection → Extended Micro-Orbit → Smooth Exit
     tl.to(
       camState,
       {
-        x: 42,
+        x: 47.6,
         y: -168,
-        z: -350,
-        targetX: 32,
-        targetY: -183,
-        targetZ: -420,
-        fov: 68,
+        z: -359.6,
+        targetX: 22,
+        targetY: -180,
+        targetZ: -430,
+        fov: 66,
         fogDensity: 0.017,
         duration: 1.2,
         ease: "power2.out",
@@ -3364,13 +3419,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 48,
+        x: 42.0,
         y: -176,
-        z: -390,
-        targetX: 32,
-        targetY: -183,
-        targetZ: -420,
-        fov: 58,
+        z: -401.4,
+        targetX: 22,
+        targetY: -180,
+        targetZ: -430,
+        fov: 60,
         duration: 1.2,
         ease: "sine.inOut",
       },
@@ -3379,13 +3434,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 30,
+        x: 22.0,
         y: -174,
-        z: -402,
-        targetX: 32,
-        targetY: -183,
-        targetZ: -420,
-        fov: 51,
+        z: -395.0,
+        targetX: 22,
+        targetY: -180,
+        targetZ: -430,
+        fov: 56,
         duration: 1.1,
         ease: "sine.inOut",
       },
@@ -3394,13 +3449,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 18,
+        x: 2.0,
         y: -176,
-        z: -412,
-        targetX: 32,
-        targetY: -183,
-        targetZ: -420,
-        fov: 52,
+        z: -401.4,
+        targetX: 22,
+        targetY: -180,
+        targetZ: -430,
+        fov: 56,
         duration: 1.1,
         ease: "sine.inOut",
       },
@@ -3409,12 +3464,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -10,
+        x: -20.0,
         y: -195,
-        z: -445,
-        targetX: 32,
-        targetY: -183,
-        targetZ: -420,
+        z: -455.0,
+        targetX: 22,
+        targetY: -180,
+        targetZ: -430,
         fov: 64,
         fogDensity: 0.018,
         duration: 1.2,
@@ -3429,7 +3484,7 @@ export default function Scene() {
       {
         x: -18,
         y: -170,
-        z: -442,
+        z: -465,
         targetX: -32,
         targetY: -183,
         targetZ: -508,
@@ -3447,9 +3502,9 @@ export default function Scene() {
         y: -176,
         z: -475,
         targetX: -32,
-        targetY: -183,
+        targetY: -173,
         targetZ: -508,
-        fov: 58,
+        fov: 72,
         duration: 1.2,
         ease: "sine.inOut",
       },
@@ -3462,9 +3517,9 @@ export default function Scene() {
         y: -174,
         z: -488,
         targetX: -32,
-        targetY: -183,
+        targetY: -173,
         targetZ: -508,
-        fov: 51,
+        fov: 65,
         duration: 1.1,
         ease: "sine.inOut",
       },
@@ -3477,9 +3532,9 @@ export default function Scene() {
         y: -176,
         z: -496,
         targetX: -32,
-        targetY: -183,
+        targetY: -173,
         targetZ: -508,
-        fov: 53,
+        fov: 67,
         duration: 1.1,
         ease: "sine.inOut",
       },
@@ -3526,9 +3581,9 @@ export default function Scene() {
         y: -218,
         z: -568,
         targetX: 32,
-        targetY: -223,
+        targetY: -213,
         targetZ: -608,
-        fov: 60,
+        fov: 74,
         duration: 1.0,
         ease: "power1.inOut",
       },
@@ -3541,9 +3596,9 @@ export default function Scene() {
         y: -216,
         z: -570,
         targetX: 32,
-        targetY: -223,
+        targetY: -213,
         targetZ: -608,
-        fov: 48,
+        fov: 62,
         duration: 0.6,
         ease: "sine.inOut",
       },
@@ -3590,9 +3645,9 @@ export default function Scene() {
         y: -222,
         z: -653,
         targetX: -32,
-        targetY: -223,
+        targetY: -213,
         targetZ: -708,
-        fov: 58,
+        fov: 72,
         duration: 1.0,
         ease: "power1.inOut",
       },
@@ -3605,9 +3660,9 @@ export default function Scene() {
         y: -220,
         z: -670,
         targetX: -32,
-        targetY: -223,
+        targetY: -213,
         targetZ: -708,
-        fov: 48,
+        fov: 62,
         duration: 0.6,
         ease: "sine.inOut",
       },
@@ -3620,9 +3675,9 @@ export default function Scene() {
         y: -260,
         z: -738,
         targetX: -32,
-        targetY: -223,
+        targetY: -213,
         targetZ: -708,
-        fov: 62,
+        fov: 76,
         fogDensity: 0.023,
         duration: 0.8,
         ease: "power1.inOut",
@@ -3630,16 +3685,17 @@ export default function Scene() {
       31.5
     );
 
+    
     // EVENT 06 — SURPRISE EVENT: Deep Approach → Right Approach → Depth Reveal → Hero Orbit → Hero Settle → Exit
     tl.to(
       camState,
       {
         x: 14,
         y: -278,
-        z: -785,
+        z: -795,
         targetX: 32,
-        targetY: -303,
-        targetZ: -860,
+        targetY: -300,
+        targetZ: -870,
         fov: 66,
         fogDensity: 0.024,
         duration: 1.2,
@@ -3650,13 +3706,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 42,
+        x: 54.5,
         y: -292,
-        z: -820,
+        z: -831.0,
         targetX: 32,
-        targetY: -303,
-        targetZ: -860,
-        fov: 60,
+        targetY: -300,
+        targetZ: -870,
+        fov: 62,
         duration: 1.2,
         ease: "sine.inOut",
       },
@@ -3665,13 +3721,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 48,
+        x: 41.1,
         y: -298,
-        z: -838,
+        z: -836.2,
         targetX: 32,
-        targetY: -303,
-        targetZ: -860,
-        fov: 55,
+        targetY: -300,
+        targetZ: -870,
+        fov: 58,
         duration: 1.1,
         ease: "sine.inOut",
       },
@@ -3680,13 +3736,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 30,
+        x: 22.9,
         y: -294,
-        z: -848,
+        z: -836.2,
         targetX: 32,
-        targetY: -303,
-        targetZ: -860,
-        fov: 50,
+        targetY: -300,
+        targetZ: -870,
+        fov: 58,
         duration: 1.2,
         ease: "sine.inOut",
       },
@@ -3695,13 +3751,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 18,
+        x: 7.3,
         y: -296,
-        z: -855,
+        z: -845.3,
         targetX: 32,
-        targetY: -303,
-        targetZ: -860,
-        fov: 51,
+        targetY: -300,
+        targetZ: -870,
+        fov: 60,
         duration: 1.1,
         ease: "sine.inOut",
       },
@@ -3724,16 +3780,17 @@ export default function Scene() {
       38.3
     );
 
+    
     // EVENT 07 — IT MANAGER SPIRE: 5-Phase 3D Orbital Trajectory
     tl.to(
       camState,
       {
-        x: -10,
+        x: -14,
         y: -284,
-        z: -876,
-        targetX: -28,
-        targetY: -294,
-        targetZ: -905,
+        z: -889,
+        targetX: -32,
+        targetY: -300,
+        targetZ: -918,
         fov: 64,
         fogDensity: 0.025,
         duration: 1.2,
@@ -3744,13 +3801,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -42,
+        x: -54.0,
         y: -286,
-        z: -888,
-        targetX: -28,
-        targetY: -294,
-        targetZ: -905,
-        fov: 58,
+        z: -890.9,
+        targetX: -32,
+        targetY: -300,
+        targetZ: -918,
+        fov: 62,
         duration: 1.2,
         ease: "sine.inOut",
       },
@@ -3759,13 +3816,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -30,
+        x: -38.0,
         y: -287,
-        z: -894,
-        targetX: -28,
-        targetY: -294,
-        targetZ: -905,
-        fov: 51,
+        z: -883.6,
+        targetX: -32,
+        targetY: -300,
+        targetZ: -918,
+        fov: 58,
         duration: 1.1,
         ease: "sine.inOut",
       },
@@ -3774,13 +3831,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -18,
+        x: -7.3,
         y: -288,
-        z: -898,
-        targetX: -28,
-        targetY: -294,
-        targetZ: -905,
-        fov: 52,
+        z: -893.3,
+        targetX: -32,
+        targetY: -300,
+        targetZ: -918,
+        fov: 60,
         duration: 1.1,
         ease: "sine.inOut",
       },
@@ -3789,12 +3846,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 15,
+        x: 19.0,
         y: -350,
-        z: -933,
-        targetX: 28,
-        targetY: -383,
-        targetZ: -1015,
+        z: -936.0,
+        targetX: 32,
+        targetY: -380,
+        targetZ: -1018,
         fov: 64,
         fogDensity: 0.0255,
         duration: 1.1,
@@ -3807,12 +3864,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 18,
+        x: 22.0,
         y: -365,
-        z: -970,
-        targetX: 28,
-        targetY: -383,
-        targetZ: -1015,
+        z: -973.0,
+        targetX: 32,
+        targetY: -380,
+        targetZ: -1018,
         fov: 64,
         fogDensity: 0.026,
         duration: 1.2,
@@ -3823,13 +3880,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 48,
+        x: 56.7,
         y: -366,
-        z: -995,
-        targetX: 28,
-        targetY: -383,
-        targetZ: -1015,
-        fov: 58,
+        z: -993.3,
+        targetX: 32,
+        targetY: -380,
+        targetZ: -1018,
+        fov: 62,
         duration: 1.2,
         ease: "sine.inOut",
       },
@@ -3838,13 +3895,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 34,
+        x: 41.1,
         y: -367,
-        z: -1002,
-        targetX: 28,
-        targetY: -383,
-        targetZ: -1015,
-        fov: 51,
+        z: -984.2,
+        targetX: 32,
+        targetY: -380,
+        targetZ: -1018,
+        fov: 58,
         duration: 1.1,
         ease: "sine.inOut",
       },
@@ -3853,13 +3910,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 24,
+        x: 22.9,
         y: -368,
-        z: -1004,
-        targetX: 28,
-        targetY: -383,
-        targetZ: -1015,
-        fov: 52,
+        z: -984.2,
+        targetX: 32,
+        targetY: -380,
+        targetZ: -1018,
+        fov: 58,
         duration: 1.1,
         ease: "sine.inOut",
       },
@@ -3868,12 +3925,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -15,
+        x: -19.0,
         y: -405,
-        z: -1045,
-        targetX: -28,
-        targetY: -423,
-        targetZ: -1115,
+        z: -1048.0,
+        targetX: -32,
+        targetY: -420,
+        targetZ: -1118,
         fov: 64,
         fogDensity: 0.0265,
         duration: 1.1,
@@ -3886,12 +3943,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -18,
+        x: -22.0,
         y: -405,
-        z: -1080,
-        targetX: -28,
-        targetY: -423,
-        targetZ: -1115,
+        z: -1083.0,
+        targetX: -32,
+        targetY: -420,
+        targetZ: -1118,
         fov: 64,
         fogDensity: 0.027,
         duration: 1.2,
@@ -3902,13 +3959,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -48,
+        x: -52.1,
         y: -406,
-        z: -1095,
-        targetX: -28,
-        targetY: -423,
-        targetZ: -1115,
-        fov: 58,
+        z: -1089.3,
+        targetX: -32,
+        targetY: -420,
+        targetZ: -1118,
+        fov: 62,
         duration: 1.2,
         ease: "sine.inOut",
       },
@@ -3917,13 +3974,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -34,
+        x: -38.1,
         y: -407,
-        z: -1102,
-        targetX: -28,
-        targetY: -423,
-        targetZ: -1115,
-        fov: 51,
+        z: -1083.5,
+        targetX: -32,
+        targetY: -420,
+        targetZ: -1118,
+        fov: 58,
         duration: 1.1,
         ease: "sine.inOut",
       },
@@ -3932,13 +3989,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: -24,
+        x: -22.9,
         y: -408,
-        z: -1104,
-        targetX: -28,
-        targetY: -423,
-        targetZ: -1115,
-        fov: 52,
+        z: -1084.2,
+        targetX: -32,
+        targetY: -420,
+        targetZ: -1118,
+        fov: 58,
         duration: 1.1,
         ease: "sine.inOut",
       },
@@ -3947,12 +4004,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 10,
+        x: 2.0,
         y: -445,
-        z: -1145,
-        targetX: 8,
-        targetY: -463,
-        targetZ: -1215,
+        z: -1148.0,
+        targetX: 0,
+        targetY: -460,
+        targetZ: -1218,
         fov: 64,
         fogDensity: 0.0275,
         duration: 1.1,
@@ -3965,12 +4022,12 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 16,
+        x: 8.0,
         y: -446,
-        z: -1175,
-        targetX: 8,
-        targetY: -463,
-        targetZ: -1215,
+        z: -1178.0,
+        targetX: 0,
+        targetY: -460,
+        targetZ: -1218,
         fov: 64,
         fogDensity: 0.028,
         duration: 1.3,
@@ -3981,13 +4038,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 20,
+        x: 17.5,
         y: -447,
-        z: -1190,
-        targetX: 8,
-        targetY: -463,
-        targetZ: -1215,
-        fov: 58,
+        z: -1187.7,
+        targetX: 0,
+        targetY: -460,
+        targetZ: -1218,
+        fov: 62,
         duration: 1.3,
         ease: "sine.inOut",
       },
@@ -3996,13 +4053,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 10,
+        x: 9.1,
         y: -448,
-        z: -1198,
-        targetX: 8,
-        targetY: -463,
-        targetZ: -1215,
-        fov: 50,
+        z: -1184.2,
+        targetX: 0,
+        targetY: -460,
+        targetZ: -1218,
+        fov: 58,
         duration: 1.2,
         ease: "sine.inOut",
       },
@@ -4011,13 +4068,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 4,
+        x: 0,
         y: -449,
-        z: -1200,
-        targetX: 8,
-        targetY: -463,
-        targetZ: -1215,
-        fov: 48,
+        z: -1183.0,
+        targetX: 0,
+        targetY: -460,
+        targetZ: -1218,
+        fov: 58,
         duration: 1.2,
         ease: "sine.inOut",
       },
@@ -4026,13 +4083,13 @@ export default function Scene() {
     tl.to(
       camState,
       {
-        x: 0,
+        x: -10.2,
         y: -450,
-        z: -1202,
-        targetX: 8,
-        targetY: -463,
-        targetZ: -1215,
-        fov: 46,
+        z: -1189.8,
+        targetX: 0,
+        targetY: -460,
+        targetZ: -1218,
+        fov: 60,
         fogDensity: 0.029,
         duration: 1.5,
         ease: "power2.out",
@@ -4040,7 +4097,25 @@ export default function Scene() {
       64.3
     );
 
-    tl.to({}, { duration: 2.0 });
+    // Final Post-Event-10 Camera Float (Upward and Forward)
+    tl.to(
+      camState,
+      {
+        x: 0,
+        y: -380,
+        z: -1280,
+        targetX: 0,
+        targetY: -380,
+        targetZ: -1400,
+        fov: 70,
+        fogDensity: 0.015,
+        duration: 2.5,
+        ease: "power2.inOut",
+      },
+      65.8
+    );
+
+    tl.to({}, { duration: 1.7 });
 
     // --- PERF: Pre-flatten group materials once so the render loop never has to
     // walk the scene graph (traverse()) every frame — just iterate flat arrays. ---
@@ -4388,6 +4463,56 @@ export default function Scene() {
           dolphin.mixer.update(delta);
         }
 
+        if (crabData) {
+          if (crabData.mixer) crabData.mixer.update(delta);
+
+          crabData.timer -= delta;
+          if (crabData.timer <= 0) {
+            if (crabData.state === 'idle') {
+              crabData.state = 'moving';
+              crabData.timer = 2 + Math.random() * 3;
+              // Restrict angle to 0 - PI so sin(angle) is positive, keeping the crab 
+              // strictly moving towards +Z (forward along the steps) and NEVER into the portal (-Z)
+              const angle = Math.random() * Math.PI;
+              const radius = 1 + Math.random() * 4;
+              crabData.targetPos.set(
+                crabData.originPos.x + Math.cos(angle) * radius,
+                crabData.originPos.y,
+                crabData.originPos.z + Math.sin(angle) * radius
+              );
+              if (crabData.walkAction) { crabData.walkAction.reset(); crabData.walkAction.play(); }
+              if (crabData.idleAction) crabData.idleAction.stop();
+            } else {
+              crabData.state = 'idle';
+              crabData.timer = 2 + Math.random() * 3;
+              if (crabData.walkAction) crabData.walkAction.stop();
+              if (crabData.idleAction) { crabData.idleAction.reset(); crabData.idleAction.play(); }
+            }
+          }
+
+          if (crabData.state === 'moving') {
+            const mesh = crabData.mesh;
+            const target = crabData.targetPos;
+            const dir = new THREE.Vector3().subVectors(target, mesh.position);
+            dir.y = 0;
+            const dist = dir.length();
+            
+            if (dist > 0.1) {
+              dir.normalize();
+              const targetAngle = Math.atan2(dir.x, dir.z);
+              // "Derecha" (animation 0) means sidestep right. Crab's forward vector should be 90deg offset from movement.
+              const desiredRot = targetAngle + Math.PI / 2;
+              const diff = desiredRot - mesh.rotation.y;
+              const normDiff = Math.atan2(Math.sin(diff), Math.cos(diff));
+              mesh.rotation.y += normDiff * delta * 4.0;
+              
+              mesh.position.addScaledVector(dir, crabData.speed * delta);
+            } else {
+              crabData.timer = 0; // force idle
+            }
+          }
+        }
+
         // Pod offset formation vectors (Leader + Left Wing + Right Wing)
         let offFwd = 0;
         let offRight = 0;
@@ -4545,9 +4670,9 @@ export default function Scene() {
           eventSpeedScale = 1.0;
         } else if (distToShrine > 42) {
           const t = (distToShrine - 42) / 23;
-          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+          eventSpeedScale = 0.40 + 0.60 * (t * t * (3 - 2 * t));
         } else {
-          eventSpeedScale = 0.08;
+          eventSpeedScale = 0.40;
         }
 
         if (distToShrine < 60) {
@@ -4577,9 +4702,9 @@ export default function Scene() {
           eventSpeedScale = 1.0;
         } else if (distToShrine > 42) {
           const t = (distToShrine - 42) / 23;
-          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+          eventSpeedScale = 0.40 + 0.60 * (t * t * (3 - 2 * t));
         } else {
-          eventSpeedScale = 0.08;
+          eventSpeedScale = 0.40;
         }
 
         const fastScrollVelocity = Math.abs(vz);
@@ -4603,9 +4728,9 @@ export default function Scene() {
           eventSpeedScale = 1.0;
         } else if (distToShrine > 42) {
           const t = (distToShrine - 42) / 23;
-          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+          eventSpeedScale = 0.40 + 0.60 * (t * t * (3 - 2 * t));
         } else {
-          eventSpeedScale = 0.08;
+          eventSpeedScale = 0.40;
         }
 
         const fastScrollVelocity = Math.abs(vz);
@@ -4629,9 +4754,9 @@ export default function Scene() {
           eventSpeedScale = 1.0;
         } else if (distToShrine > 42) {
           const t = (distToShrine - 42) / 23;
-          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+          eventSpeedScale = 0.40 + 0.60 * (t * t * (3 - 2 * t));
         } else {
-          eventSpeedScale = 0.08;
+          eventSpeedScale = 0.40;
         }
 
         const fastScrollVelocity = Math.abs(vz);
@@ -4655,9 +4780,9 @@ export default function Scene() {
           eventSpeedScale = 1.0;
         } else if (distToShrine > 42) {
           const t = (distToShrine - 42) / 23;
-          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+          eventSpeedScale = 0.40 + 0.60 * (t * t * (3 - 2 * t));
         } else {
-          eventSpeedScale = 0.08;
+          eventSpeedScale = 0.40;
         }
 
         const fastScrollVelocity = Math.abs(vz);
@@ -4681,9 +4806,9 @@ export default function Scene() {
           eventSpeedScale = 1.0;
         } else if (distToShrine > 42) {
           const t = (distToShrine - 42) / 23;
-          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+          eventSpeedScale = 0.40 + 0.60 * (t * t * (3 - 2 * t));
         } else {
-          eventSpeedScale = 0.08;
+          eventSpeedScale = 0.40;
         }
 
         const fastScrollVelocity = Math.abs(vz);
@@ -4707,9 +4832,9 @@ export default function Scene() {
           eventSpeedScale = 1.0;
         } else if (distToShrine > 42) {
           const t = (distToShrine - 42) / 23;
-          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+          eventSpeedScale = 0.40 + 0.60 * (t * t * (3 - 2 * t));
         } else {
-          eventSpeedScale = 0.08;
+          eventSpeedScale = 0.40;
         }
 
         const fastScrollVelocity = Math.abs(vz);
@@ -4733,9 +4858,9 @@ export default function Scene() {
           eventSpeedScale = 1.0;
         } else if (distToShrine > 42) {
           const t = (distToShrine - 42) / 23;
-          eventSpeedScale = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+          eventSpeedScale = 0.40 + 0.60 * (t * t * (3 - 2 * t));
         } else {
-          eventSpeedScale = 0.08;
+          eventSpeedScale = 0.40;
         }
 
         const fastScrollVelocity = Math.abs(vz);
@@ -4746,14 +4871,14 @@ export default function Scene() {
       }
 
       // Position spring lerp for smooth, liquid camera movement
-      const basePosLerp = isMobile ? 0.10 : 0.07;
+      const basePosLerp = isMobile ? 0.25 : 0.15;
       const effectivePosLerp = basePosLerp * eventSpeedScale;
       smoothCamPos.lerp(_smoothCamTarget.set(camState.x + event1RightArcOffset, camState.y, camState.z), effectivePosLerp);
 
       // Surface-to-Portal & Event Landmark focus:
       // GSAP keyframes define precise look-at targets (targetX, targetY, targetZ) for cinematic reveals.
       desiredLookAt.set(camState.targetX, camState.targetY, camState.targetZ);
-      const baseLookLerp = isMobile ? 0.10 : 0.07;
+      const baseLookLerp = isMobile ? 0.25 : 0.15;
       const effectiveLookLerp = baseLookLerp * eventSpeedScale;
       currentLookAt.lerp(desiredLookAt, effectiveLookLerp);
 
@@ -4823,57 +4948,6 @@ export default function Scene() {
         setActiveEvent(currentActiveId);
       }
 
-      // --- IMMERSIVE DYNAMIC HOLD CAPTURE ---
-      let activeEventForHold = null;
-      if (camState.z < -245) {
-        for (const node of eventNodes) {
-          const dist = Math.sqrt(
-            Math.pow(smoothCamPos.x - node.pos.x, 2) +
-            Math.pow(smoothCamPos.y - node.pos.y, 2) +
-            Math.pow(smoothCamPos.z - node.pos.z, 2)
-          );
-          if (dist <= 65) {
-            activeEventForHold = node.id;
-            break;
-          }
-        }
-      }
-
-      if (activeEventForHold && !pausedEventsRef.current.has(activeEventForHold) && !isHeldRef.current) {
-        const st = ScrollTrigger.getAll()[0];
-        // Only trigger if user is actively scrolling downwards or stationary
-        if (st && st.direction !== -1 && window.__lenis) {
-          isHeldRef.current = true;
-          pausedEventsRef.current.add(activeEventForHold);
-
-          // Snap native scroll back to EXACTLY where the visual camera currently is,
-          // preventing the jarring jump caused by inaccurate minScroll values.
-          const targetPixel = st.start + (st.end - st.start) * tl.progress();
-          window.__lenis.scrollTo(targetPixel, { immediate: true });
-          window.__lenis.stop();
-
-          // Absolutely prevent native scroll hijacking during the hold
-          const _preventScroll = (e) => e.preventDefault();
-          const _preventKeys = (e) => {
-            if (["Space", "ArrowUp", "ArrowDown", "PageUp", "PageDown"].includes(e.code)) {
-              e.preventDefault();
-            }
-          };
-          window.addEventListener('wheel', _preventScroll, { passive: false });
-          window.addEventListener('touchmove', _preventScroll, { passive: false });
-          window.addEventListener('keydown', _preventKeys, { passive: false });
-
-          setTimeout(() => {
-            isHeldRef.current = false;
-            window.removeEventListener('wheel', _preventScroll);
-            window.removeEventListener('touchmove', _preventScroll);
-            window.removeEventListener('keydown', _preventKeys);
-            if (window.__lenis) window.__lenis.start();
-          }, 2000); // 2 second hold
-        }
-      }
-      // --------------------------------------
-
       // Ensure all event banners remain visible on their respective rock platforms
       eventNodes.forEach((node) => {
         const group = eventBannerGroups[node.id];
@@ -4938,6 +5012,10 @@ export default function Scene() {
 
         if (results.dolphin) {
           await buildDolphinsFromBuffer(await results.dolphin.arrayBuffer());
+        }
+        
+        if (results.crab) {
+          await buildCrabFromBuffer(await results.crab.arrayBuffer());
         }
         setProgress(82);
 
@@ -5309,16 +5387,14 @@ export default function Scene() {
 
           {/* Final End Screen after the event scroll (Cinematic Reveal) */}
           <div
-            className={`fixed inset-0 bg-[#010a13] flex flex-col items-center justify-center z-[100] transition-all duration-[1500ms] ease-out ${scrollProgress >= 99 ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-              }`}
+            className={`fixed inset-0 flex flex-col items-center justify-center z-[100] transition-all duration-[1500ms] ease-out pointer-events-none ${scrollProgress >= 98 ? "bg-black/40" : "bg-transparent"}`}
           >
             {/* Subtle atmospheric lighting background */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(0,180,255,0.15)_0%,_rgba(0,0,0,0)_60%)] -z-10 pointer-events-none" />
-            <div className="absolute inset-0 bg-[url('/textures/waternormals.jpg')] opacity-5 bg-cover bg-center mix-blend-overlay pointer-events-none" />
-
+            <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(0,180,255,0.15)_0%,_rgba(0,0,0,0)_60%)] -z-10 transition-opacity duration-1000 ${scrollProgress >= 98 ? "opacity-100" : "opacity-0"}`} />
+            
             {/* Cinematic Semaphore Logo Reveal */}
-            <div className={`z-10 mb-12 relative flex items-center justify-center transition-all duration-[2000ms] delay-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${scrollProgress >= 99 ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-12 scale-90"}`}>
-              <div className={`absolute w-3/4 h-3/4 bg-cyan-400/20 blur-[100px] rounded-full animate-pulse pointer-events-none transition-opacity duration-[2000ms] delay-700 ${scrollProgress >= 99 ? "opacity-100" : "opacity-0"}`} />
+            <div className={`z-10 mb-12 relative flex items-center justify-center transition-all duration-[2000ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] ${scrollProgress >= 98 ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-12 scale-90"}`}>
+              <div className={`absolute w-3/4 h-3/4 bg-cyan-400/20 blur-[100px] rounded-full animate-pulse pointer-events-none transition-opacity duration-[2000ms] delay-500 ${scrollProgress >= 98 ? "opacity-100" : "opacity-0"}`} />
               <img
                 src="https://res.cloudinary.com/zuxdlzob/image/upload/v1787802540/semaphore_logo.png"
                 alt="Semaphore 2026 Logo"
@@ -5327,12 +5403,14 @@ export default function Scene() {
             </div>
 
             {/* Standalone Visual Register Button Reveal */}
-            <a
-              href="/events/register"
-              className={`z-10 px-12 py-4 bg-cyan-600/80 hover:bg-cyan-500 text-white font-mono font-bold tracking-[0.2em] rounded-lg shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.8)] text-xl md:text-2xl border border-cyan-400/30 hover:border-cyan-300 transition-all duration-[1200ms] ease-out delay-[1200ms] ${scrollProgress >= 99 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-            >
-              REGISTER Now
-            </a>
+            <div className={`transition-all duration-[1200ms] ease-out delay-500 ${scrollProgress >= 98 ? "opacity-100 translate-y-0 scale-100 pointer-events-auto" : "opacity-0 translate-y-8 scale-95 pointer-events-none"}`}>
+              <a
+                href="/events/register"
+                className="z-10 px-12 py-4 bg-cyan-600/80 hover:bg-cyan-500 text-white font-mono font-bold tracking-[0.2em] rounded-lg shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.8)] text-xl md:text-2xl border border-cyan-400/30 hover:border-cyan-300 transition-all duration-300 block"
+              >
+                REGISTER NOW
+              </a>
+            </div>
           </div>
 
         </div>
