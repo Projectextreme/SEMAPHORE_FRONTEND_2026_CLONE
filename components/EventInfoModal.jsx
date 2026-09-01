@@ -72,7 +72,7 @@ export default function EventInfoModal({ event, onClose }) {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 md:top-2 md:right-6 text-cyan-400 text-sm font-bold hover:text-white transition-colors z-50 bg-[#020813]/50 md:bg-transparent px-3 py-1 rounded-full md:rounded-none md:px-0 md:py-0"
+          className="absolute top-4 left-3 right-auto md:left-auto md:top-2 md:right-6 text-cyan-400 text-sm font-bold hover:text-white transition-colors z-50 bg-[#020813]/50 md:bg-transparent px-3 py-1 rounded-full md:rounded-none md:px-0 md:py-0"
         >
           [ CLOSE ✕ ]
         </button>
