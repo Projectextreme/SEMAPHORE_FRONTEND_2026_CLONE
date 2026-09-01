@@ -12,17 +12,6 @@ export const developmentTeam = [
     linkedin: "https://www.linkedin.com/in/shashidhara-k-a2374b31b"
   },
   {
-    id: "dev-3",
-    name: "Swasthik NJ",
-    role: "Design Systems Engineer",
-    image: "/assets/developer/swasthik.webp",
-    initials: "SN",
-    phone: "",
-    email: "mailto:swastiknj76@gmail.com",
-    github: "https://github.com/swasthik-nj",
-    linkedin: "https://www.linkedin.com/in/swasthik-nj/"
-  },
-  {
     id: "dev-4",
     name: "Sumanth",
     role: "3D Designer",
@@ -33,6 +22,17 @@ export const developmentTeam = [
     email: "mailto:sumanthpoojary965@gmail.com",
     github: "https://github.com/sumanth965",
     linkedin: "https://www.linkedin.com/in/sumanth-poojary-2a1052246"
+  },
+  {
+    id: "dev-3",
+    name: "Swasthik NJ",
+    role: "Design Systems Engineer",
+    image: "/assets/developer/swasthik.webp",
+    initials: "SN",
+    phone: "",
+    email: "mailto:swastiknj76@gmail.com",
+    github: "https://github.com/swasthik-nj",
+    linkedin: "https://www.linkedin.com/in/swasthik-nj/"
   },
   {
     id: "dev-5",
@@ -58,16 +58,15 @@ export const developmentTeam = [
     linkedin: "https://www.linkedin.com/in/havyasu/"
   },
   {
-    id: "dev-6",
-    name: "Sharan",
-    role: "Frontend Developer",
-    image: "/assets/developer/sharan.webp",
-    imagePosition: "object-[50%_-20%]",
-    initials: "SH",
+    id: "dev-11",
+    name: "Jeevan",
+    role: "UI Developer",
+    image: "/assets/developer/jeevan.webp",
+    initials: "JE",
     phone: "",
-    email: "mailto:sharansalyan1@gmail.com",
-    github: "https://github.com/sharansalyan102-star",
-    linkedin: "https://www.linkedin.com/in/sharan-salyan-3162a42b9"
+    email: "mailto:jeevanshetty9481@gmail.com",
+    github: "https://github.com/Jeevan-Shetty07",
+    linkedin: "https://www.linkedin.com/in/jeevan-shetty-241613229/"
   },
   {
     id: "dev-7",
@@ -80,6 +79,18 @@ export const developmentTeam = [
     email: "mailto:udithrpoojary@gmail.com",
     github: "https://github.com/udithrpoojary04",
     linkedin: "https://www.linkedin.com/in/udith-r-poojary-8a4053246"
+  },
+  {
+    id: "dev-6",
+    name: "Sharan",
+    role: "Frontend Developer",
+    image: "/assets/developer/sharan.webp",
+    imagePosition: "object-[50%_-20%]",
+    initials: "SH",
+    phone: "",
+    email: "mailto:sharansalyan1@gmail.com",
+    github: "https://github.com/sharansalyan102-star",
+    linkedin: "https://www.linkedin.com/in/sharan-salyan-3162a42b9"
   },
   {
     id: "dev-8",
@@ -115,17 +126,6 @@ export const developmentTeam = [
     github: "https://github.com/gautam606",
     linkedin: "https://www.linkedin.com/in/gaurav-sk-891720333/"
   },
-  {
-    id: "dev-11",
-    name: "Jeevan",
-    role: "UI Developer",
-    image: "/assets/developer/jeevan.webp",
-    initials: "JE",
-    phone: "",
-    email: "mailto:jeevanshetty9481@gmail.com",
-    github: "https://github.com/Jeevan-Shetty07",
-    linkedin: "https://www.linkedin.com/in/jeevan-shetty-241613229/"
-  }
 ];
 
 export const staffCoordinators = [
