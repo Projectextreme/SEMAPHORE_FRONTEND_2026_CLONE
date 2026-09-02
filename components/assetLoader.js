@@ -75,7 +75,7 @@ export const CRITICAL_ASSETS = [
   { key: "banner_event-6", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802513/surpriseevent.png", kind: "texture", bytes: 55000 },
   { key: "banner_event-7", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802487/itmanager.png", kind: "texture", bytes: 60000 },
   { key: "banner_event-8", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802510/startup.png", kind: "texture", bytes: 50000 },
-  { key: "banner_event-9", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802490/fashion.png", kind: "texture", bytes: 85000 },
+  { key: "banner_event-9", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1788326801/fashon_show_new.png", kind: "texture", bytes: 85000 },
   { key: "banner_event-10", url: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802512/photography.png", kind: "texture", bytes: 70000 },
 ];
 

@@ -12,6 +12,7 @@ import { Info, Link } from "lucide-react";
 import { CRITICAL_ASSETS, loadAssets, blobToTexture, pruneOldCaches } from "./assetLoader";
 
 import { addCoralReef, addCliffCorals } from "./CoralReef";
+import Jellyfish from "./Jellyfish";
 import {
   seabedVertex,
   seabedFragment,
@@ -1685,6 +1686,7 @@ export default function Scene() {
     let dolphinLineColors = null;
 
     let allFishSchools = [];
+    let allJellyfish = [];
 
     // --- Where fish are allowed to swim ---------------------------------------
     // The canyon is walled by BoxGeometry(34, 180, 160) cliffs centred at x = ±66,
@@ -1839,13 +1841,13 @@ export default function Scene() {
 
     function setupCrabInstance(parentGroup, gltf, x, y, z) {
       const crabMesh = gltf.scene;
-      crabMesh.scale.set(1.0, 1.0, 1.0); 
+      crabMesh.scale.set(1.0, 1.0, 1.0);
       crabMesh.position.set(x, y, z);
       crabMesh.rotation.y = Math.PI / 4;
       crabMesh.rotation.x = -0.1; // slight tilt to match rock
-      
+
       parentGroup.add(crabMesh);
-      
+
       let mixer = null;
       let walkAction = null;
       let idleAction = null;
@@ -2011,6 +2013,39 @@ export default function Scene() {
 
               setupFishSchoolInstance(newWorldGroup, gltf, startX, startY, startZ, scale, phase, true, -1290, -1170);
             }
+
+            // Generate Jellyfish specifically near events AFTER the Startup Event (event-8)
+            // Deferred to allow the loading screen to vanish smoothly without blocking the main thread
+            setTimeout(() => {
+              eventNodes.forEach((node, index) => {
+                // Only spawn if the event number is > 8
+                if (parseInt(node.num, 10) <= 8) return;
+
+                // Spawn 3 to 5 jellyfish per event to make up for fewer spawn locations
+                const numJellyfish = 3 + Math.floor(Math.random() * 3);
+
+
+                for (let i = 0; i < numJellyfish; i++) {
+                  // Place them in open water: 
+                  // - Well in front of the platform (z + 40 to 70)
+                  // - Closer to the center of the canyon to avoid side cliffs (x between -15 and 15)
+                  // - Higher up to avoid clipping the floor/platform (y + 20 to 40)
+                  const startZ = node.pos.z + 40 + Math.random() * 30;
+                  const startX = (Math.random() - 0.5) * 30; // -15 to +15
+                  const startY = node.pos.y + 20 + Math.random() * 20;
+
+                  const scale = 2.0 + Math.random() * 1.5; // Make them fairly large and visible
+
+                  const jelly = new Jellyfish({
+                    position: new THREE.Vector3(startX, startY, startZ),
+                    speed: 0.2 + Math.random() * 0.2,
+                    size: scale,
+                    scene: newWorldGroup
+                  });
+                  allJellyfish.push(jelly);
+                }
+              });
+            }, 500);
 
             resolve(true);
           },
@@ -2419,7 +2454,7 @@ export default function Scene() {
           aspect: 3.0,
         },
         "event-9": {
-          src: "https://res.cloudinary.com/zuxdlzob/image/upload/v1787802490/fashion.png",
+          src: "https://res.cloudinary.com/zuxdlzob/image/upload/v1788326801/fashon_show_new.png",
           aspect: 2100 / 749,
         },
         "event-10": {
@@ -3398,7 +3433,7 @@ export default function Scene() {
       11.2
     );
 
-    
+
     // EVENT 02 — WEB DESIGN: Wide Arrival → Right Flank Orbit → Hero Inspection → Extended Micro-Orbit → Smooth Exit
     tl.to(
       camState,
@@ -3685,7 +3720,7 @@ export default function Scene() {
       31.5
     );
 
-    
+
     // EVENT 06 — SURPRISE EVENT: Deep Approach → Right Approach → Depth Reveal → Hero Orbit → Hero Settle → Exit
     tl.to(
       camState,
@@ -3780,7 +3815,7 @@ export default function Scene() {
       38.3
     );
 
-    
+
     // EVENT 07 — IT MANAGER SPIRE: 5-Phase 3D Orbital Trajectory
     tl.to(
       camState,
@@ -4389,6 +4424,10 @@ export default function Scene() {
       const podRight = _podRight.crossVectors(podForward, _worldUp).normalize();
       const podUp = _podUp.crossVectors(podRight, podForward).normalize();
 
+      allJellyfish.forEach((jelly) => {
+        jelly.update(t, delta);
+      });
+
       allFishSchools.forEach((school) => {
         if (school.group) {
           const dx = school.group.position.x - camera.position.x;
@@ -4496,7 +4535,7 @@ export default function Scene() {
             const dir = new THREE.Vector3().subVectors(target, mesh.position);
             dir.y = 0;
             const dist = dir.length();
-            
+
             if (dist > 0.1) {
               dir.normalize();
               const targetAngle = Math.atan2(dir.x, dir.z);
@@ -4505,7 +4544,7 @@ export default function Scene() {
               const diff = desiredRot - mesh.rotation.y;
               const normDiff = Math.atan2(Math.sin(diff), Math.cos(diff));
               mesh.rotation.y += normDiff * delta * 4.0;
-              
+
               mesh.position.addScaledVector(dir, crabData.speed * delta);
             } else {
               crabData.timer = 0; // force idle
@@ -5013,7 +5052,7 @@ export default function Scene() {
         if (results.dolphin) {
           await buildDolphinsFromBuffer(await results.dolphin.arrayBuffer());
         }
-        
+
         if (results.crab) {
           await buildCrabFromBuffer(await results.crab.arrayBuffer());
         }
@@ -5391,7 +5430,7 @@ export default function Scene() {
           >
             {/* Subtle atmospheric lighting background */}
             <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(0,180,255,0.15)_0%,_rgba(0,0,0,0)_60%)] -z-10 transition-opacity duration-1000 ${scrollProgress >= 98 ? "opacity-100" : "opacity-0"}`} />
-            
+
             {/* Cinematic Semaphore Logo Reveal */}
             <div className={`z-10 mb-12 relative flex items-center justify-center transition-all duration-[2000ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] ${scrollProgress >= 98 ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-12 scale-90"}`}>
               <div className={`absolute w-3/4 h-3/4 bg-cyan-400/20 blur-[100px] rounded-full animate-pulse pointer-events-none transition-opacity duration-[2000ms] delay-500 ${scrollProgress >= 98 ? "opacity-100" : "opacity-0"}`} />
