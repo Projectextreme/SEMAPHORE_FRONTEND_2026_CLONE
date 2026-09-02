@@ -377,12 +377,7 @@ export default function MemoriesPage() {
             >
               REGISTER FOR EVENTS →
             </Link>
-            <Link
-              href="/info"
-              className="px-7 py-3 rounded-xl bg-white/5 border border-cyan-400/30 text-cyan-300 font-bold font-mono text-xs tracking-wider uppercase hover:bg-white/10 transition-colors"
-            >
-              VIEW EVENT INFO
-            </Link>
+
           </div>
         </div>
       </section>
@@ -449,9 +444,8 @@ export default function MemoriesPage() {
 
             {/* Lightbox Image Container (6:4 format) */}
             <div
-              className={`relative w-full max-w-5xl aspect-[6/4] max-h-[78vh] transition-transform duration-200 flex items-center justify-center ${
-                isZoomed ? "scale-125 cursor-zoom-out" : "scale-100 cursor-zoom-in"
-              }`}
+              className={`relative w-full max-w-5xl aspect-[6/4] max-h-[78vh] transition-transform duration-200 flex items-center justify-center ${isZoomed ? "scale-125 cursor-zoom-out" : "scale-100 cursor-zoom-in"
+                }`}
               onClick={() => setIsZoomed(!isZoomed)}
             >
               <Image
