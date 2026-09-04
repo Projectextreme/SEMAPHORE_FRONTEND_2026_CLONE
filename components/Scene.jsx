@@ -3056,17 +3056,8 @@ export default function Scene() {
     const mouseVector = new THREE.Vector2();
 
     function handlePortalClick(event) {
-      // absolute guard: if we are at the top of the page, only stargate click is allowed
+      // absolute guard: if we are at the top of the page, do not trigger any 3D clicks
       if (window.scrollY < 300) {
-        mouseVector.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouseVector.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(mouseVector, camera);
-
-        const intersects = raycaster.intersectObjects([portalRingMesh], true);
-        if (intersects.length > 0) {
-          const targetY = window.innerHeight * 5;
-          window.scrollTo({ top: targetY, behavior: "smooth" });
-        }
         return;
       }
 
@@ -3074,16 +3065,10 @@ export default function Scene() {
       mouseVector.y = -(event.clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouseVector, camera);
 
-      const intersects = raycaster.intersectObjects([portalRingMesh, ...crystalShrineMeshes, ...bannerMeshes, ...infoMeshes], true);
+      const intersects = raycaster.intersectObjects([...crystalShrineMeshes, ...bannerMeshes, ...infoMeshes], true);
       if (intersects.length > 0) {
         const hit = intersects[0].object;
-        if (hit === portalRingMesh) {
-          const zDist = Math.abs(camera.position.z - (-190));
-          if (zDist < 250) {
-            const targetY = window.innerHeight * 5;
-            window.scrollTo({ top: targetY, behavior: "smooth" });
-          }
-        } else if (hit.userData && hit.userData.eventData) {
+        if (hit.userData && hit.userData.eventData) {
           const node = hit.userData.eventData;
           const zDist = Math.abs(camera.position.z - node.pos.z);
           console.log("[Portal Click Debug]", {
@@ -4202,6 +4187,7 @@ export default function Scene() {
     let animationId;
     let frameCount = 0;
     let lastFpsCheck = performance.now();
+    let currentSmoothedSpeed = 0;
 
     const _eventShrinePositions = {
       1: new THREE.Vector3(-22, -106, -318),
@@ -4227,7 +4213,7 @@ export default function Scene() {
         const depthVal = Math.max(2, Math.floor(Math.abs(camState.y)));
         setStats({
           depth: depthVal,
-          speed: (2.0 + Math.sin(t * 0.5) * 0.4).toFixed(1),
+          speed: currentSmoothedSpeed.toFixed(1),
           coords: `X:${Math.round(camState.x)} Y:${Math.round(camState.y)} Z:${Math.round(
             camState.z
           )}`,
@@ -4690,6 +4676,8 @@ export default function Scene() {
       lastCamPos.set(camState.x, camState.y, camState.z);
 
       const moveSpeed = Math.sqrt(vx * vx + vy * vy + vz * vz);
+      const instSpeed = delta > 0 ? (moveSpeed / delta) : 0;
+      currentSmoothedSpeed = currentSmoothedSpeed * 0.9 + instSpeed * 0.1;
 
       // Dynamic micro-banking roll on lateral turns (capped at ±0.07 rads / ~4°, zero while passing through stargate center)
       const rawBank = Math.max(-0.07, Math.min(0.07, -vx * 0.018));
