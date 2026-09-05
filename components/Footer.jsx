@@ -39,6 +39,8 @@ export default function Footer() {
                 <li><a href="/" className="hover:text-cyan-300 transition-colors">Home</a></li>
                 <li><a href="/events/register" className="hover:text-cyan-300 transition-colors">Events & Competitions</a></li>
                 <li><a href="https://nitte.edu.in/nmamit/department-mca.php" className="hover:text-cyan-300 transition-colors">About MCA Department</a></li>
+                <li><a href="/Semaphore_2K26_Registration_Guide.pdf" target="_blank" className="hover:text-cyan-300 transition-colors">Help</a></li>
+
                 <li>
                   <a
                     href="/contact"
