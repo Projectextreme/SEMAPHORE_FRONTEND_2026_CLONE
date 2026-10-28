@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from 'next/navigation';
 import { User, Phone } from 'lucide-react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.semaphore2k26.in';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://semaphore-backend-2026.onrender.com';
 
 export default function MyRegistration({ user: initialUser }) {
   const [fetchedUserData, setFetchedUserData] = useState(null);

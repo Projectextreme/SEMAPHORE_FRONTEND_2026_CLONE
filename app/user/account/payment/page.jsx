@@ -6,7 +6,7 @@ import Image from 'next/image';
 import PaymentSubmission from '@/components/payment/PaymentSubmission';
 import WaterWave from '@/components/WaterWaveWrapper';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.semaphore2k26.in';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://semaphore-backend-2026.onrender.com';
 
 export default function PaymentPage() {
   const [loading, setLoading] = useState(true);
