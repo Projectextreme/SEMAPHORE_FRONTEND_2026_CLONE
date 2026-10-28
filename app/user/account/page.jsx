@@ -9,7 +9,7 @@ import WaterWave from '@/components/WaterWaveWrapper';
 import Footer from '@/components/Footer';
 
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.semaphore2k26.in';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://semaphore-backend-2026.onrender.com';
 
 export default function MyRegistrationPage() {
   const [user, setUser] = useState(null);

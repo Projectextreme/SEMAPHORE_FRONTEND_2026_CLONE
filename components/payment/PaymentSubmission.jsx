@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { TEAM_REGISTRATION_FEE } from '@/constants/pricing';
 import { fetchPaymentDone } from '@/lib/paymentStatus';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.semaphore2k26.in';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://semaphore-backend-2026.onrender.com';
 
 export default function PaymentSubmission() {
   const [file, setFile] = useState(null);

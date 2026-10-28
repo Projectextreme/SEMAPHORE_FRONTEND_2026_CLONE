@@ -7,14 +7,34 @@ import Link from 'next/link';
 import WaterWave from '@/components/WaterWaveWrapper';
 
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.semaphore2k26.in';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://semaphore-backend-2026.onrender.com';
+const COLLEGES_API_URL = 'https://semaphore-backend-2026.onrender.com/api/colleges';
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '168801764074-kcn9c9to0daenc3o5pn9nfutgho8pcin.apps.googleusercontent.com';
+
+const HARDCODED_COLLEGES = [
+  "A. J. Institute of Engineering and Technology  , Kottara Chowki",
+  "Canara Engineering College,  Benjanapadavu, Mangaluru",
+  "MITE, Moodabidri",
+  "NMAMIT",
+  "National  Instituiton of Engineering (NIE)  Mysuru",
+  "Nitte Meenakshi Institute of Technology, Bangalore",
+  "PPC , Udupi",
+  "Shree Devi Institute of Technology (SDIT), Mangaluru",
+  "Srinivas Institute of Technology (SIT), Pandeshwar",
+  "Srinivas Institute of Technology , Valachil",
+  "St. Agnes College, Mangalore",
+  "St. Aloysius Institute of Management & Information Technology, Mangalore",
+  "St. Joseph Engineering College (SJEC), Vamanjoor",
+  "St. Philomena College, Puttur",
+  "Vivekananda College of Engineering & Technology, Puttur",
+  "Yenepoya Institute of Arts, Science, Management & commerce, Mangaluru"
+];
 
 import { Suspense } from 'react';
 
 function UserRegisterContent() {
-  const [colleges, setColleges] = useState([]);
-  const [collegeName, setCollegeName] = useState('');
+  const [colleges, setColleges] = useState(HARDCODED_COLLEGES);
+  const [collegeName, setCollegeName] = useState(HARDCODED_COLLEGES[0] || '');
   const [isCustom, setIsCustom] = useState(false);
   const [customCollege, setCustomCollege] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,19 +51,24 @@ function UserRegisterContent() {
   useEffect(() => {
     const fetchColleges = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/colleges`, {
+        const response = await fetch(COLLEGES_API_URL, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
+        if (!response.ok) throw new Error('Failed to load colleges from backend');
         const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Failed to load colleges');
 
         const rawList = Array.isArray(data) ? data : (data.colleges || []);
-const list = rawList.map((c) => (typeof c === 'string' ? c : c.collegeName));
-setColleges(list);
-if (list.length > 0) setCollegeName(list[0]);
+        const list = rawList
+          .map((c) => (typeof c === 'string' ? c : c?.collegeName))
+          .filter((c) => Boolean(c && typeof c === 'string' && c.trim().length > 0));
+
+        if (list.length > 0) {
+          setColleges(list);
+          setCollegeName((prev) => (prev && list.includes(prev) ? prev : list[0]));
+        }
       } catch (err) {
-        setError(err.message);
+        console.warn('API fetch failed, falling back to hardcoded list:', err);
       }
     };
     fetchColleges();
